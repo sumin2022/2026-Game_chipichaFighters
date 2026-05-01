@@ -126,14 +126,18 @@ void SESSION::process_packet(unsigned char* p)
 	case CS_MOVE:
 	{
 		CS_Move* packet = reinterpret_cast<CS_Move*>(p);
-		DIRECTION dir = packet->dir;
+		//방향값에 따라 위치 이동
+		float axisX = packet->axisX;
+		float axisY = packet->axisY;
 
-		switch (dir) {
-		case UP:    m_y = std::max<short>(0, m_y - 1); break;
-		case DOWN:  m_y = std::min<short>(WORLD_HEIGHT - 1, m_y + 1); break;
-		case LEFT:  m_x = std::max<short>(0, m_x - 1); break;
-		case RIGHT: m_x = std::min<short>(WORLD_WIDTH - 1, m_x + 1); break;
-		}
+		// 임시 이동 속도
+		float speed = 3.0f;
+
+		m_x += static_cast<short>(axisX * speed);
+		m_y += static_cast<short>(axisY * speed);
+
+		m_x = std::clamp<short>(m_x, 0, WORLD_WIDTH - 1);
+		m_y = std::clamp<short>(m_y, 0, WORLD_HEIGHT - 1);
 
 		std::cout << "Player[" << m_id << "] moved to (" << m_x << ", " << m_y << ")\n";
 
@@ -141,6 +145,31 @@ void SESSION::process_packet(unsigned char* p)
 			if (cl.m_is_connected)
 				cl.send_move_packet(m_id);
 		}
+		break;
+	}
+	case CS_ATTACK:
+	{
+		CS_Attack* packet = reinterpret_cast<CS_Attack*>(p);
+
+		float aimX = packet->aimX;
+		float aimY = packet->aimY;
+
+		std::cout << "Player[" << m_id << "] attack dir: "
+			<< aimX << ", " << aimY << "\n";
+
+		break;
+	}
+	case CS_SKILL:
+	{
+		CS_Skill* packet = reinterpret_cast<CS_Skill*>(p);
+
+		int skillId = packet->skillId;
+		float aimX = packet->aimX;
+		float aimY = packet->aimY;
+
+		std::cout << "Player[" << m_id << "] skill[" << skillId << "] dir: "
+			<< aimX << ", " << aimY << "\n";
+
 		break;
 	}
 	default:
@@ -162,4 +191,40 @@ void send_login_fail(SOCKET client, const char* message)
 	wsa_buf.len = packet.size;
 
 	WSASend(client, &wsa_buf, 1, 0, 0, nullptr, nullptr);
+}
+
+void SESSION::send_game_start()
+{
+	SC_GameStart packet;
+	packet.size = sizeof(SC_GameStart);
+	packet.type = SC_GAME_START;
+
+	do_send(packet.size, reinterpret_cast<char*>(&packet));
+}
+
+void SESSION::send_death(int dead_player_id)
+{
+	SC_Death packet;
+	packet.size = sizeof(SC_Death);
+	packet.type = SC_DEATH;
+
+	do_send(packet.size, reinterpret_cast<char*>(&packet));
+}
+
+void SESSION::send_respawn(int player_id)
+{
+	SC_Respawn packet;
+	packet.size = sizeof(SC_Respawn);
+	packet.type = SC_RESPAWN;
+
+	do_send(packet.size, reinterpret_cast<char*>(&packet));
+}
+
+void SESSION::send_game_result()
+{
+	SC_GameResult packet;
+	packet.size = sizeof(SC_GameResult);
+	packet.type = SC_GAME_RESULT;
+
+	do_send(packet.size, reinterpret_cast<char*>(&packet));
 }

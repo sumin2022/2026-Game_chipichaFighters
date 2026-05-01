@@ -22,6 +22,7 @@
     <ClCompile Include="file\Common.cpp" />
     <ClCompile Include="file\DBLogin.cpp" />
     <ClCompile Include="file\main.cpp" />
+    <ClCompile Include="file\RoomManager.cpp" />
     <ClCompile Include="file\ServerMain.cpp" />
     <ClCompile Include="file\SESSION.cpp" />
   </ItemGroup>
@@ -30,6 +31,7 @@
     <ClInclude Include="file\DBLogin.h" />
     <ClInclude Include="file\ExpOver.h" />
     <ClInclude Include="file\protocol.h" />
+    <ClInclude Include="file\RoomManager.h" />
     <ClInclude Include="file\ServerMain.h" />
     <ClInclude Include="file\SESSION.h" />
   </ItemGroup>
@@ -121,6 +123,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\Program Files\MySQL\MySQL Server 9.5\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -138,6 +141,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\Program Files\MySQL\MySQL Server 9.5\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

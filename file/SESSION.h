@@ -25,6 +25,12 @@ public:
 	void send_remove_player(int player_id);
 	void send_login_success();
 	void process_packet(unsigned char* p);
+
+	void send_current_state();
+	void send_death(int player_id);
+	void send_respawn(int player_id);
+	void send_game_start();
+	void send_game_result();
 };
 
 extern std::array<SESSION, MAX_PLAYERS> clients;

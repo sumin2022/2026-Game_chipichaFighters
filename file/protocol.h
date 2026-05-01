@@ -5,13 +5,13 @@ constexpr int WORLD_WIDTH = 400;
 constexpr int WORLD_HEIGHT = 400;
 constexpr int MAX_PLAYERS = 18;
 constexpr int MAX_NAME_LEN = 20;
-constexpr int MAX_ROOM_PLAYERS = 6;
 constexpr int MAX_ROOM_AI = 6;
 
-enum PACKET_TYPE {
-	CS_LOGIN, CS_MOVE, SC_LOGIN_RESULT, SC_AVATAR_INFO,SC_ADD_PLAYER,
-	 SC_REMOVE_PLAYER, SC_MOVE_PLAYER, CS_SKILL, SC_CURRENT_STATE, SC_DEATH, 
-	 SC_RESPAWN, SC_GAME_RESULT,SC_GAME_START,CS_READY
+enum PACKET_TYPE : unsigned char {
+	CS_LOGIN, CS_MOVE, CS_ATTACK, CS_SKILL, CS_READY, 
+	SC_LOGIN_RESULT, SC_AVATAR_INFO,SC_ADD_PLAYER,
+	 SC_REMOVE_PLAYER, SC_MOVE_PLAYER,  SC_CURRENT_STATE, SC_DEATH, 
+	 SC_RESPAWN, SC_GAME_RESULT,SC_GAME_START,
 
 };
 enum DIRECTION {UP,DOWN,LEFT,RIGHT};
@@ -27,7 +27,8 @@ struct CS_Login {
 struct CS_Move {
 	unsigned char size;
 	PACKET_TYPE type;
-	DIRECTION dir;
+	float axisX;   // -1.0 ~ 1.0
+	float axisY;   // -1.0 ~ 1.0
 };
 
 struct SC_LoginResult {
@@ -68,24 +69,51 @@ struct SC_AvatarInfo {
 	short y;
 };
 
-struct CS_Skill;
-struct SC_CurrentState;
-struct SC_Death;
-struct SC_Respawn;
-struct SC_GameResult;
-struct SC_GameStart;
-struct CS_Ready;
+struct CS_Attack {
+	unsigned char size;
+	PACKET_TYPE type;
 
+	float aimX; // 공격 방향 x
+	float aimY; // 공격 방향 y
+};
 
-struct Room{
-	int room_id = -1; // room 번호 : 1, 2, 3 ...? 
-	bool active = false;
+struct CS_Skill {
+	unsigned char size;
+	PACKET_TYPE type;
 
-	std::array<int, MAX_ROOM_PLAYERS> player_ids;
-	std::array<int, MAX_ROOM_AI> ai_ids;
+	short skillId;
+	float aimX;
+	float aimY;
+};
 
-	int player_count = 0;
-	int ai_count = 0;
+struct SC_CurrentState {
+	unsigned char size;
+	PACKET_TYPE type;
+};
+
+struct SC_Death {
+	unsigned char size;
+	PACKET_TYPE type;
+};
+
+struct SC_Respawn {
+	unsigned char size;
+	PACKET_TYPE type;
+};
+
+struct SC_GameResult {
+	unsigned char size;
+	PACKET_TYPE type;
+};
+
+struct SC_GameStart {
+	unsigned char size;
+	PACKET_TYPE type;
+};
+
+struct CS_Ready {
+	unsigned char size;
+	PACKET_TYPE type;
 };
 
 #pragma pack(pop)
