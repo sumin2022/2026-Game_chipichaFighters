@@ -4,11 +4,20 @@
 
 constexpr int MAX_ROOM_PLAYERS = 6;
 
+struct PlayerState {
+	int id;
+	short x;
+	short y;
+	int hp;
+	bool alive;
+};
+
 struct Room {
 	int room_id = -1; // room ¹øÈ£ : 1, 2, 3 ...? 
 	bool active = false;
 
 	std::array<int, MAX_ROOM_PLAYERS> players;
+	std::array<PlayerState, MAX_ROOM_PLAYERS> states;
 	int player_count = 0;
 
 	void add_player(int player_id)
@@ -33,4 +42,5 @@ extern std::unordered_map<int, Room> g_rooms;
 extern std::unordered_map<int, int> g_player_room;
 
 void broadcast_room(int room_id, char* packet, int size);
+void update_all_rooms();
 void update_room(Room& room);

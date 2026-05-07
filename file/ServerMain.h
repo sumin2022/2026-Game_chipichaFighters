@@ -13,12 +13,17 @@ public:
 	bool InitServer(int port);
 	void PostAccept();
 	void HandleAccept(EXP_OVER* exp_over);
+	int GetNewClientId();
 	void HandleRecv(int player_index, DWORD num_bytes, EXP_OVER* exp_over);
 	void HandleSend(EXP_OVER* exp_over, int player_index);
 	void DisconnectClient(int player_index);
 	void CleanupServer();
+	void Run();
 
 private:
+	void WorkerThread();
+	void GameThread();
+
 	SOCKET server;
 	HANDLE h_iocp;
 	DBLogin db;

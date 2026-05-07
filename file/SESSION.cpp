@@ -102,6 +102,10 @@ void SESSION::process_packet(unsigned char* p)
 	switch (type) {
 	case CS_LOGIN:
 	{
+		// DB 확인
+		// 성공하면 m_is_logged_in = true;
+		// m_username 저장
+		// SC_LOGIN_RESULT 전송
 		CS_Login* packet = reinterpret_cast<CS_Login*>(p);
 		strncpy_s(m_username, packet->username, MAX_NAME_LEN);
 
@@ -123,8 +127,16 @@ void SESSION::process_packet(unsigned char* p)
 		}
 		break;
 	}
+	case CS_READY:
+	{
+		if (!m_is_logged_in) return;
+		// RoomManager에 매칭 요청
+		break;
+	}
 	case CS_MOVE:
 	{
+		if (!m_in_game) return;
+
 		CS_Move* packet = reinterpret_cast<CS_Move*>(p);
 		//방향값에 따라 위치 이동
 		float axisX = packet->axisX;
@@ -141,14 +153,17 @@ void SESSION::process_packet(unsigned char* p)
 
 		std::cout << "Player[" << m_id << "] moved to (" << m_x << ", " << m_y << ")\n";
 
-		for (auto& cl : clients) {
-			if (cl.m_is_connected)
-				cl.send_move_packet(m_id);
-		}
+		//for (auto& cl : clients) {
+		//	if (cl.m_is_connected)
+		//		cl.send_move_packet(m_id);
+		//}
+		// 나중에 방에	있는 플레이어한테만 보내도록 수정하기
 		break;
 	}
 	case CS_ATTACK:
 	{
+		if (!m_in_game) return;
+		// 공격 요청 저장
 		CS_Attack* packet = reinterpret_cast<CS_Attack*>(p);
 
 		float aimX = packet->aimX;
@@ -161,6 +176,8 @@ void SESSION::process_packet(unsigned char* p)
 	}
 	case CS_SKILL:
 	{
+		if (!m_in_game) return;
+		// 스킬 요청 저장
 		CS_Skill* packet = reinterpret_cast<CS_Skill*>(p);
 
 		int skillId = packet->skillId;
@@ -190,7 +207,7 @@ void send_login_fail(SOCKET client, const char* message)
 	wsa_buf.buf = reinterpret_cast<char*>(&packet);
 	wsa_buf.len = packet.size;
 
-	WSASend(client, &wsa_buf, 1, 0, 0, nullptr, nullptr);
+	WSASend(client, &wsa_buf, 1, 0, 0, nullptr, nullptr);// ?이거 왜 WSASend임? do_send?
 }
 
 void SESSION::send_game_start()

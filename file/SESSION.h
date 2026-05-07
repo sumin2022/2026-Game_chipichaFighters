@@ -14,6 +14,9 @@ public:
 	int m_prev_recv;
 	char m_username[MAX_NAME_LEN];
 	short m_x, m_y;
+	bool m_is_logged_in = false;
+	bool m_in_game = false;
+	int m_room_id = -1;
 
 	SESSION();
 	~SESSION();

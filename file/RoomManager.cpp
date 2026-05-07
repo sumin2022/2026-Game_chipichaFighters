@@ -4,6 +4,12 @@
 std::unordered_map<int, Room> g_rooms;
 std::unordered_map<int, int> g_player_room;
 
+static void update_ai(Room& room);
+static void update_skills(Room& room);
+static void check_player_attacks(Room& room);
+static void check_collisions(Room& room);
+static void send_room_snapshot(Room& room); //플렝이어 위치, 체력, 스킬 상태 등등 보내기 (여기서 맞나?)
+
 void broadcast_room(int room_id, char* packet, int size)
 {
 	auto room_it = g_rooms.find(room_id);
@@ -22,20 +28,27 @@ void broadcast_room(int room_id, char* packet, int size)
 	}
 }
 
+void update_all_rooms()
+{
+	for (auto& [id, room] : g_rooms) {
+		update_room(room);
+	}
+}
+
 void update_room(Room& room)
 {
 	if (!room.active) return;
 
-	for (int i = 0; i < room.player_count; ++i) {
-		int attacker_id = room.players[i];
+	update_ai(room);
+	update_skills(room);
+	check_player_attacks(room);
+	check_collisions(room);
+	send_room_snapshot(room);
 
-		for (int j = 0; j < room.player_count; ++j) {
-			if (i == j) continue;
-
-			int target_id = room.players[j];
-
-			// 공격 판정
-			// 충돌 체크
-		}
-	}
 }
+
+static void update_ai(Room& room) {}
+static void update_skills(Room& room) {}
+static void check_player_attacks(Room& room) {}
+static void check_collisions(Room& room) {}
+static void send_room_snapshot(Room& room) {}
