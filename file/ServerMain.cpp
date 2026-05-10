@@ -131,7 +131,7 @@ void ServerMain::GameThread()
 	while (true) {
 		auto start = steady_clock::now();
 
-		update_all_rooms();
+		RoomManager::Instance().update_all_rooms();
 
 		auto end = steady_clock::now();
 		auto elapsed = end - start;
@@ -296,21 +296,15 @@ int ServerMain::GetNewClientId()
 
 void ServerMain::DisconnectClient(int player_index)
 {
-	SESSION& session = clients[player_index];
+	RoomManager::Instance().leave_room(player_index);
 
-	if (!session.m_is_connected)
-		return;
+	clients[player_index].m_is_connected = false;
+	clients[player_index].m_is_logged_in = false;
+	clients[player_index].m_in_game = false;
+	clients[player_index].m_room_id = -1;
 
-	std::cout << "Client disconnected: " << player_index << "\n";
+	closesocket(clients[player_index].m_client);
+	clients[player_index].m_client = INVALID_SOCKET;
 
-	session.m_is_connected = false;
-	session.m_is_logged_in = false;
-	session.m_in_game = false;
-	session.m_prev_recv = 0;
-
-	closesocket(session.m_client);
-	session.m_client = INVALID_SOCKET;
-
-	// 나중에 RoomManager에서 방에서도 제거해야 함
-	// leave_room(player_index);
+	std::cout << "Client disconnected: " << player_index << '\n';
 }

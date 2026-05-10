@@ -1,5 +1,6 @@
 #include "SESSION.h"
 #include <algorithm>
+#include "RoomManager.h"
 
 std::array<SESSION, MAX_PLAYERS> clients;
 
@@ -109,28 +110,33 @@ void SESSION::process_packet(unsigned char* p)
 		CS_Login* packet = reinterpret_cast<CS_Login*>(p);
 		strncpy_s(m_username, packet->username, MAX_NAME_LEN);
 
+		m_is_logged_in = true;
+
 		std::cout << "Player[" << m_id << "] logged in as " << m_username << std::endl;
 
 		send_login_success();
 		send_avatar_info();
 
-		for (auto& other : clients) {
-			if (!other.m_is_connected) continue;
-			if (other.m_id == m_id) continue;
-			send_add_player(other.m_id);
-		}
+		//for (auto& other : clients) {
+		//	if (!other.m_is_connected) continue;
+		//	if (other.m_id == m_id) continue;
+		//	send_add_player(other.m_id);
+		//}
 
-		for (auto& other : clients) {
-			if (!other.m_is_connected) continue;
-			if (other.m_id == m_id) continue;
-			other.send_add_player(m_id);
-		}
+		//for (auto& other : clients) {
+		//	if (!other.m_is_connected) continue;
+		//	if (other.m_id == m_id) continue;
+		//	other.send_add_player(m_id);
+		//}
 		break;
 	}
 	case CS_READY:
 	{
 		if (!m_is_logged_in) return;
+
 		// RoomManager¿¡ ¸ÅÄª ¿äÃ»
+		RoomManager::Instance().request_matchmaking(m_id);
+
 		break;
 	}
 	case CS_MOVE:
