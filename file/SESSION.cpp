@@ -139,6 +139,23 @@ void SESSION::process_packet(unsigned char* p)
 
 		break;
 	}
+	case CS_SELECT_CHARACTER:
+	{
+		CS_SelectCharacter* packet = reinterpret_cast<CS_SelectCharacter*>(p);
+
+		RoomManager::Instance().select_character(m_id, packet->character);
+
+		break;
+	}
+
+	case CS_GAME_READY:
+	{
+		CS_GameReady* packet = reinterpret_cast<CS_GameReady*>(p);
+
+		RoomManager::Instance().set_lobby_ready(m_id, packet->ready);
+
+		break;
+	}
 	case CS_MOVE:
 	{
 		if (!m_in_game) return;

@@ -158,7 +158,7 @@ void RoomManager::process_pending_requests()
 		auto room_it = m_rooms.find(target_room_id);
 		if (room_it != m_rooms.end()) {
 			if (room_it->second.is_full()) {
-				start_room(target_room_id);
+				enter_lobby(target_room_id);
 			}
 		}
 	}
@@ -195,9 +195,10 @@ void RoomManager::start_room(int room_id)
 
 	Room& room = room_it->second;
 
-	if (room.active) return;
-	if (room.player_count < MAX_ROOM_PLAYERS) return;
+	if (room.state != RoomState::LOBBY) return;
+	if (!room.all_ready()) return;
 
+	room.state = RoomState::INGAME;
 	room.active = true;
 
 	for (int i = 0; i < room.player_count; ++i) {
@@ -213,7 +214,134 @@ void RoomManager::start_room(int room_id)
 	std::cout << "Room " << room_id << " started\n";
 }
 
+void RoomManager::enter_lobby(int room_id)
+{
+	auto room_it = m_rooms.find(room_id);
+	if (room_it == m_rooms.end()) return;
 
+	Room& room = room_it->second;
+
+	if (room.state != RoomState::MATCHING) return;
+	if (!room.is_full()) return;
+
+	room.state = RoomState::LOBBY;
+
+	SC_RoomEnter packet;
+	packet.size = sizeof(SC_RoomEnter);
+	packet.type = SC_ROOM_ENTER;
+	packet.room_id = room_id;
+	packet.player_count = room.player_count;
+
+	broadcast_room(room_id, reinterpret_cast<char*>(&packet), packet.size);
+
+	std::cout << "Room " << room_id << " entered lobby\n";
+}
+
+void RoomManager::select_character(int player_id, CharacterType character)
+{
+	if (character < CHAR_DEALER || character > CHAR_HEALER) return;
+
+	auto it = m_player_room.find(player_id);
+	if (it == m_player_room.end()) return;
+
+	int room_id = it->second;
+
+	auto room_it = m_rooms.find(room_id);
+	if (room_it == m_rooms.end()) return;
+
+	Room& room = room_it->second;
+
+	if (room.state != RoomState::LOBBY) return;
+
+	PlayerState* state = find_player_state(room, player_id);
+	if (state == nullptr) return;
+
+	apply_character_to_player(*state, character);
+
+	SC_CharacterSelected packet;
+	packet.size = sizeof(SC_CharacterSelected);
+	packet.type = SC_CHARACTER_SELECTED;
+	packet.player_id = player_id;
+	packet.character = character;
+
+	broadcast_room(room_id, reinterpret_cast<char*>(&packet), packet.size);
+}
+
+void RoomManager::set_lobby_ready(int player_id, bool ready)
+{
+	auto it = m_player_room.find(player_id);
+	if (it == m_player_room.end()) return;
+
+	int room_id = it->second;
+
+	auto room_it = m_rooms.find(room_id);
+	if (room_it == m_rooms.end()) return;
+
+	Room& room = room_it->second;
+
+	if (room.state != RoomState::LOBBY) return;
+
+	PlayerState* state = find_player_state(room, player_id);
+	if (state == nullptr) return;
+
+	if (state->character == CHAR_NONE) return;
+
+	state->lobby_ready = ready;
+
+	SC_LobbyReadyState packet;
+	packet.size = sizeof(SC_LobbyReadyState);
+	packet.type = SC_LOBBY_READY_STATE;
+	packet.player_id = player_id;
+	packet.ready = ready;
+
+	broadcast_room(room_id, reinterpret_cast<char*>(&packet), packet.size);
+
+	if (room.all_ready()) {
+		start_room(room_id);
+	}
+}
+
+PlayerState* RoomManager::find_player_state(Room& room, int player_id)
+{
+	for (int i = 0; i < room.player_count; ++i) {
+		if (room.states[i].id == player_id) {
+			return &room.states[i];
+		}
+	}
+
+	return nullptr;
+}
+
+void RoomManager::apply_character_to_player(PlayerState& state, CharacterType character)
+{
+	const CharacterStats& stats = CharacterManager::GetStats(character);
+
+	state.character = character;
+
+	state.max_hp = stats.max_hp;
+	state.hp = stats.max_hp;
+
+	state.max_mp = stats.max_mp;
+	state.mp = stats.max_mp;
+
+	state.attack_damage = stats.attack_damage;
+	state.attack_cooldown = stats.attack_cooldown;
+	state.attack_range = stats.attack_range;
+	state.move_speed = stats.move_speed;
+
+	state.attack_type = stats.attack_type;
+	state.active_skill = stats.skill.type;
+	state.passive_skill = stats.passive.type;
+
+	state.attack_timer = 0.0f;
+	state.skill_timer = 0.0f;
+
+	state.last_attack_target = -1;
+	state.last_damaged_time = 0.0f;
+
+	state.alive = true;
+	state.lobby_ready = false;
+}
 
 void RoomManager::update_ai(Room& room) {}
 void RoomManager::update_skills(Room& room) {}

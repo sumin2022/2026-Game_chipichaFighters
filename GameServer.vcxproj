@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="file\Character.cpp" />
     <ClCompile Include="file\Common.cpp" />
     <ClCompile Include="file\DBLogin.cpp" />
     <ClCompile Include="file\main.cpp" />
@@ -27,6 +28,7 @@
     <ClCompile Include="file\SESSION.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="file\Character.h" />
     <ClInclude Include="file\Common.h" />
     <ClInclude Include="file\DBLogin.h" />
     <ClInclude Include="file\ExpOver.h" />

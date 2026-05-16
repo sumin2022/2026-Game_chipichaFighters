@@ -9,9 +9,17 @@ constexpr int MAX_ROOM_AI = 6;
 
 enum PACKET_TYPE : unsigned char {
 	CS_LOGIN, CS_MOVE, CS_ATTACK, CS_SKILL, CS_READY, 
+
+	CS_SELECT_CHARACTER,
+	CS_GAME_READY,
+
 	SC_LOGIN_RESULT, SC_AVATAR_INFO,SC_ADD_PLAYER,
 	 SC_REMOVE_PLAYER, SC_MOVE_PLAYER,  SC_CURRENT_STATE, SC_DEATH, 
 	 SC_RESPAWN, SC_GAME_RESULT,SC_GAME_START,
+
+	 SC_ROOM_ENTER,
+	 SC_CHARACTER_SELECTED,
+	 SC_LOBBY_READY_STATE
 
 };
 enum DIRECTION {UP,DOWN,LEFT,RIGHT};
@@ -114,6 +122,47 @@ struct SC_GameStart {
 struct CS_Ready {
 	unsigned char size;
 	PACKET_TYPE type;
+};
+
+enum CharacterType : unsigned char {
+	CHAR_NONE = 0,
+	CHAR_DEALER,
+	CHAR_ARCHER,
+	CHAR_TANKER,
+	CHAR_HEALER
+};
+
+struct CS_SelectCharacter {
+	unsigned char size;
+	PACKET_TYPE type;
+	CharacterType character;
+};
+
+struct CS_GameReady {
+	unsigned char size;
+	PACKET_TYPE type;
+	bool ready;
+};
+
+struct SC_RoomEnter {
+	unsigned char size;
+	PACKET_TYPE type;
+	int room_id;
+	int player_count;
+};
+
+struct SC_CharacterSelected {
+	unsigned char size;
+	PACKET_TYPE type;
+	int player_id;
+	CharacterType character;
+};
+
+struct SC_LobbyReadyState {
+	unsigned char size;
+	PACKET_TYPE type;
+	int player_id;
+	bool ready;
 };
 
 #pragma pack(pop)
