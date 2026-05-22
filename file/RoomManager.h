@@ -6,7 +6,7 @@
 #include "protocol.h"
 #include "Character.h"
 
-constexpr int MAX_ROOM_PLAYERS = 6;
+constexpr int MAX_ROOM_PLAYERS = 2; // ¿ø·¡ 6¸í
 
 struct PlayerState {
 	int id = -1;

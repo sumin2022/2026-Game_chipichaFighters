@@ -134,6 +134,9 @@ void SESSION::process_packet(unsigned char* p)
 	{
 		if (!m_is_logged_in) return;
 
+		std::cout << "[RECV] CS_READY / player=" << m_id
+			<< " matchmaking request\n";
+
 		// RoomManager¿¡ ¸ÅÄª ¿äÃ»
 		RoomManager::Instance().request_matchmaking(m_id);
 
@@ -143,6 +146,9 @@ void SESSION::process_packet(unsigned char* p)
 	{
 		CS_SelectCharacter* packet = reinterpret_cast<CS_SelectCharacter*>(p);
 
+		std::cout << "[RECV] CS_SELECT_CHARACTER / player=" << m_id
+			<< " character=" << (int)packet->character << "\n";
+
 		RoomManager::Instance().select_character(m_id, packet->character);
 
 		break;
@@ -151,6 +157,10 @@ void SESSION::process_packet(unsigned char* p)
 	case CS_GAME_READY:
 	{
 		CS_GameReady* packet = reinterpret_cast<CS_GameReady*>(p);
+
+		std::cout << "[RECV] CS_GAME_READY / player=" << m_id
+			<< " ready=" << packet->ready << "\n";
+
 
 		RoomManager::Instance().set_lobby_ready(m_id, packet->ready);
 

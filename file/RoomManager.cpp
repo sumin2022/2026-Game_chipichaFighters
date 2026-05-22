@@ -209,6 +209,7 @@ void RoomManager::start_room(int room_id)
 		clients[player_id].m_room_id = room_id;
 
 		clients[player_id].send_game_start();
+		std::cout << "Room " << room_id << " started\n";
 	}
 
 	std::cout << "Room " << room_id << " started\n";
