@@ -171,20 +171,10 @@ void SESSION::process_packet(unsigned char* p)
 		if (!m_in_game) return;
 
 		CS_Move* packet = reinterpret_cast<CS_Move*>(p);
-		//방향값에 따라 위치 이동
-		float axisX = packet->axisX;
-		float axisY = packet->axisY;
+		RoomManager::Instance().set_move_input(m_id, packet->axisX, packet->axisY);
+		break;
 
-		// 임시 이동 속도
-		float speed = 3.0f;
-
-		m_x += static_cast<short>(axisX * speed);
-		m_y += static_cast<short>(axisY * speed);
-
-		m_x = std::clamp<short>(m_x, 0, WORLD_WIDTH - 1);
-		m_y = std::clamp<short>(m_y, 0, WORLD_HEIGHT - 1);
-
-		std::cout << "Player[" << m_id << "] moved to (" << m_x << ", " << m_y << ")\n";
+		//std::cout << "Player[" << m_id << "] moved to (" << m_x << ", " << m_y << ")\n";
 
 		//for (auto& cl : clients) {
 		//	if (cl.m_is_connected)
@@ -199,12 +189,10 @@ void SESSION::process_packet(unsigned char* p)
 		// 공격 요청 저장
 		CS_Attack* packet = reinterpret_cast<CS_Attack*>(p);
 
-		float aimX = packet->aimX;
-		float aimY = packet->aimY;
+		RoomManager::Instance().request_attack(m_id, packet->aimX, packet->aimY);
 
-		std::cout << "Player[" << m_id << "] attack dir: "
-			<< aimX << ", " << aimY << "\n";
-
+		//std::cout << "Player[" << m_id << "] attack dir: "
+		//	<< aimX << ", " << aimY << "\n";
 		break;
 	}
 	case CS_SKILL:
@@ -213,12 +201,10 @@ void SESSION::process_packet(unsigned char* p)
 		// 스킬 요청 저장
 		CS_Skill* packet = reinterpret_cast<CS_Skill*>(p);
 
-		int skillId = packet->skillId;
-		float aimX = packet->aimX;
-		float aimY = packet->aimY;
+		RoomManager::Instance().request_skill(m_id, packet->aimX, packet->aimY);
 
-		std::cout << "Player[" << m_id << "] skill[" << skillId << "] dir: "
-			<< aimX << ", " << aimY << "\n";
+		//std::cout << "Player[" << m_id << "] skill[" << skillId << "] dir: "
+		//	<< aimX << ", " << aimY << "\n";
 
 		break;
 	}
