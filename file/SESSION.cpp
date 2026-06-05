@@ -249,11 +249,15 @@ void SESSION::send_death(int dead_id, int killer_id)
 	do_send(packet.size, reinterpret_cast<char*>(&packet));
 }
 
-void SESSION::send_respawn(int player_id)
+void SESSION::send_respawn(int player_id, float x, float y, int hp)
 {
 	SC_Respawn packet;
 	packet.size = sizeof(SC_Respawn);
 	packet.type = SC_RESPAWN;
+	packet.player_id = player_id;
+	packet.x = x;
+	packet.y = y;
+	packet.hp = hp;
 
 	do_send(packet.size, reinterpret_cast<char*>(&packet));
 }

@@ -36,6 +36,7 @@ void RoomManager::update_room(Room& room)
 	if (!room.active) return;
 
 	update_ai(room);
+	update_respawns(room);
 	update_movement(room);
 	update_skills(room);
 	update_attacks(room);
@@ -779,6 +780,60 @@ void RoomManager::kill_player(Room& room, PlayerState& target, int killer_id)
 	}
 
 	std::cout << "[DEATH] player=" << target.id << "\n";
+}
+
+void RoomManager::update_respawns(Room& room)
+{
+	constexpr float DT = 0.016f;
+
+	for (int i = 0; i < room.player_count; ++i) {
+		PlayerState& player = room.states[i];
+
+		if (player.alive)
+			continue;
+
+		player.respawn_timer -= DT;
+
+		if (player.respawn_timer <= 0.0f) {
+			respawn_player(room, player);
+		}
+	}
+}
+
+void RoomManager::respawn_player(Room& room, PlayerState& player)
+{
+	player.alive = true;
+	player.hp = player.max_hp;
+
+	player.respawn_timer = 0.0f;
+
+	player.moveX = 0.0f;
+	player.moveY = 0.0f;
+
+	player.auto_attack = false;
+	player.skill_requested = false;
+
+	if (player.team == TEAM_RED) //현재는 임시 리스폰 위치 값
+	{
+		player.x = 50;
+		player.y = 200;
+	}
+	else
+	{
+		player.x = 350;
+		player.y = 200;
+	}
+
+	for (int i = 0; i < room.player_count; ++i) {
+		clients[room.players[i]].send_respawn(
+			player.id,
+			player.x,
+			player.y,
+			player.hp
+		);
+	}
+
+	std::cout << "[RESPAWN] player=" << player.id << "\n";
 }
 
 void RoomManager::update_ai(Room& room) {}

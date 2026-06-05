@@ -170,6 +170,8 @@ private:
 	PlayerState* find_player_state(Room& room, int player_id);
 
 	void kill_player(Room& room, PlayerState& target, int killer_id);
+	void update_respawns(Room& room);
+	void respawn_player(Room& room, PlayerState& player);
 
 	void apply_character_to_player(PlayerState& state, CharacterType character);
 

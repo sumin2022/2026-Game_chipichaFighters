@@ -146,6 +146,10 @@ struct SC_Death {
 struct SC_Respawn {
 	unsigned char size;
 	PACKET_TYPE type;
+	int player_id;
+	float x;
+	float y;
+	int hp;
 };
 
 struct SC_GameResult {
