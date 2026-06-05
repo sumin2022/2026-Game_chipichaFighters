@@ -30,7 +30,7 @@ public:
 	void process_packet(unsigned char* p);
 
 	void send_current_state();
-	void send_death(int player_id);
+	void send_death(int dead_id, int killer_id);
 	void send_respawn(int player_id);
 	void send_game_start();
 	void send_game_result();

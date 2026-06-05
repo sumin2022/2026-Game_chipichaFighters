@@ -238,11 +238,13 @@ void SESSION::send_game_start()
 	do_send(packet.size, reinterpret_cast<char*>(&packet));
 }
 
-void SESSION::send_death(int dead_player_id)
+void SESSION::send_death(int dead_id, int killer_id)
 {
 	SC_Death packet;
 	packet.size = sizeof(SC_Death);
 	packet.type = SC_DEATH;
+	packet.dead_id = dead_id;
+	packet.killer_id = killer_id;
 
 	do_send(packet.size, reinterpret_cast<char*>(&packet));
 }

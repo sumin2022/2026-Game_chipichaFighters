@@ -1,11 +1,13 @@
-#include <array>
 #pragma once
+#include <array>
+
 constexpr short PORT = 9000;
 constexpr int WORLD_WIDTH = 400;
 constexpr int WORLD_HEIGHT = 400;
 constexpr int MAX_PLAYERS = 18;
 constexpr int MAX_NAME_LEN = 20;
 constexpr int MAX_ROOM_AI = 6;
+constexpr int MAX_ROOM_PLAYERS = 6; // 원래 6명
 
 enum PACKET_TYPE : unsigned char {
 	CS_LOGIN, CS_MOVE, CS_ATTACK, CS_SKILL, CS_READY, 
@@ -30,6 +32,12 @@ enum CharacterType : unsigned char {
 	CHAR_ARCHER,
 	CHAR_TANKER,
 	CHAR_HEALER
+};
+
+enum TeamType : int {
+	TEAM_NONE = 0,
+	TEAM_RED = 1,
+	TEAM_BLUE = 2
 };
 
 #pragma pack(push, 1)
@@ -131,6 +139,8 @@ struct SC_CurrentState { //개인용
 struct SC_Death {
 	unsigned char size;
 	PACKET_TYPE type;
+	int dead_id;
+	int killer_id;
 };
 
 struct SC_Respawn {
@@ -170,6 +180,8 @@ struct SC_RoomEnter {
 	PACKET_TYPE type;
 	int room_id;
 	int player_count;
+	int player_ids[MAX_ROOM_PLAYERS];
+	int teams[MAX_ROOM_PLAYERS];
 };
 
 struct SC_CharacterSelected {

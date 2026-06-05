@@ -6,10 +6,11 @@
 #include "protocol.h"
 #include "Character.h"
 
-constexpr int MAX_ROOM_PLAYERS = 2; // 원래 6명
-
 struct PlayerState {
 	int id = -1;
+
+	TeamType team = TEAM_NONE;
+	float respawn_timer = 0.0f;
 
 	float x = 0.0f;
 	float y = 0.0f;
@@ -163,8 +164,12 @@ private:
 	void check_collisions(Room& room);
 	void send_room_snapshot(Room& room); //플렝이어 위치, 체력, 스킬 상태 등등 보내기 (여기서 맞나?)
 
+	bool is_same_team(const PlayerState& a, const PlayerState& b) const;
 	void enter_lobby(int room_id);
+	void assign_teams(Room& room);
 	PlayerState* find_player_state(Room& room, int player_id);
+
+	void kill_player(Room& room, PlayerState& target, int killer_id);
 
 	void apply_character_to_player(PlayerState& state, CharacterType character);
 
