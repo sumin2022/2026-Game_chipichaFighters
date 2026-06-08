@@ -36,10 +36,6 @@
 			"Enabled": true
 		},
 		{
-			"Name": "SoundMod",
-			"Enabled": true
-		},
-		{
 			"Name": "Spatialization",
 			"Enabled": true
 		},
@@ -49,10 +45,6 @@
 		},
 		{
 			"Name": "RigMapperOp",
-			"Enabled": true
-		},
-		{
-			"Name": "AudioModulation",
 			"Enabled": true
 		},
 		{
