@@ -121,6 +121,9 @@ struct NetPlayerState {
 
 	bool alive;
 	CharacterType character;
+
+	int kill_count;	//킬뎃 실시간 적용?
+	int death_count; 
 };
 
 struct SC_RoomSnapshot { //방전체 용
@@ -128,6 +131,9 @@ struct SC_RoomSnapshot { //방전체 용
 	PACKET_TYPE type;
 
 	int count;
+	int red_score;
+	int blue_score;
+	float time_left;
 	NetPlayerState players[MAX_ROOM_AI];
 };
 
@@ -155,6 +161,15 @@ struct SC_Respawn {
 struct SC_GameResult {
 	unsigned char size;
 	PACKET_TYPE type;
+
+	int red_score;
+	int blue_score;
+	TeamType winner_team;
+
+	int player_count; //테스트 용 1~6명 변경시 테스팅에 사용
+	int player_ids[MAX_ROOM_PLAYERS];
+	int kills[MAX_ROOM_PLAYERS];
+	int deaths[MAX_ROOM_PLAYERS];
 };
 
 struct SC_GameStart {

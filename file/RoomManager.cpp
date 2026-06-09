@@ -35,6 +35,15 @@ void RoomManager::update_room(Room& room)
 {
 	if (!room.active) return;
 
+	constexpr float DT = 0.016f;
+
+	room.score.update(room, DT);
+
+	if (room.score.is_time_over()) {
+		end_room(room);
+		return;
+	}
+
 	update_ai(room);
 	update_respawns(room);
 	update_movement(room);
@@ -774,6 +783,12 @@ void RoomManager::kill_player(Room& room, PlayerState& target, int killer_id)
 	target.auto_attack = false;
 	target.skill_requested = false;
 	target.respawn_timer = 5.0f; // 임시 리스폰 시간
+	target.death_count++;
+
+	PlayerState* killer = find_player_state(room, killer_id);
+	if (killer != nullptr && killer->id != target.id) {
+		killer->kill_count++;
+	}
 
 	for (int i = 0; i < room.player_count; ++i) {
 		clients[room.players[i]].send_death(target.id, killer_id);
@@ -836,6 +851,57 @@ void RoomManager::respawn_player(Room& room, PlayerState& player)
 	std::cout << "[RESPAWN] player=" << player.id << "\n";
 }
 
+void RoomManager::send_room_snapshot(Room& room) 
+{
+	SC_RoomSnapshot packet;
+	packet.size = sizeof(SC_RoomSnapshot);
+	packet.type = SC_ROOM_SNAPSHOT;
+	packet.count = room.player_count;
+
+	for (int i = 0; i < room.player_count; ++i) {
+		PlayerState& p = room.states[i];
+
+		packet.players[i].player_id = p.id;
+		packet.players[i].x = p.x;
+		packet.players[i].y = p.y;
+		packet.players[i].hp = p.hp;
+		packet.players[i].max_hp = p.max_hp;
+		packet.players[i].alive = p.alive;
+		packet.players[i].character = p.character;
+		packet.red_score = room.score.get_red_score();
+		packet.blue_score = room.score.get_blue_score();
+		packet.time_left = room.score.get_time_left();
+		//킬뎃 실시간 적용?
+		packet.players[i].kill_count = p.kill_count;
+		packet.players[i].death_count = p.death_count;
+	}
+
+	broadcast_room(room.room_id, reinterpret_cast<char*>(&packet), packet.size);
+}
+
+void RoomManager::end_room(Room& room)
+{
+	if (room.state == RoomState::ENDED) return;
+
+	room.state = RoomState::ENDED;
+	room.active = false;
+
+	SC_GameResult packet;
+	room.score.make_result(room, packet);
+
+	broadcast_room(room.room_id, reinterpret_cast<char*>(&packet), packet.size);
+
+	for (int i = 0; i < room.player_count; ++i) {
+		int pid = room.players[i];
+		if (pid == -1) continue;
+
+		clients[pid].m_in_game = false;
+		clients[pid].m_room_id = -1;
+		m_player_room.erase(pid);
+	}
+
+	m_rooms.erase(room.room_id);
+}
+
 void RoomManager::update_ai(Room& room) {}
 void RoomManager::check_collisions(Room& room) {}
-void RoomManager::send_room_snapshot(Room& room) {}

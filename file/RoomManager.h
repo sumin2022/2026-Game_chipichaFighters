@@ -5,6 +5,7 @@
 #include <mutex>
 #include "protocol.h"
 #include "Character.h"
+#include "Score.h"
 
 struct PlayerState {
 	int id = -1;
@@ -27,6 +28,9 @@ struct PlayerState {
 	float move_speed = 300.0f;
 
 	bool alive = true;
+
+	int kill_count = 0;
+	int death_count = 0;
 
 	float moveX = 0.0f;
 	float moveY = 0.0f;
@@ -64,6 +68,7 @@ struct Room {
 	int room_id = -1; // room ¹øÈ£ : 1, 2, 3 ...? 
 	RoomState state = RoomState::MATCHING;
 	bool active = false;
+	ScoreManager score;
 
 	std::array<int, MAX_ROOM_PLAYERS> players;
 	std::array<PlayerState, MAX_ROOM_PLAYERS> states;
@@ -174,6 +179,8 @@ private:
 	void respawn_player(Room& room, PlayerState& player);
 
 	void apply_character_to_player(PlayerState& state, CharacterType character);
+
+	void end_room(Room& room);
 
 	std::unordered_map<int, Room> m_rooms;
 	std::unordered_map<int, int> m_player_room;

@@ -24,6 +24,7 @@
     <ClCompile Include="file\DBLogin.cpp" />
     <ClCompile Include="file\main.cpp" />
     <ClCompile Include="file\RoomManager.cpp" />
+    <ClCompile Include="file\Score.cpp" />
     <ClCompile Include="file\ServerMain.cpp" />
     <ClCompile Include="file\SESSION.cpp" />
   </ItemGroup>
@@ -34,6 +35,7 @@
     <ClInclude Include="file\ExpOver.h" />
     <ClInclude Include="file\protocol.h" />
     <ClInclude Include="file\RoomManager.h" />
+    <ClInclude Include="file\Score.h" />
     <ClInclude Include="file\ServerMain.h" />
     <ClInclude Include="file\SESSION.h" />
   </ItemGroup>
