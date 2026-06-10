@@ -419,11 +419,17 @@ void RoomManager::update_attacks(Room& room)
 	for (int i = 0; i < room.player_count; ++i) {
 		PlayerState& attacker = room.states[i];
 
-		if (!attacker.alive) continue;
-		if (!attacker.auto_attack) continue;
+		if (!attacker.alive) {
+			attacker.current_target_id = -1;
+			continue;
+		}
+
+		if (!attacker.auto_attack) {
+			attacker.current_target_id = -1;
+			continue;
+		}
 
 		attacker.attack_timer = (std::max)(0.0f, attacker.attack_timer - DT);
-		if (attacker.attack_timer > 0.0f) continue;
 
 		PlayerState* target = nullptr;
 		float bestDistSq = attacker.attack_range * attacker.attack_range;
@@ -458,7 +464,10 @@ void RoomManager::update_attacks(Room& room)
 			target = &enemy;
 		}
 
+		attacker.current_target_id = target ? target->id : -1;
+
 		if (target == nullptr) continue;
+		if (attacker.attack_timer > 0.0f) continue;
 
 		attacker.last_attack_target = target->id;
 
@@ -878,6 +887,7 @@ void RoomManager::send_room_snapshot(Room& room)
 		packet.players[i].y = p.y;
 		packet.players[i].faceX = p.faceX;
 		packet.players[i].faceY = p.faceY;
+		packet.players[i].current_target_id = p.current_target_id;
 		packet.players[i].hp = p.hp;
 		packet.players[i].max_hp = p.max_hp;
 		packet.players[i].alive = p.alive;

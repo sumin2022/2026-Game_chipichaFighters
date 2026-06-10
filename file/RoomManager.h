@@ -49,6 +49,7 @@ struct PlayerState {
 	float attack_timer = 0.0f;       // 기본 공격 쿨타임 진행 상태
 	float skill_timer = 0.0f;        // 스킬 쿨타임 진행 상태
 
+	int current_target_id = -1; // 클라 표시용
 	int last_attack_target = -1;     // 마지막으로 공격한 대상
 	float last_damaged_time = 0.0f;  // 마지막으로 피해받은 시간
 

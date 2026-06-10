@@ -138,6 +138,8 @@ struct NetPlayerState {
 
 	int kill_count;	//킬뎃 실시간 적용?
 	int death_count; 
+
+	int current_target_id = -1; // 클라 표시용
 };
 
 struct SC_RoomSnapshot { //방전체 용
