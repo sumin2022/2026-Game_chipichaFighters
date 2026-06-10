@@ -1,0 +1,45 @@
+#
+* text=auto
+
+# UE file types
+*.uasset filter=lfs merge=lfs -text lockable
+*.umap filter=lfs merge=lfs -text lockable
+*.uexp filter=lfs merge=lfs -text lockable
+*.ubulk filter=lfs merge=lfs -text lockable
+
+# 3D model types
+*.fbx filter=lfs merge=lfs -text lockable
+*.3ds filter=lfs merge=lfs -text lockable
+*.vox filter=lfs merge=lfs -text lockable
+
+# Image types
+*.psd filter=lfs merge=lfs -text lockable
+*.png filter=lfs merge=lfs -text lockable
+*.jpg filter=lfs merge=lfs -text lockable
+*.xcf filter=lfs merge=lfs -text lockable
+*.tga filter=lfs merge=lfs -text lockable
+*.bmp filter=lfs merge=lfs -text lockable
+*.tif filter=lfs merge=lfs -text lockable
+*.hdr filter=lfs merge=lfs -text lockable
+*.exr filter=lfs merge=lfs -text lockable
+
+# Audio types
+*.mp3 filter=lfs merge=lfs -text lockable
+*.wav filter=lfs merge=lfs -text lockable
+*.bank filter=lfs merge=lfs -text lockable
+
+# Video types
+*.mp4 filter=lfs merge=lfs -text lockable
+
+# Font types
+*.ttf filter=lfs merge=lfs -text
+*.otf filter=lfs merge=lfs -text
+
+# Misc binary
+*.tmp filter=lfs merge=lfs -text
+
+# Libraries and executables
+*.a filter=lfs merge=lfs -text
+*.lib filter=lfs merge=lfs -text
+*.exe filter=lfs merge=lfs -text
+*.zip filter=lfs merge=lfs -text
