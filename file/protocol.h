@@ -14,6 +14,7 @@ enum PACKET_TYPE : unsigned char {
 
 	CS_SELECT_CHARACTER,
 	CS_GAME_READY,
+	CS_FACE_DIR,
 
 	SC_LOGIN_RESULT, SC_AVATAR_INFO,SC_ADD_PLAYER,
 	 SC_REMOVE_PLAYER, SC_MOVE_PLAYER,  SC_NETPLAYERSTATE, SC_DEATH, 
@@ -55,6 +56,14 @@ struct CS_Move {
 	float axisY;   // -1.0 ~ 1.0
 };
 
+struct CS_FaceDir {
+	unsigned char size;
+	PACKET_TYPE type;
+
+	float faceX;
+	float faceY;
+};
+
 struct SC_LoginResult {
 	unsigned char size;
 	PACKET_TYPE type;
@@ -93,12 +102,13 @@ struct SC_AvatarInfo {
 	short y;
 };
 
+// 공격 방향은 플레이어의 faceX, faceY로 대체하기로 함
 struct CS_Attack {
 	unsigned char size;
 	PACKET_TYPE type;
 
-	float aimX; // 공격 방향 x
-	float aimY; // 공격 방향 y
+	//float aimX; // 공격 방향 x
+	//float aimY; // 공격 방향 y
 };
 
 struct CS_Skill {
@@ -106,15 +116,19 @@ struct CS_Skill {
 	PACKET_TYPE type;
 
 	short skillId;
-	float aimX;
-	float aimY;
+	//float aimX;
+	//float aimY;
 };
+//-------------------------------
 
 struct NetPlayerState {
 	int player_id;
 
 	float x;
 	float y;
+
+	float faceX; 
+	float faceY; 
 
 	int hp;
 	int max_hp;

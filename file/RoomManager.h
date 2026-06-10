@@ -40,8 +40,6 @@ struct PlayerState {
 
 	bool auto_attack = false;
 	bool skill_requested = false;
-	float skillAimX = 1.0f;
-	float skillAimY = 0.0f;
 
 	CharacterType character = CHAR_NONE;
 	AttackType attack_type = AttackType::NONE;
@@ -149,8 +147,10 @@ public:
 	void set_lobby_ready(int player_id, bool ready);
 
 	void set_move_input(int player_id, float axisX, float axisY);
-	void request_attack(int player_id, float aimX, float aimY);
-	void request_skill(int player_id, float aimX, float aimY);
+	void request_attack(int player_id);
+	void request_skill(int player_id);
+
+	void set_face_dir(int player_id, float faceX, float faceY);
 
 private:
 	RoomManager() = default;

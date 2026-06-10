@@ -183,13 +183,27 @@ void SESSION::process_packet(unsigned char* p)
 		// 나중에 방에	있는 플레이어한테만 보내도록 수정하기
 		break;
 	}
+	case CS_FACE_DIR:
+	{
+		if (!m_in_game) return;
+
+		CS_FaceDir* packet = reinterpret_cast<CS_FaceDir*>(p);
+
+		RoomManager::Instance().set_face_dir(
+			m_id,
+			packet->faceX,
+			packet->faceY
+		);
+
+		break;
+	}
 	case CS_ATTACK:
 	{
 		if (!m_in_game) return;
 		// 공격 요청 저장
 		CS_Attack* packet = reinterpret_cast<CS_Attack*>(p);
 
-		RoomManager::Instance().request_attack(m_id, packet->aimX, packet->aimY);
+		RoomManager::Instance().request_attack(m_id);
 
 		//std::cout << "Player[" << m_id << "] attack dir: "
 		//	<< aimX << ", " << aimY << "\n";
@@ -201,7 +215,7 @@ void SESSION::process_packet(unsigned char* p)
 		// 스킬 요청 저장
 		CS_Skill* packet = reinterpret_cast<CS_Skill*>(p);
 
-		RoomManager::Instance().request_skill(m_id, packet->aimX, packet->aimY);
+		RoomManager::Instance().request_skill(m_id);
 
 		//std::cout << "Player[" << m_id << "] skill[" << skillId << "] dir: "
 		//	<< aimX << ", " << aimY << "\n";

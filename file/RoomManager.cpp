@@ -400,8 +400,8 @@ void RoomManager::update_movement(Room& room)
 			p.x += dx * p.move_speed * DT;
 			p.y += dy * p.move_speed * DT;
 
-			p.faceX = dx;
-			p.faceY = dy;
+			//p.faceX = dx;
+			//p.faceY = dy;
 		}
 
 		p.x = std::clamp(p.x, 0.0f, static_cast<float>(WORLD_WIDTH - 1));
@@ -476,7 +476,7 @@ void RoomManager::update_attacks(Room& room)
 	}
 }
 
-void RoomManager::request_attack(int player_id, float aimX, float aimY) 
+void RoomManager::request_attack(int player_id) 
 {
 	auto it = m_player_room.find(player_id);
 	if (it == m_player_room.end()) return;
@@ -484,12 +484,6 @@ void RoomManager::request_attack(int player_id, float aimX, float aimY)
 	Room& room = m_rooms[it->second];
 	PlayerState* state = find_player_state(room, player_id);
 	if (state == nullptr) return;
-
-	float len = sqrtf(aimX * aimX + aimY * aimY);
-	if (len > 0.0f) {
-		state->faceX = aimX / len;
-		state->faceY = aimY / len;
-	}
 
 	state->auto_attack = true;
 }
@@ -518,7 +512,7 @@ void RoomManager::set_move_input(int player_id, float axisX, float axisY)
 	}
 }
 
-void RoomManager::request_skill(int player_id, float aimX, float aimY)
+void RoomManager::request_skill(int player_id)
 {
 	auto it = m_player_room.find(player_id);
 	if (it == m_player_room.end()) return;
@@ -535,12 +529,30 @@ void RoomManager::request_skill(int player_id, float aimX, float aimY)
 			PlayerState& state = room.states[i];
 
 			state.skill_requested = true;
-			state.skillAimX = aimX;
-			state.skillAimY = aimY;
-
 			return;
 		}
 	}
+}
+
+void RoomManager::set_face_dir(int player_id, float faceX, float faceY)
+{
+	auto it = m_player_room.find(player_id);
+	if (it == m_player_room.end()) return;
+
+	auto room_it = m_rooms.find(it->second);
+	if (room_it == m_rooms.end()) return;
+
+	Room& room = room_it->second;
+
+	PlayerState* state = find_player_state(room, player_id);
+	if (state == nullptr) return;
+	if (!state->alive) return;
+
+	float len = sqrtf(faceX * faceX + faceY * faceY);
+	if (len <= 0.0f) return;
+
+	state->faceX = faceX / len;
+	state->faceY = faceY / len;
 }
 
 //스킬 판정시 거리 계산용
@@ -628,8 +640,8 @@ void RoomManager::update_skills(Room& room)
 			// 방향으로 화살 판정
 			// skill.penetration_damage, skill.range 사용
 			// 방향으로 관통 화살 판정
-			float dirX = caster.skillAimX;
-			float dirY = caster.skillAimY;
+			float dirX = caster.faceX;
+			float dirY = caster.faceY;
 
 			float len = sqrtf(dirX * dirX + dirY * dirY);
 			if (len <= 0.0f) {
@@ -724,8 +736,8 @@ void RoomManager::update_skills(Room& room)
 			// 방향 사거리 위치에 장판 생성 후 범위 힐
 			// skill.heal, skill.range, skill.heal_area_range 사용
 			// 방향 사거리 위치에 장판 생성 후 범위 힐
-			float dirX = caster.skillAimX;
-			float dirY = caster.skillAimY;
+			float dirX = caster.faceX;
+			float dirY = caster.faceY;
 
 			float len = sqrtf(dirX * dirX + dirY * dirY);
 			if (len <= 0.0f) {
@@ -864,6 +876,8 @@ void RoomManager::send_room_snapshot(Room& room)
 		packet.players[i].player_id = p.id;
 		packet.players[i].x = p.x;
 		packet.players[i].y = p.y;
+		packet.players[i].faceX = p.faceX;
+		packet.players[i].faceY = p.faceY;
 		packet.players[i].hp = p.hp;
 		packet.players[i].max_hp = p.max_hp;
 		packet.players[i].alive = p.alive;
