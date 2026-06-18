@@ -21,15 +21,19 @@ public class TestZone : ModuleRules
             "Niagara",
             "UMG",
             "Slate",
-                    "MetasoundEngine",
-    "MetasoundFrontend",
-    "AudioMixer"
+            "MetasoundEngine",
+            "MetasoundFrontend",
+            "AudioMixer",
+            "Sockets"
         });
 
     PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
 
     PublicIncludePaths.AddRange(new string[] {
             "TestZone",
+            "TestZone/Test_CodeSet",
+            "TestZone/Network",
+            "TestZone/Gameplay",
             "TestZone/Variant_Strategy",
             "TestZone/Variant_Strategy/UI",
             "TestZone/Variant_TwinStick",
