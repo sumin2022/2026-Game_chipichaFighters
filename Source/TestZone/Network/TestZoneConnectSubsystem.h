@@ -12,9 +12,13 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "TestZoneConnectSubsystem.generated.h"
 
-
 UENUM(BlueprintType)
-enum struct EConnectResult : uint8 { Success, Failure, Timeout, InvalidAddress };
+enum struct EConnectResult : uint8 {
+  Success,
+  Failure,
+  Timeout,
+  InvalidAddress
+};
 
 UENUM(BlueprintType)
 enum struct ECharacterType : uint8 { None, Dealer, Archer, Tanker, Healer };
@@ -137,20 +141,20 @@ public:
   void SendLogin(FString const &Username, FString const &Password);
 
   UFUNCTION(BlueprintCallable, Category = "TestZone|Network")
-  void SendMove(float axisX, float axisY){}
+  void SendMove(float axisX, float axisY) {}
   UFUNCTION(BlueprintCallable, Category = "TestZone|Network")
-  void SendFaceDirection(float axisX, float axisY){}
+  void SendFaceDirection(float axisX, float axisY) {}
   UFUNCTION(BlueprintCallable, Category = "TestZone|Network")
-  void SendAttack(){}
+  void SendAttack() {}
   UFUNCTION(BlueprintCallable, Category = "TestZone|Network")
-  void SendSkill(int32 skillId){}
+  void SendSkill(int32 skillId) {}
   UFUNCTION(BlueprintCallable, Category = "TestZone|Network")
-  void SendReady(){}
+  void SendReady() {}
 
   UFUNCTION(BlueprintCallable, Category = "TestZone|Network")
-  void SendSelectCharacter(ECharacterType characterId){}
+  void SendSelectCharacter(ECharacterType characterId) {}
   UFUNCTION(BlueprintCallable, Category = "TestZone|Network")
-  void SendGameReady(bool ready){}
+  void SendGameReady(bool ready) {}
 
   UPROPERTY(BlueprintAssignable, Category = "TestZone|Network")
   FOnLoginResult OnLoginResult;
@@ -162,6 +166,15 @@ public:
   FOnRemovePlayer OnRemovePlayer;
 
   UPROPERTY(BlueprintAssignable, Category = "TestZone|Network")
+  FOnMovePlayer OnMovePlayer;
+
+  UPROPERTY(BlueprintAssignable, Category = "TestZone|Network")
+  FOnAvatarInfo OnAvatarInfo;
+
+  UPROPERTY(BlueprintAssignable, Category = "TestZone|Network")
+  FOnRoomSnapshot OnRoomSnapshot;
+
+  UPROPERTY(BlueprintAssignable, Category = "TestZone|Network")
   FOnCurrentState OnCurrentState;
 
   UPROPERTY(BlueprintAssignable, Category = "TestZone|Network")
@@ -171,11 +184,28 @@ public:
   FOnRespawn OnRespawn;
 
   UPROPERTY(BlueprintAssignable, Category = "TestZone|Network")
+  FOnGameResult OnGameResult;
+
+  UPROPERTY(BlueprintAssignable, Category = "TestZone|Network")
+  FOnGameStart OnGameStart;
+
+  UPROPERTY(BlueprintAssignable, Category = "TestZone|Network")
+  FOnRoomEnter OnRoomEnter;
+
+  UPROPERTY(BlueprintAssignable, Category = "TestZone|Network")
   FOnCharacterSelected OnCharacterSelect;
 
   UPROPERTY(BlueprintAssignable, Category = "TestZone|Network")
   FOnLobbyReadyState OnLobbyReadyState;
 
+  UFUNCTION(BlueprintCallable, Category = "TestZone|Network")
+  void ReceiveLoop();
+
 protected:
+  TSharedPtr<FInternetAddr> ServerAddress;
   FSocket *Socket;
+  std::array<uint8, 4096> RecvBuffer;
+  size_t RecvStart;
+  size_t RecvEnd;
+
 };
