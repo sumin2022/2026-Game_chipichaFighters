@@ -27,7 +27,7 @@ void UTestZoneConnectSubsystem::ReceiveLoop() {
 
   // 소켓이 닫히거나 복구 불가능한 오류가 발생할 경우 false 반환, 넌블럭킹
   bool bNotExceptional = Socket->Recv(pRecvBuffer, RemainBytes, BytesRead,
-                                      ESocketReceiveFlags::Peek);
+                                      ESocketReceiveFlags::None);
   if (not bNotExceptional) {
     UE_LOG(LogTemp, Error, TEXT("closed socket or unrecuverable error"));
     return;
@@ -181,7 +181,8 @@ void UTestZoneConnectSubsystem::ReceiveLoop() {
       break;
     }
     default: {
-      UE_LOG(LogTemp, Error, TEXT("Unknown packet type: %d %d"), Header->type, Header->size);
+      UE_LOG(LogTemp, Error, TEXT("Unknown packet type: %d %d"), Header->type,
+             Header->size);
       RecvStart += Header->size;
       break;
     }
@@ -223,10 +224,13 @@ EConnectResult UTestZoneConnectSubsystem::ConnectToServer(FString IPAddress,
   if (not Socket) {
     return EConnectResult::Failure;
   }
-
+  
+  Socket->SetNoDelay(true);
   bool const Connected = Socket->Connect(*ServerAddress);
   if (Connected) {
-
+    // Socket->SetNonBlocking(true);
+    RecvStart = 0;
+    RecvEnd = 0;
     return EConnectResult::Success;
   } else {
     ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->DestroySocket(Socket);
@@ -244,11 +248,11 @@ void UTestZoneConnectSubsystem::SendLogin(FString const &Username,
   CS_Login LoginPacket;
 
   // Copy the username and password into the packet
-
+  FMemory::Memzero(LoginPacket.username, sizeof(LoginPacket.username));
   auto res =
       FCStringAnsi::Strncpy(LoginPacket.username, TCHAR_TO_ANSI(*Username),
                             sizeof(LoginPacket.username));
-  LoginPacket.size += (res - LoginPacket.username);
+  LoginPacket.size = 1 + sizeof(TZPacketHeader) + strlen(LoginPacket.username);
   // FCStringAnsi::Strncpy(LoginPacket.password, TCHAR_TO_ANSI(*Password),
   //                       sizeof(LoginPacket.password));
 
@@ -256,6 +260,107 @@ void UTestZoneConnectSubsystem::SendLogin(FString const &Username,
   bool const bSuccess =
       Socket->Send((uint8 *)&LoginPacket, LoginPacket.size, BytesSent);
   if (not bSuccess || BytesSent != LoginPacket.size) {
-    UE_LOG(LogTemp, Error, TEXT("Failed to send login packet"));
+    UE_LOG(LogTemp, Error, TEXT("Failed to send login packet %d %d %d"),
+           BytesSent, sizeof(LoginPacket), LoginPacket.size);
+    UE_LOG(LogTemp, Error, TEXT("login packet %d %d %hs"), LoginPacket.size,
+           LoginPacket.type, LoginPacket.username);
+  }
+
+  UE_LOG(LogTemp, Error, TEXT("send login packet %d %d %d %hs"),
+         (res - LoginPacket.username), LoginPacket.size, LoginPacket.type,
+         LoginPacket.username);
+}
+
+void UTestZoneConnectSubsystem::SendMove(float axisX, float axisY) {
+  if (not Socket) {
+    return;
+  }
+  CS_Move MovePacket;
+  MovePacket.axisX = axisX;
+  MovePacket.axisY = axisY;
+  int32 BytesSent = 0;
+  bool const bSuccess =
+      Socket->Send((uint8 *)&MovePacket, sizeof(MovePacket), BytesSent);
+  if (not bSuccess || BytesSent != sizeof(MovePacket)) {
+    UE_LOG(LogTemp, Error, TEXT("Failed to send move packet"));
+  }
+}
+void UTestZoneConnectSubsystem::SendFaceDirection(float axisX, float axisY) {
+  if (not Socket) {
+    return;
+  }
+  CS_FaceDir FaceDirectionPacket;
+  FaceDirectionPacket.faceX = axisX;
+  FaceDirectionPacket.faceY = axisY;
+  int32 BytesSent = 0;
+  bool const bSuccess = Socket->Send((uint8 *)&FaceDirectionPacket,
+                                     sizeof(FaceDirectionPacket), BytesSent);
+  if (not bSuccess || BytesSent != sizeof(FaceDirectionPacket)) {
+    UE_LOG(LogTemp, Error, TEXT("Failed to send face direction packet"));
+  }
+}
+void UTestZoneConnectSubsystem::SendAttack() {
+  if (not Socket) {
+    return;
+  }
+  CS_Attack AttackPacket;
+  int32 BytesSent = 0;
+  bool const bSuccess =
+      Socket->Send((uint8 *)&AttackPacket, sizeof(AttackPacket), BytesSent);
+  if (not bSuccess || BytesSent != sizeof(AttackPacket)) {
+    UE_LOG(LogTemp, Error, TEXT("Failed to send attack packet"));
+  }
+}
+void UTestZoneConnectSubsystem::SendSkill(int32 skillId) {
+  if (not Socket) {
+    return;
+  }
+  CS_Skill SkillPacket;
+  SkillPacket.skillId = skillId;
+  int32 BytesSent = 0;
+  bool const bSuccess =
+      Socket->Send((uint8 *)&SkillPacket, sizeof(SkillPacket), BytesSent);
+  if (not bSuccess || BytesSent != sizeof(SkillPacket)) {
+    UE_LOG(LogTemp, Error, TEXT("Failed to send skill packet"));
+  }
+}
+void UTestZoneConnectSubsystem::SendReady() {
+  if (not Socket) {
+    return;
+  }
+  CS_Ready ReadyPacket;
+  int32 BytesSent = 0;
+  bool const bSuccess =
+      Socket->Send((uint8 *)&ReadyPacket, sizeof(ReadyPacket), BytesSent);
+  if (not bSuccess || BytesSent != sizeof(ReadyPacket)) {
+    UE_LOG(LogTemp, Error, TEXT("Failed to send ready packet"));
+  }
+}
+void UTestZoneConnectSubsystem::SendSelectCharacter(
+    ECharacterType characterId) {
+  if (not Socket) {
+    return;
+  }
+  CS_SelectCharacter SelectCharacterPacket;
+  int const temp = static_cast<int>(characterId);
+  SelectCharacterPacket.character = static_cast<CharacterType>(temp);
+  int32 BytesSent = 0;
+  bool const bSuccess = Socket->Send((uint8 *)&SelectCharacterPacket,
+                                     sizeof(SelectCharacterPacket), BytesSent);
+  if (not bSuccess || BytesSent != sizeof(SelectCharacterPacket)) {
+    UE_LOG(LogTemp, Error, TEXT("Failed to send select character packet"));
+  }
+}
+void UTestZoneConnectSubsystem::SendGameReady(bool ready) {
+  if (not Socket) {
+    return;
+  }
+  CS_GameReady GameReadyPacket;
+  GameReadyPacket.ready = ready;
+  int32 BytesSent = 0;
+  bool const bSuccess = Socket->Send((uint8 *)&GameReadyPacket,
+                                     sizeof(GameReadyPacket), BytesSent);
+  if (not bSuccess || BytesSent != sizeof(GameReadyPacket)) {
+    UE_LOG(LogTemp, Error, TEXT("Failed to send game ready packet"));
   }
 }

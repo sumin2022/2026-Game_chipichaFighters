@@ -141,20 +141,20 @@ public:
   void SendLogin(FString const &Username, FString const &Password);
 
   UFUNCTION(BlueprintCallable, Category = "TestZone|Network")
-  void SendMove(float axisX, float axisY) {}
+  void SendMove(float axisX, float axisY);
   UFUNCTION(BlueprintCallable, Category = "TestZone|Network")
-  void SendFaceDirection(float axisX, float axisY) {}
+  void SendFaceDirection(float axisX, float axisY);
   UFUNCTION(BlueprintCallable, Category = "TestZone|Network")
-  void SendAttack() {}
+  void SendAttack();
   UFUNCTION(BlueprintCallable, Category = "TestZone|Network")
-  void SendSkill(int32 skillId) {}
+  void SendSkill(int32 skillId);
   UFUNCTION(BlueprintCallable, Category = "TestZone|Network")
-  void SendReady() {}
+  void SendReady();
 
   UFUNCTION(BlueprintCallable, Category = "TestZone|Network")
-  void SendSelectCharacter(ECharacterType characterId) {}
+  void SendSelectCharacter(ECharacterType characterId);
   UFUNCTION(BlueprintCallable, Category = "TestZone|Network")
-  void SendGameReady(bool ready) {}
+  void SendGameReady(bool ready);
 
   UPROPERTY(BlueprintAssignable, Category = "TestZone|Network")
   FOnLoginResult OnLoginResult;
