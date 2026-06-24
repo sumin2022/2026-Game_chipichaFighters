@@ -1,197 +1,186 @@
 #pragma once
-#include <unordered_map>
-#include <array>
-#include <vector>
-#include <mutex>
-#include "protocol.h"
 #include "Character.h"
 #include "Score.h"
+#include "protocol.h"
+#include <array>
+#include <mutex>
+#include <unordered_map>
+#include <vector>
+
 
 struct PlayerState {
-	int id = -1;
+  int id = -1;
 
-	TeamType team = TEAM_NONE;
-	float respawn_timer = 0.0f;
+  TeamType team = TEAM_NONE;
+  float respawn_timer = 0.0f;
 
-	float x = 0.0f;
-	float y = 0.0f;
+  float x = 0.0f;
+  float y = 0.0f;
 
-	int hp = 100;
-	int max_hp = 100;
+  int hp = 100;
+  int max_hp = 100;
 
-	int mp = 0;
-	int max_mp = 0;
+  int mp = 0;
+  int max_mp = 0;
 
-	int attack_damage = 10;
-	float attack_cooldown = 1.0f;
-	float attack_range = 150.0f;
-	float move_speed = 300.0f;
+  int attack_damage = 10;
+  float attack_cooldown = 1.0f;
+  float attack_range = 150.0f;
+  float move_speed = 300.0f;
 
-	bool alive = true;
+  bool alive = true;
 
-	int kill_count = 0;
-	int death_count = 0;
+  int kill_count = 0;
+  int death_count = 0;
 
-	float moveX = 0.0f;
-	float moveY = 0.0f;
+  float moveX = 0.0f;
+  float moveY = 0.0f;
 
-	float faceX = 1.0f;
-	float faceY = 0.0f;
+  float faceX = 1.0f;
+  float faceY = 0.0f;
 
-	bool auto_attack = false;
-	bool skill_requested = false;
+  bool auto_attack = false;
+  bool skill_requested = false;
 
-	CharacterType character = CHAR_NONE;
-	AttackType attack_type = AttackType::NONE;
-	SkillType active_skill = SkillType::NONE;
-	PassiveType passive_skill = PassiveType::NONE;
+  CharacterType character = CHAR_NONE;
+  AttackType attack_type = AttackType::NONE;
+  SkillType active_skill = SkillType::NONE;
+  PassiveType passive_skill = PassiveType::NONE;
 
-	float attack_timer = 0.0f;       // ±âº» °ø°İ ÄğÅ¸ÀÓ ÁøÇà »óÅÂ
-	float skill_timer = 0.0f;        // ½ºÅ³ ÄğÅ¸ÀÓ ÁøÇà »óÅÂ
+  float attack_timer = 0.0f; // ê¸°ë³¸ ê³µê²© ì¿¨íƒ€ì„ ì§„í–‰ ìƒíƒœ
+  float skill_timer = 0.0f;  // ìŠ¤í‚¬ ì¿¨íƒ€ì„ ì§„í–‰ ìƒíƒœ
 
-	int current_target_id = -1; // Å¬¶ó Ç¥½Ã¿ë
-	int last_attack_target = -1;     // ¸¶Áö¸·À¸·Î °ø°İÇÑ ´ë»ó
-	float last_damaged_time = 0.0f;  // ¸¶Áö¸·À¸·Î ÇÇÇØ¹ŞÀº ½Ã°£
+  int current_target_id = -1;     // í´ë¼ í‘œì‹œìš©
+  int last_attack_target = -1;    // ë§ˆì§€ë§‰ìœ¼ë¡œ ê³µê²©í•œ ëŒ€ìƒ
+  float last_damaged_time = 0.0f; // ë§ˆì§€ë§‰ìœ¼ë¡œ í”¼í•´ë°›ì€ ì‹œê°„
 
-	bool lobby_ready = false;
+  bool lobby_ready = false;
 };
 
-enum class RoomState {
-	MATCHING,
-	LOBBY,
-	INGAME,
-	ENDED
-};
+enum class RoomState { MATCHING, LOBBY, INGAME, ENDED };
 
 struct Room {
-	int room_id = -1; // room ¹øÈ£ : 1, 2, 3 ...? 
-	RoomState state = RoomState::MATCHING;
-	bool active = false;
-	ScoreManager score;
+  int room_id = -1; // room ë²ˆí˜¸ : 1, 2, 3 ...?
+  RoomState state = RoomState::MATCHING;
+  bool active = false;
+  ScoreManager score;
 
-	std::array<int, MAX_ROOM_PLAYERS> players;
-	std::array<PlayerState, MAX_ROOM_PLAYERS> states;
-	int player_count = 0;
+  std::array<int, MAX_ROOM_PLAYERS> players;
+  std::array<PlayerState, MAX_ROOM_PLAYERS> states;
+  int player_count = 0;
 
-	Room()
-	{
-		players.fill(-1);
-	}
+  Room() { players.fill(-1); }
 
-	bool add_player(int player_id)
-	{
-		if (player_count >= MAX_ROOM_PLAYERS) return false;
-		for (int i = 0; i < player_count; ++i) {
-			if (players[i] == player_id) return false;
-		}
+  bool add_player(int player_id) {
+    if (player_count >= MAX_ROOM_PLAYERS)
+      return false;
+    for (int i = 0; i < player_count; ++i) {
+      if (players[i] == player_id)
+        return false;
+    }
 
-		players[player_count] = player_id;
+    players[player_count] = player_id;
 
-		states[player_count].id = player_id;
-		states[player_count].hp = 100;
-		states[player_count].alive = true;
+    states[player_count].id = player_id;
+    states[player_count].hp = 100;
+    states[player_count].alive = true;
 
-		++player_count;
-		return true;
-	}
+    ++player_count;
+    return true;
+  }
 
-	void remove_player(int player_id)
-	{
-		for (int i = 0; i < player_count; ++i) {
-			if (players[i] == player_id) {
-				players[i] = players[player_count - 1];
-				states[i] = states[player_count - 1];
+  void remove_player(int player_id) {
+    for (int i = 0; i < player_count; ++i) {
+      if (players[i] == player_id) {
+        players[i] = players[player_count - 1];
+        states[i] = states[player_count - 1];
 
-				players[player_count - 1] = -1;
-				states[player_count - 1] = PlayerState{};
-				--player_count;
-				return;
-			}
-		}
-	}
+        players[player_count - 1] = -1;
+        states[player_count - 1] = PlayerState{};
+        --player_count;
+        return;
+      }
+    }
+  }
 
-	bool is_full() const
-	{
-		return player_count >= MAX_ROOM_PLAYERS;
-	}
+  bool is_full() const { return player_count >= MAX_ROOM_PLAYERS; }
 
-	bool all_ready() const
-	{
-		if (player_count < MAX_ROOM_PLAYERS) return false;
+  bool all_ready() const {
+    if (player_count < MAX_ROOM_PLAYERS)
+      return false;
 
-		for (int i = 0; i < player_count; ++i) {
-			if (states[i].character == CHAR_NONE) return false;
-			if (!states[i].lobby_ready) return false;
-		}
+    for (int i = 0; i < player_count; ++i) {
+      if (states[i].character == CHAR_NONE)
+        return false;
+      if (!states[i].lobby_ready)
+        return false;
+    }
 
-		return true;
-	}
+    return true;
+  }
 };
 
 class RoomManager {
 public:
-	static RoomManager& Instance()
-	{
-		static RoomManager instance;
-		return instance;
-	}
+  static RoomManager &Instance() {
+    static RoomManager instance;
+    return instance;
+  }
 
-	void request_matchmaking(int player_id);
-	bool join_room(int room_id, int player_id);
-	void leave_room(int player_id);
-	void start_room(int room_id);
+  void request_matchmaking(int player_id);
+  bool join_room(int room_id, int player_id);
+  void leave_room(int player_id);
+  void start_room(int room_id);
 
-	void broadcast_room(int room_id, char* packet, int size);
-	void update_all_rooms();
+  void broadcast_room(int room_id, char *packet, int size);
+  void update_all_rooms();
 
-	void select_character(int player_id, CharacterType character);
-	void set_lobby_ready(int player_id, bool ready);
+  void select_character(int player_id, CharacterType character);
+  void set_lobby_ready(int player_id, bool ready);
 
-	void set_move_input(int player_id, float axisX, float axisY);
-	void request_attack(int player_id);
-	void request_skill(int player_id);
+  void set_move_input(int player_id, float axisX, float axisY);
+  void request_attack(int player_id);
+  void request_skill(int player_id);
 
-	void set_face_dir(int player_id, float faceX, float faceY);
+  void set_face_dir(int player_id, float faceX, float faceY);
 
 private:
-	RoomManager() = default;
+  RoomManager() = default;
 
-	RoomManager(const RoomManager&) = delete;
-	RoomManager& operator=(const RoomManager&) = delete;
+  RoomManager(const RoomManager &) = delete;
+  RoomManager &operator=(const RoomManager &) = delete;
 
-	void process_pending_requests();
+  void process_pending_requests();
 
-	void update_room(Room& room);
+  void update_room(Room &room);
 
-	void update_ai(Room& room);
-	void update_movement(Room& room);
-	void update_skills(Room& room);
-	void update_attacks(Room& room);
-	void check_collisions(Room& room);
-	void send_room_snapshot(Room& room); //ÇÃ·ÀÀÌ¾î À§Ä¡, Ã¼·Â, ½ºÅ³ »óÅÂ µîµî º¸³»±â (¿©±â¼­ ¸Â³ª?)
+  void update_ai(Room &room);
+  void update_movement(Room &room);
+  void update_skills(Room &room);
+  void update_attacks(Room &room);
+  void check_collisions(Room &room);
+  void send_room_snapshot(
+      Room &room); // í”Œë ì´ì–´ ìœ„ì¹˜, ì²´ë ¥, ìŠ¤í‚¬ ìƒíƒœ ë“±ë“± ë³´ë‚´ê¸° (ì—¬ê¸°ì„œ ë§ë‚˜?)
 
-	bool is_same_team(const PlayerState& a, const PlayerState& b) const;
-	void enter_lobby(int room_id);
-	void assign_teams(Room& room);
-	PlayerState* find_player_state(Room& room, int player_id);
+  bool is_same_team(const PlayerState &a, const PlayerState &b) const;
+  void enter_lobby(int room_id);
+  void assign_teams(Room &room);
+  PlayerState *find_player_state(Room &room, int player_id);
 
-	void kill_player(Room& room, PlayerState& target, int killer_id);
-	void update_respawns(Room& room);
-	void respawn_player(Room& room, PlayerState& player);
+  void kill_player(Room &room, PlayerState &target, int killer_id);
+  void update_respawns(Room &room);
+  void respawn_player(Room &room, PlayerState &player);
 
-	void apply_character_to_player(PlayerState& state, CharacterType character);
+  void apply_character_to_player(PlayerState &state, CharacterType character);
 
-	void end_room(Room& room);
+  void end_room(Room &room);
 
-	std::unordered_map<int, Room> m_rooms;
-	std::unordered_map<int, int> m_player_room;
+  std::unordered_map<int, Room> m_rooms;
+  std::unordered_map<int, int> m_player_room;
 
-	int m_next_room_id = 1;
+  int m_next_room_id = 1;
 
-	std::mutex m_request_mutex;
-	std::vector<int> m_match_requests; // ¸ÅÄª¿äÃ»´ë±â¾÷
-	std::vector<int> m_leave_requests; // ÅğÀå ¿äÃ» ´ë±â¾÷
+  std::mutex m_request_mutex;
+  std::vector<int> m_match_requests; // ë§¤ì¹­ìš”ì²­ëŒ€ê¸°ì—…
+  std::vector<int> m_leave_requests; // í‡´ì¥ ìš”ì²­ ëŒ€ê¸°ì—…
 };
-
-
-

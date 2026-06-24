@@ -21,7 +21,9 @@
   <ItemGroup>
     <ClCompile Include="file\Character.cpp" />
     <ClCompile Include="file\Common.cpp" />
-    <ClCompile Include="file\DBLogin.cpp" />
+    <ClCompile Include="file\DBLogin.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="file\main.cpp" />
     <ClCompile Include="file\RoomManager.cpp" />
     <ClCompile Include="file\Score.cpp" />
@@ -31,7 +33,9 @@
   <ItemGroup>
     <ClInclude Include="file\Character.h" />
     <ClInclude Include="file\Common.h" />
-    <ClInclude Include="file\DBLogin.h" />
+    <ClInclude Include="file\DBLogin.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="file\ExpOver.h" />
     <ClInclude Include="file\protocol.h" />
     <ClInclude Include="file\RoomManager.h" />
@@ -128,12 +132,13 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\Program Files\MySQL\MySQL Server 9.5\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>stdclatest</LanguageStandard_C>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>C:\Program Files\MySQL\MySQL Server 9.5\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalOptions>libmysql.lib %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -156,14 +161,14 @@
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="packages\inteltbb.redist.win.2022.3.1.401\build\native\inteltbb.redist.win.targets" Condition="Exists('packages\inteltbb.redist.win.2022.3.1.401\build\native\inteltbb.redist.win.targets')" />
-    <Import Project="packages\inteltbb.devel.win.2022.3.1.401\build\native\inteltbb.devel.win.targets" Condition="Exists('packages\inteltbb.devel.win.2022.3.1.401\build\native\inteltbb.devel.win.targets')" />
+    <Import Project="packages\inteltbb.redist.win.2023.0.0.716\build\native\inteltbb.redist.win.targets" Condition="Exists('packages\inteltbb.redist.win.2023.0.0.716\build\native\inteltbb.redist.win.targets')" />
+    <Import Project="packages\inteltbb.devel.win.2023.0.0.716\build\native\inteltbb.devel.win.targets" Condition="Exists('packages\inteltbb.devel.win.2023.0.0.716\build\native\inteltbb.devel.win.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>이 프로젝트는 이 컴퓨터에 없는 NuGet 패키지를 참조합니다. 해당 패키지를 다운로드하려면 NuGet 패키지 복원을 사용하십시오. 자세한 내용은 http://go.microsoft.com/fwlink/?LinkID=322105를 참조하십시오. 누락된 파일은 {0}입니다.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('packages\inteltbb.redist.win.2022.3.1.401\build\native\inteltbb.redist.win.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\inteltbb.redist.win.2022.3.1.401\build\native\inteltbb.redist.win.targets'))" />
-    <Error Condition="!Exists('packages\inteltbb.devel.win.2022.3.1.401\build\native\inteltbb.devel.win.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\inteltbb.devel.win.2022.3.1.401\build\native\inteltbb.devel.win.targets'))" />
+    <Error Condition="!Exists('packages\inteltbb.redist.win.2023.0.0.716\build\native\inteltbb.redist.win.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\inteltbb.redist.win.2023.0.0.716\build\native\inteltbb.redist.win.targets'))" />
+    <Error Condition="!Exists('packages\inteltbb.devel.win.2023.0.0.716\build\native\inteltbb.devel.win.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\inteltbb.devel.win.2023.0.0.716\build\native\inteltbb.devel.win.targets'))" />
   </Target>
 </Project>

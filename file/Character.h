@@ -2,79 +2,79 @@
 #include "protocol.h"
 
 enum class AttackType {
-    NONE,
-	DEALER, //±Ùµô·¯
-	ARCHER, //¾ÆÃ³
-    TANKER, // ÅÊÄ¿
-	HEALER  //Èú·¯
+  NONE,
+  DEALER, // ê·¼ë”œëŸ¬
+  ARCHER, // ì•„ì²˜
+  TANKER, // íƒ±ì»¤
+  HEALER  // íëŸ¬
 };
 
 enum class SkillType {
-    NONE,
-    DEALER_SKILL,
-	ARCHER_SKILL,
-    TANKER_SKILL,
-	HEALER_SKILL
+  NONE,
+  DEALER_SKILL,
+  ARCHER_SKILL,
+  TANKER_SKILL,
+  HEALER_SKILL
 };
 
 enum class PassiveType {
-    NONE,
-    DEALER_PASSIVE,
-    ARCHER_PASSIVE,
-    TANKER_PASSIVE,
-    HEALER_PASSIVE
+  NONE,
+  DEALER_PASSIVE,
+  ARCHER_PASSIVE,
+  TANKER_PASSIVE,
+  HEALER_PASSIVE
 };
 
 struct SkillStats {
-	SkillType type = SkillType::NONE;          // ¾î¶² Ä³¸¯ÅÍ ½ºÅ³ÀÎÁö ±¸ºĞ
+  SkillType type = SkillType::NONE; // ì–´ë–¤ ìºë¦­í„° ìŠ¤í‚¬ì¸ì§€ êµ¬ë¶„
 
-	int damage = 0;                            // ½ºÅ³ ±âº» ÇÇÇØ·®
-	int extra_damage = 0;                      // Ãß°¡ ÇÇÇØ·®
+  int damage = 0;       // ìŠ¤í‚¬ ê¸°ë³¸ í”¼í•´ëŸ‰
+  int extra_damage = 0; // ì¶”ê°€ í”¼í•´ëŸ‰
 
-	float cooldown = 0.0f;                     // ½ºÅ³ ÄğÅ¸ÀÓ
-	float stun_duration = 0.0f;                // ±âÀı ½Ã°£
-	float range = 0.0f;                        // ½ºÅ³ »ç°Å¸®
-	float mana_cost = 0.0f;                    // ¸¶³ª »ç¿ë·®
+  float cooldown = 0.0f;      // ìŠ¤í‚¬ ì¿¨íƒ€ì„
+  float stun_duration = 0.0f; // ê¸°ì ˆ ì‹œê°„
+  float range = 0.0f;         // ìŠ¤í‚¬ ì‚¬ê±°ë¦¬
+  float mana_cost = 0.0f;     // ë§ˆë‚˜ ì‚¬ìš©ëŸ‰
 
-	float penetration_damage = 0.0f;           // ¿ø°Å¸® °üÅë ±âº» ÇÇÇØ·®
-	float damage_reduce_per_hit = 0.0f;        // °üÅë ½Ã ÀûÁßÇÒ ¶§¸¶´Ù ÇÇÇØ °¨¼ÒÀ²
+  float penetration_damage = 0.0f;    // ì›ê±°ë¦¬ ê´€í†µ ê¸°ë³¸ í”¼í•´ëŸ‰
+  float damage_reduce_per_hit = 0.0f; // ê´€í†µ ì‹œ ì ì¤‘í•  ë•Œë§ˆë‹¤ í”¼í•´ ê°ì†Œìœ¨
 
-	int heal = 0;                              // Ä¡À¯·®
-	float heal_area_range = 0.0f;              // Ä¡À¯ ÀåÆÇ ¹üÀ§
+  int heal = 0;                 // ì¹˜ìœ ëŸ‰
+  float heal_area_range = 0.0f; // ì¹˜ìœ  ì¥íŒ ë²”ìœ„
 
-	float dealer_area_range = 0.0f;            // ±ÙÁ¢ µô·¯ ÁÖº¯ ÇÇÇØ ¹üÀ§
+  float dealer_area_range = 0.0f; // ê·¼ì ‘ ë”œëŸ¬ ì£¼ë³€ í”¼í•´ ë²”ìœ„
 };
 
 struct PassiveStats {
-	PassiveType type = PassiveType::NONE;      // ¾î¶² Ä³¸¯ÅÍ ÆĞ½ÃºêÀÎÁö ±¸ºĞ
+  PassiveType type = PassiveType::NONE; // ì–´ë–¤ ìºë¦­í„° íŒ¨ì‹œë¸Œì¸ì§€ êµ¬ë¶„
 
-	float lifesteal_rate = 0.0f;               // ÅÊÄ¿ ÈíÇ÷ ºñÀ²
-	float reflect_damage = 0.0f;               // ±ÙÁ¢ µô·¯ ÇÇÇØ ¹İ»ç·®
+  float lifesteal_rate = 0.0f; // íƒ±ì»¤ í¡í˜ˆ ë¹„ìœ¨
+  float reflect_damage = 0.0f; // ê·¼ì ‘ ë”œëŸ¬ í”¼í•´ ë°˜ì‚¬ëŸ‰
 
-	float attack_speed_buff_duration = 0.0f;   // ¿ø°Å¸® µô·¯ °ø¼Ó Áõ°¡ Áö¼Ó½Ã°£
-	float attack_cooldown_reduce = 0.0f;       // ¿ø°Å¸® µô·¯ °ø¼Ó Áõ°¡·®
+  float attack_speed_buff_duration = 0.0f; // ì›ê±°ë¦¬ ë”œëŸ¬ ê³µì† ì¦ê°€ ì§€ì†ì‹œê°„
+  float attack_cooldown_reduce = 0.0f;     // ì›ê±°ë¦¬ ë”œëŸ¬ ê³µì† ì¦ê°€ëŸ‰
 
-	float self_heal_rate = 0.0f;               // Èú·¯: ¾Æ±º Ä¡À¯·® ´ëºñ ÀÚ°¡ Ä¡À¯ ºñÀ²
+  float self_heal_rate = 0.0f; // íëŸ¬: ì•„êµ° ì¹˜ìœ ëŸ‰ ëŒ€ë¹„ ìê°€ ì¹˜ìœ  ë¹„ìœ¨
 };
 
 struct CharacterStats {
-	CharacterType type = CHAR_NONE;            // Ä³¸¯ÅÍ Á¾·ù
+  CharacterType type = CHAR_NONE; // ìºë¦­í„° ì¢…ë¥˜
 
-	int max_hp = 100;                          // ÃÖ´ë Ã¼·Â
-	int max_mp = 0;                            // ÃÖ´ë ¸¶³ª
+  int max_hp = 100; // ìµœëŒ€ ì²´ë ¥
+  int max_mp = 0;   // ìµœëŒ€ ë§ˆë‚˜
 
-	int attack_damage = 10;                    // ±âº» °ø°İ·Â
-	float attack_cooldown = 1.0f;              // ±âº» °ø°İ¼Óµµ, ¸î ÃÊ¸¶´Ù ÇÑ ¹ø °ø°İ °¡´ÉÇÑÁö
-	float attack_range = 150.0f;               // ±âº» °ø°İ »ç°Å¸®
-	float move_speed = 300.0f;                 // ÃÊ´ç ÀÌµ¿°Å¸®
+  int attack_damage = 10;       // ê¸°ë³¸ ê³µê²©ë ¥
+  float attack_cooldown = 1.0f; // ê¸°ë³¸ ê³µê²©ì†ë„, ëª‡ ì´ˆë§ˆë‹¤ í•œ ë²ˆ ê³µê²© ê°€ëŠ¥í•œì§€
+  float attack_range = 150.0f;  // ê¸°ë³¸ ê³µê²© ì‚¬ê±°ë¦¬
+  float move_speed = 300.0f;    // ì´ˆë‹¹ ì´ë™ê±°ë¦¬
 
-	AttackType attack_type = AttackType::NONE; // ±âº» °ø°İ Å¸ÀÔ
+  AttackType attack_type = AttackType::NONE; // ê¸°ë³¸ ê³µê²© íƒ€ì…
 
-	SkillStats skill;                          // Ä³¸¯ÅÍ ½ºÅ³ Á¤º¸
-	PassiveStats passive;                      // Ä³¸¯ÅÍ ÆĞ½Ãºê Á¤º¸
+  SkillStats skill;     // ìºë¦­í„° ìŠ¤í‚¬ ì •ë³´
+  PassiveStats passive; // ìºë¦­í„° íŒ¨ì‹œë¸Œ ì •ë³´
 };
 
 class CharacterManager {
 public:
-    static const CharacterStats& GetStats(CharacterType type);
+  static const CharacterStats &GetStats(CharacterType type);
 };

@@ -1,22 +1,30 @@
-#define _CRT_SECURE_NO_WARNINGS // ±¸Çü C ÇÔ¼ö »ç¿ë ½Ã °æ°í ²ô±â
-#define _WINSOCK_DEPRECATED_NO_WARNINGS // ±¸Çü ¼ÒÄÏ API »ç¿ë ½Ã °æ°í ²ô±â
+#define _CRT_SECURE_NO_WARNINGS         // êµ¬í˜• C í•¨ìˆ˜ ì‚¬ìš© ì‹œ ê²½ê³  ë„ê¸°
+#define _WINSOCK_DEPRECATED_NO_WARNINGS // êµ¬í˜• ì†Œì¼“ API ì‚¬ìš© ì‹œ ê²½ê³  ë„ê¸°
 
-#include <winsock2.h> // À©¼Ó2 ¸ŞÀÎ Çì´õ
-#include <ws2tcpip.h> // À©¼Ó2 È®Àå Çì´õ
+
+
+// winsock2
+#include <winsock2.h> // ìœˆì†2 ë©”ì¸ í—¤ë”
+#include <ws2tcpip.h> // ìœˆì†2 í™•ì¥ í—¤ë”
+
+
+// windows
 #include <windows.h>
+
+// legacy header order
 #include <MSWSock.h>
 
-#include <tchar.h> // _T(), ...
-#include <stdio.h> // printf(), ...
-#include <stdlib.h> // exit(), ...
-#include <string.h> // strncpy(), ...
 #include <atomic>
 #include <iostream>
+#include <stdio.h>  // printf(), ...
+#include <stdlib.h> // exit(), ...
+#include <string.h> // strncpy(), ...
+#include <tchar.h>  // _T(), ...
+
 
 #pragma comment(lib, "MSWSock.lib")
 #pragma comment(lib, "WS2_32.lib")
 
-void err_quit(const char* msg);
-void err_display(const char* msg);
+void err_quit(const char *msg);
+void err_display(const char *msg);
 void err_display(int errcode);
-

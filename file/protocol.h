@@ -7,230 +7,238 @@ constexpr int WORLD_HEIGHT = 400;
 constexpr int MAX_PLAYERS = 18;
 constexpr int MAX_NAME_LEN = 20;
 constexpr int MAX_ROOM_AI = 6;
-constexpr int MAX_ROOM_PLAYERS = 6; // ø¯∑° 6∏Ì
+constexpr int MAX_ROOM_PLAYERS = 6; // ÏõêÎûò 6Î™Ö
 
 enum PACKET_TYPE : unsigned char {
-	CS_LOGIN, CS_MOVE, CS_ATTACK, CS_SKILL, CS_READY, 
+  CS_LOGIN,
+  CS_MOVE,
+  CS_ATTACK,
+  CS_SKILL,
+  CS_READY,
 
-	CS_SELECT_CHARACTER,
-	CS_GAME_READY,
-	CS_FACE_DIR,
+  CS_SELECT_CHARACTER,
+  CS_GAME_READY,
+  CS_FACE_DIR,
 
-	SC_LOGIN_RESULT, SC_AVATAR_INFO,SC_ADD_PLAYER,
-	 SC_REMOVE_PLAYER, SC_MOVE_PLAYER,  SC_NETPLAYERSTATE, SC_DEATH, 
-	 SC_RESPAWN, SC_GAME_RESULT,SC_GAME_START, SC_ROOM_SNAPSHOT,
+  SC_LOGIN_RESULT,
+  SC_AVATAR_INFO,
+  SC_ADD_PLAYER,
+  SC_REMOVE_PLAYER,
+  SC_MOVE_PLAYER,
+  SC_NETPLAYERSTATE,
+  SC_DEATH,
+  SC_RESPAWN,
+  SC_GAME_RESULT,
+  SC_GAME_START,
+  SC_ROOM_SNAPSHOT,
 
-	 SC_ROOM_ENTER,
-	 SC_CHARACTER_SELECTED,
-	 SC_LOBBY_READY_STATE
+  SC_ROOM_ENTER,
+  SC_CHARACTER_SELECTED,
+  SC_LOBBY_READY_STATE
 
 };
-enum DIRECTION {UP,DOWN,LEFT,RIGHT};
+enum DIRECTION { UP, DOWN, LEFT, RIGHT };
 
 enum CharacterType : unsigned char {
-	CHAR_NONE = 0,
-	CHAR_DEALER,
-	CHAR_ARCHER,
-	CHAR_TANKER,
-	CHAR_HEALER
+  CHAR_NONE = 0,
+  CHAR_DEALER,
+  CHAR_ARCHER,
+  CHAR_TANKER,
+  CHAR_HEALER
 };
 
-enum TeamType : int {
-	TEAM_NONE = 0,
-	TEAM_RED = 1,
-	TEAM_BLUE = 2
-};
+enum TeamType : int { TEAM_NONE = 0, TEAM_RED = 1, TEAM_BLUE = 2 };
 
 #pragma pack(push, 1)
 
 struct CS_Login {
-	unsigned char size;
-	PACKET_TYPE type;
-	char username[MAX_NAME_LEN];
+  unsigned char size;
+  PACKET_TYPE type;
+  char username[MAX_NAME_LEN];
 };
 
 struct CS_Move {
-	unsigned char size;
-	PACKET_TYPE type;
-	float axisX;   // -1.0 ~ 1.0
-	float axisY;   // -1.0 ~ 1.0
+  unsigned char size;
+  PACKET_TYPE type;
+  float axisX; // -1.0 ~ 1.0
+  float axisY; // -1.0 ~ 1.0
 };
 
 struct CS_FaceDir {
-	unsigned char size;
-	PACKET_TYPE type;
+  unsigned char size;
+  PACKET_TYPE type;
 
-	float faceX;
-	float faceY;
+  float faceX;
+  float faceY;
 };
 
 struct SC_LoginResult {
-	unsigned char size;
-	PACKET_TYPE type;
-	bool success;
-	char message[50];
+  unsigned char size;
+  PACKET_TYPE type;
+  bool success;
+  char message[50];
 };
 
 struct SC_AddPlayer {
-	unsigned char size;
-	PACKET_TYPE   type;
-	int playerId;
-	char username[MAX_NAME_LEN];
-	short x;
-	short y;
+  unsigned char size;
+  PACKET_TYPE type;
+  int playerId;
+  char username[MAX_NAME_LEN];
+  short x;
+  short y;
 };
 
 struct SC_RemovePlayer {
-	unsigned char size;
-	PACKET_TYPE type;
-	int playerid;
+  unsigned char size;
+  PACKET_TYPE type;
+  int playerid;
 };
 
 struct SC_MovePlayer {
-	unsigned char size;
-	PACKET_TYPE   type;
-	int playerId;
-	short x;
-	short y;
+  unsigned char size;
+  PACKET_TYPE type;
+  int playerId;
+  short x;
+  short y;
 };
 
 struct SC_AvatarInfo {
-	unsigned char size;
-	PACKET_TYPE   type;
-	int playerId;
-	short x;
-	short y;
+  unsigned char size;
+  PACKET_TYPE type;
+  int playerId;
+  short x;
+  short y;
 };
 
-// ∞¯∞› πÊ«‚¿∫ «√∑π¿ÃæÓ¿« faceX, faceY∑Œ ¥Î√º«œ±‚∑Œ «‘
+// Í≥µÍ≤© Î∞©Ìñ•ÏùÄ ÌîåÎ†àÏù¥Ïñ¥Ïùò faceX, faceYÎ°ú ÎåÄÏ≤¥ÌïòÍ∏∞Î°ú Ìï®
 struct CS_Attack {
-	unsigned char size;
-	PACKET_TYPE type;
+  unsigned char size;
+  PACKET_TYPE type;
 
-	//float aimX; // ∞¯∞› πÊ«‚ x
-	//float aimY; // ∞¯∞› πÊ«‚ y
+  // float aimX; // Í≥µÍ≤© Î∞©Ìñ• x
+  // float aimY; // Í≥µÍ≤© Î∞©Ìñ• y
 };
 
 struct CS_Skill {
-	unsigned char size;
-	PACKET_TYPE type;
+  unsigned char size;
+  PACKET_TYPE type;
 
-	short skillId;
-	//float aimX;
-	//float aimY;
+  short skillId;
+  // float aimX;
+  // float aimY;
 };
 //-------------------------------
 
 struct NetPlayerState {
-	int player_id;
+  int player_id;
 
-	float x;
-	float y;
+  float x;
+  float y;
 
-	float faceX; 
-	float faceY; 
+  float faceX;
+  float faceY;
 
-	int hp;
-	int max_hp;
+  int hp;
+  int max_hp;
 
-	bool alive;
-	CharacterType character;
+  bool alive;
+  CharacterType character;
 
-	int kill_count;	//≈≥µ´ Ω«Ω√∞£ ¿˚øÎ?
-	int death_count; 
+  int kill_count; // ÌÇ¨ÎéÉ Ïã§ÏãúÍ∞Ñ Ï†ÅÏö©?
+  int death_count;
 
-	int current_target_id = -1; // ≈¨∂Û «•Ω√øÎ
+  int current_target_id = -1; // ÌÅ¥Îùº ÌëúÏãúÏö©
 };
 
-struct SC_RoomSnapshot { //πÊ¿¸√º øÎ
-	unsigned char size;
-	PACKET_TYPE type;
+struct SC_RoomSnapshot { // Î∞©Ï†ÑÏ≤¥ Ïö©
+  unsigned char size;
+  PACKET_TYPE type;
 
-	int count;
-	int red_score;
-	int blue_score;
-	float time_left;
-	NetPlayerState players[MAX_ROOM_AI];
+  int count;
+  int red_score;
+  int blue_score;
+  float time_left;
+  NetPlayerState players[MAX_ROOM_AI];
 };
 
-struct SC_CurrentState { //∞≥¿ŒøÎ
-	unsigned char size;
-	PACKET_TYPE type;
+struct SC_CurrentState { // Í∞úÏù∏Ïö©
+  unsigned char size;
+  PACKET_TYPE type;
 };
 
 struct SC_Death {
-	unsigned char size;
-	PACKET_TYPE type;
-	int dead_id;
-	int killer_id;
+  unsigned char size;
+  PACKET_TYPE type;
+  int dead_id;
+  int killer_id;
 };
 
 struct SC_Respawn {
-	unsigned char size;
-	PACKET_TYPE type;
-	int player_id;
-	float x;
-	float y;
-	int hp;
+  unsigned char size;
+  PACKET_TYPE type;
+  int player_id;
+  float x;
+  float y;
+  int hp;
 };
 
 struct SC_GameResult {
-	unsigned char size;
-	PACKET_TYPE type;
+  unsigned char size;
+  PACKET_TYPE type;
 
-	int red_score;
-	int blue_score;
-	TeamType winner_team;
+  int red_score;
+  int blue_score;
+  TeamType winner_team;
 
-	int player_count; //≈◊Ω∫∆Æ øÎ 1~6∏Ì ∫Ø∞ÊΩ√ ≈◊Ω∫∆√ø° ªÁøÎ
-	int player_ids[MAX_ROOM_PLAYERS];
-	int kills[MAX_ROOM_PLAYERS];
-	int deaths[MAX_ROOM_PLAYERS];
+  int player_count; // ÌÖåÏä§Ìä∏ Ïö© 1~6Î™Ö Î≥ÄÍ≤ΩÏãú ÌÖåÏä§ÌåÖÏóê ÏÇ¨Ïö©
+  int player_ids[MAX_ROOM_PLAYERS];
+  int kills[MAX_ROOM_PLAYERS];
+  int deaths[MAX_ROOM_PLAYERS];
 };
 
 struct SC_GameStart {
-	unsigned char size;
-	PACKET_TYPE type;
+  unsigned char size;
+  PACKET_TYPE type;
 };
 
 struct CS_Ready {
-	unsigned char size;
-	PACKET_TYPE type;
+  unsigned char size;
+  PACKET_TYPE type;
 };
 
 struct CS_SelectCharacter {
-	unsigned char size;
-	PACKET_TYPE type;
-	CharacterType character;
+  unsigned char size;
+  PACKET_TYPE type;
+  CharacterType character;
 };
 
 struct CS_GameReady {
-	unsigned char size;
-	PACKET_TYPE type;
-	bool ready;
+  unsigned char size;
+  PACKET_TYPE type;
+  bool ready;
 };
 
 struct SC_RoomEnter {
-	unsigned char size;
-	PACKET_TYPE type;
-	int room_id;
-	int player_count;
-	int player_ids[MAX_ROOM_PLAYERS];
-	int teams[MAX_ROOM_PLAYERS];
+  unsigned char size;
+  PACKET_TYPE type;
+  int room_id;
+  int player_count;
+  int player_ids[MAX_ROOM_PLAYERS];
+  int teams[MAX_ROOM_PLAYERS];
 };
 
 struct SC_CharacterSelected {
-	unsigned char size;
-	PACKET_TYPE type;
-	int player_id;
-	CharacterType character;
+  unsigned char size;
+  PACKET_TYPE type;
+  int player_id;
+  CharacterType character;
 };
 
 struct SC_LobbyReadyState {
-	unsigned char size;
-	PACKET_TYPE type;
-	int player_id;
-	bool ready;
+  unsigned char size;
+  PACKET_TYPE type;
+  int player_id;
+  bool ready;
 };
 
 #pragma pack(pop)

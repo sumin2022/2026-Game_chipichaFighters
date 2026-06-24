@@ -1,6 +1,6 @@
 #include "DBLogin.h"
 #include <iostream>
-
+/*
 DBLogin::DBLogin() {
         conn = nullptr;
 }
@@ -83,3 +83,4 @@ bool DBLogin::LoginUser(std::string id, std::string pw)
     std::cout << "Password incorrect\n";
     return false;
 }
+*/

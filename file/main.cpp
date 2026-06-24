@@ -1,20 +1,19 @@
-#include "ServerMain.h"
 #include "Common.h"
-
-int main()
-{
-    ServerMain server;
-
-    if (!server.InitServer(9000)) {
-        printf("InitServer() ½ÇÆĞ\n");
-        return 1;
-    }
-
-    printf("[TCP ¼­¹ö] ÃÊ±âÈ­ ¿Ï·á. Å¬¶óÀÌ¾ğÆ® Á¢¼Ó ´ë±â Áß...\n");
-    //server.AcceptClient();   // ¿©±â¼­ accept() + NetThread »ı¼º
-
-    server.Run();
+#include "ServerMain.h"
 
 
-    return 0;
+int main() {
+  ServerMain server;
+
+  if (!server.InitServer(9000)) {
+    printf("InitServer() ì‹¤íŒ¨\n");
+    return 1;
+  }
+
+  printf("[TCP ì„œë²„] ì´ˆê¸°í™” ì™„ë£Œ. í´ë¼ì´ì–¸íŠ¸ ì ‘ì† ëŒ€ê¸° ì¤‘...\n");
+  // server.AcceptClient();   // ì—¬ê¸°ì„œ accept() + NetThread ìƒì„±
+
+  server.Run();
+
+  return 0;
 }

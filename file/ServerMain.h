@@ -17,7 +17,7 @@ public:
 	void HandleRecv(int player_index, DWORD num_bytes, EXP_OVER* exp_over);
 	void HandleSend(EXP_OVER* exp_over, int player_index);
 	void DisconnectClient(int player_index);
-	void CleanupServer();
+    void CleanupServer() {}
 	void Run();
 
 private:
