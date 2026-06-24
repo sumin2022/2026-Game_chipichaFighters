@@ -228,7 +228,7 @@ EConnectResult UTestZoneConnectSubsystem::ConnectToServer(FString IPAddress,
   Socket->SetNoDelay(true);
   bool const Connected = Socket->Connect(*ServerAddress);
   if (Connected) {
-    // Socket->SetNonBlocking(true);
+    Socket->SetNonBlocking(true);
     RecvStart = 0;
     RecvEnd = 0;
     return EConnectResult::Success;
