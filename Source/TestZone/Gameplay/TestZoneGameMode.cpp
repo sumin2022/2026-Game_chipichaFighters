@@ -2,7 +2,3 @@
 
 #include "TestZoneGameMode.h"
 
-ATestZoneGameMode::ATestZoneGameMode()
-{
-	// stub
-}

@@ -33,13 +33,7 @@ public class TestZone : ModuleRules
             "TestZone",
             "TestZone/Test_CodeSet",
             "TestZone/Network",
-            "TestZone/Gameplay",
-            "TestZone/Variant_Strategy",
-            "TestZone/Variant_Strategy/UI",
-            "TestZone/Variant_TwinStick",
-            "TestZone/Variant_TwinStick/AI",
-            "TestZone/Variant_TwinStick/Gameplay",
-            "TestZone/Variant_TwinStick/UI"
+            "TestZone/Gameplay"
         });
 
     // Uncomment if you are using Slate UI

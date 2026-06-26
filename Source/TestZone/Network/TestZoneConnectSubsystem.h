@@ -67,6 +67,10 @@ struct FNetPlayerState {
   int32 CurrentTargetId;
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FTZOnDisconnected, //
+                                             EConnectResult, EDisconnectResult,
+                                             FString const &, Message);
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnLoginResult, //
                                              bool, bSuccess, FString const &,
                                              Message);
@@ -157,6 +161,9 @@ public:
   void SendGameReady(bool ready);
 
   UPROPERTY(BlueprintAssignable, Category = "TestZone|Network")
+  FTZOnDisconnected TZOnDisconnected;
+
+  UPROPERTY(BlueprintAssignable, Category = "TestZone|Network")
   FOnLoginResult OnLoginResult;
 
   UPROPERTY(BlueprintAssignable, Category = "TestZone|Network")
@@ -207,5 +214,4 @@ protected:
   std::array<uint8, 4096> RecvBuffer;
   size_t RecvStart;
   size_t RecvEnd;
-
 };

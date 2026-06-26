@@ -17,9 +17,7 @@ class ATestZoneGameMode : public AGameModeBase
 	GENERATED_BODY()
 
 public:
-
-	/** Constructor */
-	ATestZoneGameMode();
+	
 };
 
 

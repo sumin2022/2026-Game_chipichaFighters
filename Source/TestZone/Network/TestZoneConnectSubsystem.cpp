@@ -30,6 +30,10 @@ void UTestZoneConnectSubsystem::ReceiveLoop() {
                                       ESocketReceiveFlags::None);
   if (not bNotExceptional) {
     UE_LOG(LogTemp, Error, TEXT("closed socket or unrecuverable error"));
+    int a = 10;
+    TZOnDisconnected.Broadcast(
+        EConnectResult::Failure,
+        FString::Printf(TEXT("closed socket or unrecuverable error, %d"), a));
     return;
   }
 
@@ -224,7 +228,7 @@ EConnectResult UTestZoneConnectSubsystem::ConnectToServer(FString IPAddress,
   if (not Socket) {
     return EConnectResult::Failure;
   }
-  
+
   Socket->SetNoDelay(true);
   bool const Connected = Socket->Connect(*ServerAddress);
   if (Connected) {

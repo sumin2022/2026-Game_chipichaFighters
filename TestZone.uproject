@@ -7,7 +7,7 @@
 		{
 			"Name": "TestZone",
 			"Type": "Runtime",
-			"LoadingPhase": "Default",
+			"LoadingPhase": "PreDefault",
 			"AdditionalDependencies": [
 				"MetasoundEngine",
 				"Engine"

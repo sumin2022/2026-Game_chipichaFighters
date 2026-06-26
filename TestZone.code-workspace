@@ -2,20 +2,11 @@
 	"folders": [
 		{
 			"name": "TestZone",
-			"path": "D:/repo/2026/TestZone"
+			"path": "."
 		},
 		{
 			"name": "UE5",
-			"path": "D:/game/epicLibrary/UE_5.7"
-		},
-		{
-			"path": "D:/repo/2026/TeamModeling"
-		},
-		{
-			"path": "D:/repo/2026/TeamServer"
-		},
-		{
-			"path": "C:/Users/c/Documents/GitHub/personal_ob"
+			"path": "D:\\game\\epicLibrary\\UE_5.7"
 		}
 	],
 	"settings": {
