@@ -22,7 +22,9 @@ enum PACKET_TYPE : unsigned char {
 
 	 SC_ROOM_ENTER,
 	 SC_CHARACTER_SELECTED,
-	 SC_LOBBY_READY_STATE
+	 SC_LOBBY_READY_STATE,
+
+	 SC_ITEM_STATE,
 
 };
 enum DIRECTION {UP,DOWN,LEFT,RIGHT};
@@ -231,6 +233,14 @@ struct SC_LobbyReadyState {
 	PACKET_TYPE type;
 	int player_id;
 	bool ready;
+};
+
+struct SC_ItemState {
+	unsigned char size;
+	PACKET_TYPE type;
+
+	int item_id;	//id=0 이 왼쪽, id=1이 오른쪽
+	bool active;	//false면 사라짐, true면 나타남
 };
 
 #pragma pack(pop)
