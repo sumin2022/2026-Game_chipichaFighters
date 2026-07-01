@@ -3,5 +3,5 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="GameServer.vcxproj" />
+  <Project Path="GameServer.vcxproj" Id="83a03a4e-3658-4523-9071-102483546192" />
 </Solution>

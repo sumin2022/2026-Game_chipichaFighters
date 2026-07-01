@@ -34,7 +34,7 @@
     <ClInclude Include="file\Character.h" />
     <ClInclude Include="file\Common.h" />
     <ClInclude Include="file\DBLogin.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="file\ExpOver.h" />
     <ClInclude Include="file\protocol.h" />
