@@ -1,16 +1,16 @@
 #pragma once
+#include "protocol.h"
 #include <unordered_map>
 #include <array>
 #include <vector>
 #include <mutex>
-#include "protocol.h"
 #include "Character.h"
 #include "Score.h"
 
 struct PlayerState {
 	int id = -1;
 
-	TeamType team = TEAM_NONE;
+	TeamType team = TeamType::TEAM_NONE;
 	float respawn_timer = 0.0f;
 
 	float x = 0.0f;
@@ -41,7 +41,7 @@ struct PlayerState {
 	bool auto_attack = false;
 	bool skill_requested = false;
 
-	CharacterType character = CHAR_NONE;
+	CharacterType character = CharacterType::CHAR_NONE;
 	AttackType attack_type = AttackType::NONE;
 	SkillType active_skill = SkillType::NONE;
 	PassiveType passive_skill = PassiveType::NONE;
@@ -132,7 +132,7 @@ struct Room {
 		if (player_count < MAX_ROOM_PLAYERS) return false;
 
 		for (int i = 0; i < player_count; ++i) {
-			if (states[i].character == CHAR_NONE) return false;
+			if (states[i].character == CharacterType::CHAR_NONE) return false;
 			if (!states[i].lobby_ready) return false;
 		}
 

@@ -44,7 +44,7 @@ void SESSION::send_avatar_info()
 {
 	SC_AvatarInfo packet;
 	packet.size = sizeof(SC_AvatarInfo);
-	packet.type = SC_AVATAR_INFO;
+	packet.type = PACKET_TYPE::SC_AVATAR_INFO;
 	packet.playerId = m_id;
 	packet.x = m_x;
 	packet.y = m_y;
@@ -55,7 +55,7 @@ void SESSION::send_add_player(int player_id)
 {
 	SC_AddPlayer packet;
 	packet.size = sizeof(SC_AddPlayer);
-	packet.type = SC_ADD_PLAYER;
+	packet.type = PACKET_TYPE::SC_ADD_PLAYER;
 	packet.playerId = player_id;
 
 	SESSION& pl = clients[player_id];
@@ -70,7 +70,7 @@ void SESSION::send_login_success()
 {
 	SC_LoginResult packet;
 	packet.size = sizeof(SC_LoginResult);
-	packet.type = SC_LOGIN_RESULT;
+	packet.type = PACKET_TYPE::SC_LOGIN_RESULT;
 	packet.success = true;
 	strncpy_s(packet.message, "Login successful.", sizeof(packet.message));
 	do_send(packet.size, reinterpret_cast<char*>(&packet));
@@ -80,7 +80,7 @@ void SESSION::send_remove_player(int player_id)
 {
 	SC_RemovePlayer packet;
 	packet.size = sizeof(SC_RemovePlayer);
-	packet.type = SC_REMOVE_PLAYER;
+	packet.type = PACKET_TYPE::SC_REMOVE_PLAYER;
 	packet.playerid = player_id;
 	do_send(packet.size, reinterpret_cast<char*>(&packet));
 }
@@ -89,7 +89,7 @@ void SESSION::send_move_packet(int mover)
 {
 	SC_MovePlayer packet;
 	packet.size = sizeof(SC_MovePlayer);
-	packet.type = SC_MOVE_PLAYER;
+	packet.type = PACKET_TYPE::SC_MOVE_PLAYER;
 	packet.playerId = mover;
 	packet.x = clients[mover].m_x;
 	packet.y = clients[mover].m_y;
@@ -98,9 +98,12 @@ void SESSION::send_move_packet(int mover)
 
 void SESSION::process_packet(unsigned char* p)
 {
-	PACKET_TYPE type = *reinterpret_cast<PACKET_TYPE*>(&p[1]);
+	TZPacketHeader* header = reinterpret_cast<TZPacketHeader*>(p);
 
-	switch (type) {
+
+	switch (header->type) {
+	using enum PACKET_TYPE;
+
 	case CS_LOGIN:
 	{
 		// DB »Æ¿Œ
@@ -232,7 +235,7 @@ void send_login_fail(SOCKET client, const char* message)
 {
 	SC_LoginResult packet;
 	packet.size = sizeof(SC_LoginResult);
-	packet.type = SC_LOGIN_RESULT;
+	packet.type = PACKET_TYPE::SC_LOGIN_RESULT;
 	packet.success = false;
 	strncpy_s(packet.message, message, sizeof(packet.message));
 
@@ -247,7 +250,7 @@ void SESSION::send_game_start()
 {
 	SC_GameStart packet;
 	packet.size = sizeof(SC_GameStart);
-	packet.type = SC_GAME_START;
+	packet.type = PACKET_TYPE::SC_GAME_START;
 
 	do_send(packet.size, reinterpret_cast<char*>(&packet));
 }
@@ -256,7 +259,7 @@ void SESSION::send_death(int dead_id, int killer_id)
 {
 	SC_Death packet;
 	packet.size = sizeof(SC_Death);
-	packet.type = SC_DEATH;
+	packet.type = PACKET_TYPE::SC_DEATH;
 	packet.dead_id = dead_id;
 	packet.killer_id = killer_id;
 
@@ -267,7 +270,7 @@ void SESSION::send_respawn(int player_id, float x, float y, int hp)
 {
 	SC_Respawn packet;
 	packet.size = sizeof(SC_Respawn);
-	packet.type = SC_RESPAWN;
+	packet.type = PACKET_TYPE::SC_RESPAWN;
 	packet.player_id = player_id;
 	packet.x = x;
 	packet.y = y;
@@ -280,7 +283,7 @@ void SESSION::send_game_result()
 {
 	SC_GameResult packet;
 	packet.size = sizeof(SC_GameResult);
-	packet.type = SC_GAME_RESULT;
+	packet.type = PACKET_TYPE::SC_GAME_RESULT;
 
 	do_send(packet.size, reinterpret_cast<char*>(&packet));
 }

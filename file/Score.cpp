@@ -13,13 +13,13 @@ bool ScoreManager::is_time_over() const
 void ScoreManager::make_result(Room& room, SC_GameResult& packet)
 {
     packet.size = sizeof(SC_GameResult);
-    packet.type = SC_GAME_RESULT;
+    packet.type = PACKET_TYPE::SC_GAME_RESULT;
 
     packet.red_score = static_cast<int>(red_score);
     packet.blue_score = static_cast<int>(blue_score);
 
     packet.winner_team =
-        (red_score > blue_score) ? TEAM_RED : TEAM_BLUE;
+        (red_score > blue_score) ? TeamType::TEAM_RED : TeamType::TEAM_BLUE;
 
     packet.player_count = room.player_count;
 

@@ -250,7 +250,7 @@ void RoomManager::enter_lobby(int room_id)
 
 	SC_RoomEnter packet;
 	packet.size = sizeof(SC_RoomEnter);
-	packet.type = SC_ROOM_ENTER;
+	packet.type = PACKET_TYPE::SC_ROOM_ENTER;
 	packet.room_id = room_id;
 	packet.player_count = room.player_count;
 
@@ -268,9 +268,9 @@ void RoomManager::assign_teams(Room& room)
 {
 	for (int i = 0; i < room.player_count; ++i) {
 		if (i < room.player_count / 2)
-			room.states[i].team = TEAM_RED;
+			room.states[i].team = TeamType::TEAM_RED;
 		else
-			room.states[i].team = TEAM_BLUE;
+			room.states[i].team = TeamType::TEAM_BLUE;
 	}
 }
 
@@ -282,7 +282,7 @@ bool RoomManager::is_same_team(const PlayerState& a,
 
 void RoomManager::select_character(int player_id, CharacterType character)
 {
-	if (character < CHAR_DEALER || character > CHAR_HEALER) return;
+	if (character < CharacterType::CHAR_DEALER || character > CharacterType::CHAR_HEALER) return;
 
 	auto it = m_player_room.find(player_id);
 	if (it == m_player_room.end()) return;
@@ -303,7 +303,7 @@ void RoomManager::select_character(int player_id, CharacterType character)
 
 	SC_CharacterSelected packet;
 	packet.size = sizeof(SC_CharacterSelected);
-	packet.type = SC_CHARACTER_SELECTED;
+	packet.type = PACKET_TYPE::SC_CHARACTER_SELECTED;
 	packet.player_id = player_id;
 	packet.character = character;
 
@@ -327,13 +327,13 @@ void RoomManager::set_lobby_ready(int player_id, bool ready)
 	PlayerState* state = find_player_state(room, player_id);
 	if (state == nullptr) return;
 
-	if (state->character == CHAR_NONE) return;
+	if (state->character == CharacterType::CHAR_NONE) return;
 
 	state->lobby_ready = ready;
 
 	SC_LobbyReadyState packet;
 	packet.size = sizeof(SC_LobbyReadyState);
-	packet.type = SC_LOBBY_READY_STATE;
+	packet.type = PACKET_TYPE::SC_LOBBY_READY_STATE;
 	packet.player_id = player_id;
 	packet.ready = ready;
 
@@ -888,7 +888,7 @@ void RoomManager::respawn_player(Room& room, PlayerState& player)
 	player.auto_attack = false;
 	player.skill_requested = false;
 
-	if (player.team == TEAM_RED) //현재는 임시 리스폰 위치 값
+	if (player.team == TeamType::TEAM_RED) //현재는 임시 리스폰 위치 값
 	{
 		player.x = 50;
 		player.y = 200;
@@ -915,7 +915,7 @@ void RoomManager::send_room_snapshot(Room& room)
 {
 	SC_RoomSnapshot packet;
 	packet.size = sizeof(SC_RoomSnapshot);
-	packet.type = SC_ROOM_SNAPSHOT;
+	packet.type = PACKET_TYPE::SC_ROOM_SNAPSHOT;
 	packet.count = room.player_count;
 
 	for (int i = 0; i < room.player_count; ++i) {
@@ -981,7 +981,7 @@ void RoomManager::broadcast_item_state(Room& room, int item_id, bool active)
 {
 	SC_ItemState packet;
 	packet.size = sizeof(SC_ItemState);
-	packet.type = SC_ITEM_STATE;
+	packet.type = PACKET_TYPE::SC_ITEM_STATE;
 	packet.item_id = item_id;
 	packet.active = active;
 

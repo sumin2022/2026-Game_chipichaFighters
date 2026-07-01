@@ -5,7 +5,7 @@ const CharacterStats& CharacterManager::GetStats(CharacterType type)
 	static CharacterStats default_stats{};
 
 	static CharacterStats tanker{
-		CHAR_TANKER,                 // type
+		CharacterType::CHAR_TANKER,                 // type
 		610,                         // max_hp
 		0,                           // max_mp
 		80,                          // attack_damage
@@ -40,7 +40,7 @@ const CharacterStats& CharacterManager::GetStats(CharacterType type)
 	};
 
 	static CharacterStats dealer{
-		CHAR_DEALER,                 // type
+		CharacterType::CHAR_DEALER,                 // type
 		582,                         // max_hp
 		250,                         // max_mp
 		55,                          // attack_damage
@@ -75,7 +75,7 @@ const CharacterStats& CharacterManager::GetStats(CharacterType type)
 	};
 
 	static CharacterStats archer{
-		CHAR_ARCHER,                 // type
+		CharacterType::CHAR_ARCHER,                 // type
 		520,                         // max_hp
 		290,                         // max_mp
 		55,                          // attack_damage
@@ -110,7 +110,7 @@ const CharacterStats& CharacterManager::GetStats(CharacterType type)
 	};
 
 	static CharacterStats healer{
-		CHAR_HEALER,                 // type
+		CharacterType::CHAR_HEALER,                 // type
 		560,                         // max_hp
 		390,                         // max_mp
 		0,                           // attack_damage
@@ -145,13 +145,13 @@ const CharacterStats& CharacterManager::GetStats(CharacterType type)
 	};
 
 	switch (type) {
-	case CHAR_DEALER:
+	case CharacterType::CHAR_DEALER:
 		return dealer;
-	case CHAR_ARCHER:
+	case CharacterType::CHAR_ARCHER:
 		return archer;
-	case CHAR_TANKER:
+	case CharacterType::CHAR_TANKER:
 		return tanker;
-	case CHAR_HEALER:
+	case CharacterType::CHAR_HEALER:
 		return healer;
 	default:
 		return default_stats;
