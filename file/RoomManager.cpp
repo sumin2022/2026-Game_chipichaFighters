@@ -3,6 +3,9 @@
 #include <algorithm>
 #include <cmath>
 
+constexpr float ITEM_POS_X[2] = {100.0f, 300.0f};
+constexpr float ITEM_POS_Y[2] = {200.0f, 200.0f};
+
 void RoomManager::broadcast_room(int room_id, char *packet, int size) {
   auto room_it = m_rooms.find(room_id);
   if (room_it == m_rooms.end())
@@ -49,6 +52,7 @@ void RoomManager::update_room(Room &room) {
   update_movement(room);
   update_skills(room);
   update_attacks(room);
+  update_items(room);
   check_collisions(room);
   send_room_snapshot(room);
 }
@@ -165,6 +169,8 @@ void RoomManager::process_pending_requests() {
       Room new_room;
       new_room.room_id = target_room_id;
 
+      init_items(new_room);
+
       m_rooms.emplace(target_room_id, new_room);
 
       std::cout << "Room created: " << target_room_id << '\n';
@@ -255,7 +261,7 @@ void RoomManager::enter_lobby(int room_id) {
 
   SC_RoomEnter packet;
   packet.size = sizeof(SC_RoomEnter);
-  packet.type = SC_ROOM_ENTER;
+  packet.type = PACKET_TYPE::SC_ROOM_ENTER;
   packet.room_id = room_id;
   packet.player_count = room.player_count;
 
@@ -272,9 +278,9 @@ void RoomManager::enter_lobby(int room_id) {
 void RoomManager::assign_teams(Room &room) {
   for (int i = 0; i < room.player_count; ++i) {
     if (i < room.player_count / 2)
-      room.states[i].team = TEAM_RED;
+      room.states[i].team = TeamType::TEAM_RED;
     else
-      room.states[i].team = TEAM_BLUE;
+      room.states[i].team = TeamType::TEAM_BLUE;
   }
 }
 
@@ -284,7 +290,8 @@ bool RoomManager::is_same_team(const PlayerState &a,
 }
 
 void RoomManager::select_character(int player_id, CharacterType character) {
-  if (character < CHAR_DEALER || character > CHAR_HEALER)
+  if (character < CharacterType::CHAR_DEALER ||
+      character > CharacterType::CHAR_HEALER)
     return;
 
   auto it = m_player_room.find(player_id);
@@ -310,7 +317,7 @@ void RoomManager::select_character(int player_id, CharacterType character) {
 
   SC_CharacterSelected packet;
   packet.size = sizeof(SC_CharacterSelected);
-  packet.type = SC_CHARACTER_SELECTED;
+  packet.type = PACKET_TYPE::SC_CHARACTER_SELECTED;
   packet.player_id = player_id;
   packet.character = character;
 
@@ -337,14 +344,14 @@ void RoomManager::set_lobby_ready(int player_id, bool ready) {
   if (state == nullptr)
     return;
 
-  if (state->character == CHAR_NONE)
+  if (state->character == CharacterType::CHAR_NONE)
     return;
 
   state->lobby_ready = ready;
 
   SC_LobbyReadyState packet;
   packet.size = sizeof(SC_LobbyReadyState);
-  packet.type = SC_LOBBY_READY_STATE;
+  packet.type = PACKET_TYPE::SC_LOBBY_READY_STATE;
   packet.player_id = player_id;
   packet.ready = ready;
 
@@ -396,6 +403,7 @@ void RoomManager::apply_character_to_player(PlayerState &state,
   state.lobby_ready = false;
 }
 
+constexpr float MOVE_INPUT_TIMEOUT = 0.1f; // 패킷 끊기는건 0.1초 정도는 허용
 void RoomManager::update_movement(Room &room) {
   constexpr float DT = 0.016f; // GameThread 16ms 기준
 
@@ -404,6 +412,18 @@ void RoomManager::update_movement(Room &room) {
 
     if (!p.alive)
       continue;
+
+    p.move_input_timer -= DT;
+
+    if (p.move_input_timer <= 0.0f) {
+      p.moving = false;
+      p.moveX = 0.0f;
+      p.moveY = 0.0f;
+    }
+
+    if (!p.moving) {
+      continue;
+    }
 
     float dx = p.moveX;
     float dy = p.moveY;
@@ -538,6 +558,18 @@ void RoomManager::set_move_input(int player_id, float axisX, float axisY) {
 
       state.moveX = axisX;
       state.moveY = axisY;
+
+      float len = sqrtf(axisX * axisX + axisY * axisY);
+
+      if (len > 0.0f) {
+        state.moving = true;
+        state.move_input_timer = MOVE_INPUT_TIMEOUT;
+      } else {
+        state.moving = false;
+        state.move_input_timer = 0.0f;
+        state.moveX = 0.0f;
+        state.moveY = 0.0f;
+      }
 
       break;
     }
@@ -834,6 +866,10 @@ void RoomManager::kill_player(Room &room, PlayerState &target, int killer_id) {
 
   target.hp = 0;
   target.alive = false;
+  target.moveX = 0.0f;
+  target.moveY = 0.0f;
+  target.moving = false;
+  target.move_input_timer = 0.0f;
   target.auto_attack = false;
   target.skill_requested = false;
   target.respawn_timer = 5.0f; // 임시 리스폰 시간
@@ -877,10 +913,13 @@ void RoomManager::respawn_player(Room &room, PlayerState &player) {
   player.moveX = 0.0f;
   player.moveY = 0.0f;
 
+  player.moving = false;
+  player.move_input_timer = 0.0f;
+
   player.auto_attack = false;
   player.skill_requested = false;
 
-  if (player.team == TEAM_RED) // 현재는 임시 리스폰 위치 값
+  if (player.team == TeamType::TEAM_RED) // 현재는 임시 리스폰 위치 값
   {
     player.x = 50;
     player.y = 200;
@@ -900,7 +939,7 @@ void RoomManager::respawn_player(Room &room, PlayerState &player) {
 void RoomManager::send_room_snapshot(Room &room) {
   SC_RoomSnapshot packet;
   packet.size = sizeof(SC_RoomSnapshot);
-  packet.type = SC_ROOM_SNAPSHOT;
+  packet.type = PACKET_TYPE::SC_ROOM_SNAPSHOT;
   packet.count = room.player_count;
 
   for (int i = 0; i < room.player_count; ++i) {
@@ -950,6 +989,72 @@ void RoomManager::end_room(Room &room) {
   }
 
   m_rooms.erase(room.room_id);
+}
+
+void RoomManager::init_items(Room &room) {
+  for (int i = 0; i < 2; ++i) {
+    room.items[i].id = i;
+    room.items[i].x = ITEM_POS_X[i];
+    room.items[i].y = ITEM_POS_Y[i];
+    room.items[i].active = true;
+    room.items[i].respawn_timer = 0.0f;
+  }
+}
+
+void RoomManager::broadcast_item_state(Room &room, int item_id, bool active) {
+  SC_ItemState packet;
+  packet.size = sizeof(SC_ItemState);
+  packet.type = PACKET_TYPE::SC_ITEM_STATE;
+  packet.item_id = item_id;
+  packet.active = active;
+
+  broadcast_room(room.room_id, reinterpret_cast<char *>(&packet), packet.size);
+}
+
+void RoomManager::update_items(Room &room) {
+  constexpr float DT = 0.016f;
+  constexpr float ITEM_RADIUS = 30.0f;
+  constexpr int HEAL_AMOUNT = 30;
+  constexpr float ITEM_RESPAWN_TIME = 10.0f;
+
+  for (int i = 0; i < 2; ++i) {
+    ItemState &item = room.items[i];
+
+    if (!item.active) {
+      item.respawn_timer -= DT;
+
+      if (item.respawn_timer <= 0.0f) {
+        item.active = true;
+        item.respawn_timer = 0.0f;
+        broadcast_item_state(room, item.id, true);
+      }
+
+      continue;
+    }
+
+    for (int j = 0; j < room.player_count; ++j) {
+      PlayerState &player = room.states[j];
+
+      if (!player.alive)
+        continue;
+      if (player.hp >= player.max_hp)
+        continue;
+
+      float dx = player.x - item.x;
+      float dy = player.y - item.y;
+      float distSq = dx * dx + dy * dy;
+
+      if (distSq <= ITEM_RADIUS * ITEM_RADIUS) {
+        player.hp = (std::min)(player.max_hp, player.hp + HEAL_AMOUNT);
+
+        item.active = false;
+        item.respawn_timer = ITEM_RESPAWN_TIME;
+
+        broadcast_item_state(room, item.id, false);
+        break;
+      }
+    }
+  }
 }
 
 void RoomManager::update_ai(Room &room) {}

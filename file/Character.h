@@ -58,7 +58,7 @@ struct PassiveStats {
 };
 
 struct CharacterStats {
-  CharacterType type = CHAR_NONE; // 캐릭터 종류
+  CharacterType type = CharacterType::CHAR_NONE; // 캐릭터 종류
 
   int max_hp = 100; // 최대 체력
   int max_mp = 0;   // 최대 마나

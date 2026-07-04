@@ -7,11 +7,10 @@
 #include <unordered_map>
 #include <vector>
 
-
 struct PlayerState {
   int id = -1;
 
-  TeamType team = TEAM_NONE;
+  TeamType team = TeamType::TEAM_NONE;
   float respawn_timer = 0.0f;
 
   float x = 0.0f;
@@ -42,7 +41,7 @@ struct PlayerState {
   bool auto_attack = false;
   bool skill_requested = false;
 
-  CharacterType character = CHAR_NONE;
+  CharacterType character = CharacterType::CHAR_NONE;
   AttackType attack_type = AttackType::NONE;
   SkillType active_skill = SkillType::NONE;
   PassiveType passive_skill = PassiveType::NONE;
@@ -55,15 +54,27 @@ struct PlayerState {
   float last_damaged_time = 0.0f; // 마지막으로 피해받은 시간
 
   bool lobby_ready = false;
+
+  bool moving = false;
+  float move_input_timer = 0.0f;
 };
 
 enum class RoomState { MATCHING, LOBBY, INGAME, ENDED };
+
+struct ItemState {
+  int id;
+  float x;
+  float y;
+  bool active;
+  float respawn_timer;
+};
 
 struct Room {
   int room_id = -1; // room 번호 : 1, 2, 3 ...?
   RoomState state = RoomState::MATCHING;
   bool active = false;
   ScoreManager score;
+  ItemState items[2];
 
   std::array<int, MAX_ROOM_PLAYERS> players;
   std::array<PlayerState, MAX_ROOM_PLAYERS> states;
@@ -110,7 +121,7 @@ struct Room {
       return false;
 
     for (int i = 0; i < player_count; ++i) {
-      if (states[i].character == CHAR_NONE)
+      if (states[i].character == CharacterType::CHAR_NONE)
         return false;
       if (!states[i].lobby_ready)
         return false;
@@ -161,6 +172,9 @@ private:
   void check_collisions(Room &room);
   void send_room_snapshot(
       Room &room); // 플렝이어 위치, 체력, 스킬 상태 등등 보내기 (여기서 맞나?)
+  void update_items(Room &room);
+
+  void broadcast_item_state(Room &room, int item_id, bool active);
 
   bool is_same_team(const PlayerState &a, const PlayerState &b) const;
   void enter_lobby(int room_id);
@@ -174,6 +188,7 @@ private:
   void apply_character_to_player(PlayerState &state, CharacterType character);
 
   void end_room(Room &room);
+  void init_items(Room &room);
 
   std::unordered_map<int, Room> m_rooms;
   std::unordered_map<int, int> m_player_room;
