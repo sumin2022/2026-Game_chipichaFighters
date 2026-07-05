@@ -207,18 +207,25 @@ void ServerMain::HandleRecv(int player_index, DWORD num_bytes, EXP_OVER* exp_ove
 
 	session.m_prev_recv += num_bytes;
 
-	unsigned char* packet_start =
-		reinterpret_cast<unsigned char*>(session.m_recv_over.m_buff);
+	char* packet_start = session.m_recv_over.m_buff;
 
 	int remain_data = session.m_prev_recv;
 
-	while (remain_data > 0) {
-		unsigned char packet_size = packet_start[0];
+	while (remain_data >= sizeof(TZPacketHeader)) {
+		TZPacketHeader* header =
+			reinterpret_cast<TZPacketHeader*>(packet_start);
+
+		std::uint16_t packet_size = header->size;
+
+		if (packet_size < sizeof(TZPacketHeader) || packet_size > BUF_SIZE) {
+			DisconnectClient(player_index);
+			return;
+		}
 
 		if (remain_data < packet_size)
 			break;
 
-		session.process_packet(packet_start);
+		session.process_packet(reinterpret_cast<unsigned char*>(packet_start));
 
 		remain_data -= packet_size;
 		packet_start += packet_size;

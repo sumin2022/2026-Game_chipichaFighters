@@ -75,7 +75,7 @@ enum struct TeamType : std::int32_t {
 template <PACKET_TYPE Type, typename Derived>
 struct TZPacket
 {
-	std::uint8_t size;
+	std::uint16_t size;
 	PACKET_TYPE type;
 
 	constexpr TZPacket()

@@ -2,7 +2,7 @@
 #include <WinSock2.h>
 #include <MSWSock.h>
 
-constexpr int BUF_SIZE = 200;
+constexpr int BUF_SIZE = 1024;
 
 enum IOType { IO_SEND, IO_RECV, IO_ACCEPT };
 
