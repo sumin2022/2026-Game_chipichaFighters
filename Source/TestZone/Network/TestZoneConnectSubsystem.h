@@ -72,28 +72,30 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FTZOnDisconnected, //
                                              FString const &, Message);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnLoginResult, //
-                                             bool, bSuccess, FString const &,
-                                             Message);
+                                             bool, bSuccess, //
+                                             FString const &, Message);
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnAddPlayer, //
-                                              int32, PlayerId, FString const &,
-                                              username, int32, x, int32, y);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnAddPlayer,              //
+                                              int32, PlayerId,           //
+                                              FString const &, username, //
+                                              int32, x, int32, y);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRemovePlayer, //
                                             int32, PlayerId);
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnMovePlayer, //
-                                               int32, PlayerId, int32, axisX,
-                                               int32, axisY);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnMovePlayer,   //
+                                               int32, PlayerId, //
+                                               int32, axisX, int32, axisY);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAvatarInfo, //
                                                int32, PlayerId, int32, axisX,
                                                int32, axisY);
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams(FOnRoomSnapshot, //
-                                              int32, count, int32, red_score,
-                                              int32, blue_score, float,
-                                              time_left,
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams(FOnRoomSnapshot,   //
+                                              int32, count,      //
+                                              int32, red_score,  //
+                                              int32, blue_score, //
+                                              float, time_left,  //
                                               TArray<FNetPlayerState> const &,
                                               players);
 
@@ -102,27 +104,29 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCurrentState);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDeath, //
                                              int32, dead_id, int32, killer_id);
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnRespawn, //
-                                              int32, player_id, float, x, float,
-                                              y, int32, hp);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnRespawn,         //
+                                              int32, player_id,   //
+                                              float, x, float, y, //
+                                              int32, hp);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_SevenParams(
-    FOnGameResult, //
-    int32, red_score, int32, blue_score, ETeamType, winner_team, int32,
-    player_count, TArray<int32> const &, player_ids, TArray<int32> const &,
-    player_kills, TArray<int32> const &, player_deaths);
+    FOnGameResult,                                               //
+    int32, red_score, int32, blue_score, ETeamType, winner_team, //
+    int32, player_count, TArray<int32> const &, player_ids,      //
+    TArray<int32> const &, player_kills, TArray<int32> const &, player_deaths);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGameStart);
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnRoomEnter, //
-                                              int32, room_id, int32,
-                                              player_count,
-                                              TArray<int32> const &, player_ids,
-                                              TArray<int32> const &, teams);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnRoomEnter,   //
+                                               int32, room_id, //
+                                               TArray<int32> const &,
+                                               player_ids, //
+                                               TArray<ETeamType> const &,
+                                               teams);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnCharacterSelected, //
-                                             int32, player_id, ECharacterType,
-                                             character_id);
+                                             int32, player_id,     //
+                                             ECharacterType, character_id);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnLobbyReadyState, //
                                              int32, player_id, bool, ready);
@@ -159,6 +163,7 @@ public:
   void SendSelectCharacter(ECharacterType characterId);
   UFUNCTION(BlueprintCallable, Category = "TestZone|Network")
   void SendGameReady(bool ready);
+
 
   UPROPERTY(BlueprintAssignable, Category = "TestZone|Network")
   FTZOnDisconnected TZOnDisconnected;

@@ -159,13 +159,13 @@ void UTestZoneConnectSubsystem::ReceiveLoop() {
     }
     case SC_ROOM_ENTER: {
       SC_RoomEnter *pRecv = reinterpret_cast<SC_RoomEnter *>(Header);
-      TArray<int32> PlayerIds, Teams;
+      TArray<int32> PlayerIds;
+      TArray<ETeamType> Teams;
       for (int i = 0; i < pRecv->player_count; ++i) {
         PlayerIds.Add(pRecv->player_ids[i]);
-        Teams.Add(pRecv->teams[i]);
+        Teams.Add(static_cast<ETeamType>(pRecv->teams[i]));
       }
-      OnRoomEnter.Broadcast(pRecv->room_id, pRecv->player_count, PlayerIds,
-                            Teams);
+      OnRoomEnter.Broadcast(pRecv->room_id, PlayerIds, Teams);
       RecvStart += Header->size;
       break;
     }
