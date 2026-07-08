@@ -224,23 +224,21 @@ void RoomManager::start_room(int room_id)
 	for (int i = 0; i < room.player_count; ++i) {
 		PlayerState& player = room.states[i];
 
-		if (player.team == TeamType::TEAM_RED) {
-			player.x = RED_SPAWN_X;
-			player.y = RED_SPAWN_Y;
-			player.faceX = 1.0f;
-			player.faceY = 0.0f;
-		}
-		else {
-			player.x = BLUE_SPAWN_X;
-			player.y = BLUE_SPAWN_Y;
-			player.faceX = -1.0f;
-			player.faceY = 0.0f;
-		}
-
 		player.alive = true;
+		player.hp = player.max_hp;
+		player.respawn_timer = 0.0f;
+
 		player.current_target_id = -1;
+
 		player.moveX = 0.0f;
 		player.moveY = 0.0f;
+		player.moving = false;
+		player.move_input_timer = 0.0f;
+
+		player.auto_attack = false;
+		player.skill_requested = false;
+
+		set_spawn_position(room, player);
 	}
 
 	//게임 시작 패킷 전송
@@ -252,9 +250,7 @@ void RoomManager::start_room(int room_id)
 		clients[player_id].m_room_id = room_id;
 
 		clients[player_id].send_game_start();
-		std::cout << "Room " << room_id << " started\n";
 	}
-
 	std::cout << "Room " << room_id << " started\n";
 }
 
@@ -912,20 +908,7 @@ void RoomManager::respawn_player(Room& room, PlayerState& player)
 	player.auto_attack = false;
 	player.skill_requested = false;
 
-	if (player.team == TeamType::TEAM_RED) //현재는 임시 리스폰 위치 값
-	{
-		player.x = RED_SPAWN_X;
-		player.y = RED_SPAWN_Y;
-		player.faceX = 1.0f;
-		player.faceY = 0.0f;
-	}
-	else
-	{
-		player.x = BLUE_SPAWN_X;
-		player.y = BLUE_SPAWN_Y;
-		player.faceX = -1.0f;
-		player.faceY = 0.0f;
-	}
+	set_spawn_position(room, player);
 
 	for (int i = 0; i < room.player_count; ++i) {
 		clients[room.players[i]].send_respawn(
@@ -937,6 +920,35 @@ void RoomManager::respawn_player(Room& room, PlayerState& player)
 	}
 
 	std::cout << "[RESPAWN] player=" << player.id << "\n";
+}
+
+// 리스폰 위치를 팀별로 나눠서 설정
+void RoomManager::set_spawn_position(Room& room, PlayerState& player)
+{
+	int teamIndex = 0;
+
+	for (int i = 0; i < room.player_count; ++i) {
+		if (room.states[i].id == player.id)
+			break;
+
+		if (room.states[i].team == player.team)
+			++teamIndex;
+	}
+
+	float offsets[3] = { -RESPAWN_OFFSET, 0.0f, RESPAWN_OFFSET };
+
+	if (player.team == TeamType::TEAM_RED) {
+		player.x = RED_SPAWN_X;
+		player.y = RED_SPAWN_Y + offsets[teamIndex];
+		player.faceX = 1.0f;
+		player.faceY = 0.0f;
+	}
+	else {
+		player.x = BLUE_SPAWN_X;
+		player.y = BLUE_SPAWN_Y + offsets[teamIndex];
+		player.faceX = -1.0f;
+		player.faceY = 0.0f;
+	}
 }
 
 void RoomManager::send_room_snapshot(Room& room) 
