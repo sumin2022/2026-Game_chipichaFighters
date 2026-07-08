@@ -228,10 +228,33 @@ void RoomManager::start_room(int room_id) {
   room.state = RoomState::INGAME;
   room.active = true;
 
-  for (int i = 0; i < room.player_count; ++i) {
-    int player_id = room.players[i];
-    if (player_id == -1)
-      continue;
+	// 플레이어 상태 초기화
+	for (int i = 0; i < room.player_count; ++i) {
+		PlayerState& player = room.states[i];
+
+		if (player.team == TeamType::TEAM_RED) {
+			player.x = RED_SPAWN_X;
+			player.y = RED_SPAWN_Y;
+			player.faceX = 1.0f;
+			player.faceY = 0.0f;
+		}
+		else {
+			player.x = BLUE_SPAWN_X;
+			player.y = BLUE_SPAWN_Y;
+			player.faceX = -1.0f;
+			player.faceY = 0.0f;
+		}
+
+		player.alive = true;
+		player.current_target_id = -1;
+		player.moveX = 0.0f;
+		player.moveY = 0.0f;
+	}
+
+	// 게임 시작 패킷 전송
+	for (int i = 0; i < room.player_count; ++i) {
+		int player_id = room.players[i];
+		if (player_id == -1) continue;
 
     clients[player_id].m_in_game = true;
     clients[player_id].m_room_id = room_id;
@@ -919,14 +942,20 @@ void RoomManager::respawn_player(Room &room, PlayerState &player) {
   player.auto_attack = false;
   player.skill_requested = false;
 
-  if (player.team == TeamType::TEAM_RED) // 현재는 임시 리스폰 위치 값
-  {
-    player.x = 50;
-    player.y = 200;
-  } else {
-    player.x = 350;
-    player.y = 200;
-  }
+	if (player.team == TeamType::TEAM_RED) // 현재는 임시 리스폰 위치 값
+	{
+		player.x = RED_SPAWN_X;
+		player.y = RED_SPAWN_Y;
+		player.faceX = 1.0f;
+		player.faceY = 0.0f;
+	}
+	else
+	{
+		player.x = BLUE_SPAWN_X;
+		player.y = BLUE_SPAWN_Y;
+		player.faceX = -1.0f;
+		player.faceY = 0.0f;
+	}
 
   for (int i = 0; i < room.player_count; ++i) {
     clients[room.players[i]].send_respawn(player.id, player.x, player.y,

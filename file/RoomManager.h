@@ -7,6 +7,12 @@
 #include <unordered_map>
 #include <vector>
 
+constexpr float RED_SPAWN_X = 50.0f;
+constexpr float RED_SPAWN_Y = 200.0f;
+
+constexpr float BLUE_SPAWN_X = 350.0f;
+constexpr float BLUE_SPAWN_Y = 200.0f;
+
 struct PlayerState {
   int id = -1;
 
