@@ -23,6 +23,7 @@
     <ClCompile Include="file\Common.cpp" />
     <ClCompile Include="file\DBLogin.cpp" />
     <ClCompile Include="file\main.cpp" />
+    <ClCompile Include="file\MapCollision.cpp" />
     <ClCompile Include="file\RoomManager.cpp" />
     <ClCompile Include="file\Score.cpp" />
     <ClCompile Include="file\ServerMain.cpp" />
@@ -33,6 +34,7 @@
     <ClInclude Include="file\Common.h" />
     <ClInclude Include="file\DBLogin.h" />
     <ClInclude Include="file\ExpOver.h" />
+    <ClInclude Include="file\MapCollision.h" />
     <ClInclude Include="file\protocol.h" />
     <ClInclude Include="file\RoomManager.h" />
     <ClInclude Include="file\Score.h" />

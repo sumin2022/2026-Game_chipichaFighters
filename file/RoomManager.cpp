@@ -1,5 +1,6 @@
 #include "RoomManager.h"
 #include "SESSION.h"
+#include "MapCollision.h"
 #include <algorithm>
 #include <cmath>
 
@@ -446,15 +447,18 @@ void RoomManager::update_movement(Room& room, float dt)
 			dx /= len;
 			dy /= len;
 
-			p.x += dx * p.move_speed * dt;
-			p.y += dy * p.move_speed * dt;
+			// 이동 후 예상 위치 계산
+			float nextX = p.x + dx * p.move_speed * dt;
+			float nextY = p.y + dy * p.move_speed * dt;
 
-			//p.faceX = dx;
-			//p.faceY = dy;
+			// 맵 경계를 벗어나지 않도록 제한
+			MapCollision::clamp_to_map(nextX, nextY);
+
+			if (MapCollision::is_walkable(nextX, nextY)) {
+				p.x = nextX;
+				p.y = nextY;
+			}
 		}
-
-		p.x = std::clamp(p.x, 0.0f, static_cast<float>(WORLD_WIDTH - 1));
-		p.y = std::clamp(p.y, 0.0f, static_cast<float>(WORLD_HEIGHT - 1));
 
 		clients[p.id].m_x = static_cast<short>(p.x);
 		clients[p.id].m_y = static_cast<short>(p.y);
