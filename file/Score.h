@@ -28,9 +28,18 @@ public:
     float get_time_left() const { return game_timer; }
 
 private:
-    float game_timer = 150.0f; // 2분 30초
-    int red_score = 0;
-    int blue_score = 0;
+    float game_timer = 100.0f; // 2분 30초
+    float red_score = 0;
+    float blue_score = 0;
 
-    CaptureZone zone;
+    CaptureZone zone{ //점령지 위치
+    -310.0f,  // min_x = centerX - 300
+     290.0f,  // max_x = centerX + 300
+    -300.0f,  // min_y = centerY - 300
+     300.0f   // max_y = centerY + 300
+    };
+
+	bool is_in_capture_zone(float x, float y) const; // 점령지 안에 있는지 확인
+	float get_capture_multiplier(int count) const;  // 점령지 안에 있는 플레이어 수에 따른 점수 배율 계산
+
 };

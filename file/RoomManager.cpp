@@ -29,8 +29,18 @@ void RoomManager::update_all_rooms()
 {
 	process_pending_requests();
 
-	for (auto& [id, room] : m_rooms) {
+	for (auto it = m_rooms.begin(); it != m_rooms.end();) {
+		Room& room = it->second;
+
 		update_room(room);
+
+		if (room.state == RoomState::ENDED) {
+			std::cout << "Room " << room.room_id << " removed\n";
+			it = m_rooms.erase(it);
+		}
+		else {
+			++it;
+		}
 	}
 }
 
@@ -217,6 +227,7 @@ void RoomManager::start_room(int room_id)
 	if (room.state != RoomState::LOBBY) return;
 	if (!room.all_ready()) return;
 
+	room.score.start_game(); // 점수 초기화
 	room.state = RoomState::INGAME;
 	room.active = true;
 
@@ -1003,7 +1014,6 @@ void RoomManager::end_room(Room& room)
 		m_player_room.erase(pid);
 	}
 
-	m_rooms.erase(room.room_id);
 }
 
 void RoomManager::init_items(Room& room)
