@@ -28,7 +28,7 @@ public:
     float get_time_left() const { return game_timer; }
 
 private:
-    float game_timer = 100.0f; // 2분 30초
+    float game_timer = 150.0f; // 2분 30초
     float red_score = 0;
     float blue_score = 0;
 

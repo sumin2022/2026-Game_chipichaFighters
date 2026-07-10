@@ -25,14 +25,14 @@ void RoomManager::broadcast_room(int room_id, char* packet, int size)
 	}
 }
 
-void RoomManager::update_all_rooms()
+void RoomManager::update_all_rooms(float dt)
 {
 	process_pending_requests();
 
 	for (auto it = m_rooms.begin(); it != m_rooms.end();) {
 		Room& room = it->second;
 
-		update_room(room);
+		update_room(room, dt);
 
 		if (room.state == RoomState::ENDED) {
 			std::cout << "Room " << room.room_id << " removed\n";
@@ -44,7 +44,7 @@ void RoomManager::update_all_rooms()
 	}
 }
 
-void RoomManager::update_room(Room& room)
+void RoomManager::update_room(Room& room, float dt)
 {
 	if (!room.active) return;
 
@@ -57,12 +57,12 @@ void RoomManager::update_room(Room& room)
 		return;
 	}
 
-	update_ai(room);
-	update_respawns(room);
-	update_movement(room);
-	update_skills(room);
-	update_attacks(room);
-	update_items(room);
+	update_ai(room, dt);
+	update_respawns(room, dt);
+	update_movement(room, dt);
+	update_skills(room, dt);
+	update_attacks(room, dt);
+	update_items(room, dt);
 	check_collisions(room);
 	send_room_snapshot(room);
 
@@ -418,16 +418,15 @@ void RoomManager::apply_character_to_player(PlayerState& state, CharacterType ch
 }
 
 constexpr float MOVE_INPUT_TIMEOUT = 0.1f;	//패킷 끊기는건 0.1초 정도는 허용 
-void RoomManager::update_movement(Room& room)
+void RoomManager::update_movement(Room& room, float dt)
 {
-	constexpr float DT = 0.016f; // GameThread 16ms 기준
 
 	for (int i = 0; i < room.player_count; ++i) {
 		PlayerState& p = room.states[i];
 
 		if (!p.alive) continue;
 
-		p.move_input_timer -= DT;
+		p.move_input_timer -= dt;
 
 		if (p.move_input_timer <= 0.0f) {
 			p.moving = false;
@@ -447,8 +446,8 @@ void RoomManager::update_movement(Room& room)
 			dx /= len;
 			dy /= len;
 
-			p.x += dx * p.move_speed * DT;
-			p.y += dy * p.move_speed * DT;
+			p.x += dx * p.move_speed * dt;
+			p.y += dy * p.move_speed * dt;
 
 			//p.faceX = dx;
 			//p.faceY = dy;
@@ -462,9 +461,8 @@ void RoomManager::update_movement(Room& room)
 	}
 }
 
-void RoomManager::update_attacks(Room& room)
+void RoomManager::update_attacks(Room& room, float dt)
 {
-	constexpr float DT = 0.016f;
 
 	for (int i = 0; i < room.player_count; ++i) {
 		PlayerState& attacker = room.states[i];
@@ -479,7 +477,7 @@ void RoomManager::update_attacks(Room& room)
 			continue;
 		}
 
-		attacker.attack_timer = (std::max)(0.0f, attacker.attack_timer - DT);
+		attacker.attack_timer = (std::max)(0.0f, attacker.attack_timer - dt);
 
 		PlayerState* target = nullptr;
 		float bestDistSq = attacker.attack_range * attacker.attack_range;
@@ -655,16 +653,15 @@ static void apply_heal(PlayerState& target, int heal)
 		target.hp = target.max_hp;
 }
 
-void RoomManager::update_skills(Room& room)
+void RoomManager::update_skills(Room& room, float dt)
 {
-	constexpr float DT = 0.016f;
 
 	for (int i = 0; i < room.player_count; ++i) {
 		PlayerState& caster = room.states[i];
 
 		if (!caster.alive) continue;
 
-		caster.skill_timer = (std::max)(0.0f, caster.skill_timer - DT);
+		caster.skill_timer = (std::max)(0.0f, caster.skill_timer - dt);
 
 		if (!caster.skill_requested) continue;
 
@@ -885,9 +882,8 @@ void RoomManager::kill_player(Room& room, PlayerState& target, int killer_id)
 	std::cout << "[DEATH] player=" << target.id << "\n";
 }
 
-void RoomManager::update_respawns(Room& room)
+void RoomManager::update_respawns(Room& room, float dt)
 {
-	constexpr float DT = 0.016f;
 
 	for (int i = 0; i < room.player_count; ++i) {
 		PlayerState& player = room.states[i];
@@ -895,7 +891,7 @@ void RoomManager::update_respawns(Room& room)
 		if (player.alive)
 			continue;
 
-		player.respawn_timer -= DT;
+		player.respawn_timer -= dt;
 
 		if (player.respawn_timer <= 0.0f) {
 			respawn_player(room, player);
@@ -1038,9 +1034,8 @@ void RoomManager::broadcast_item_state(Room& room, int item_id, bool active)
 	broadcast_room(room.room_id, reinterpret_cast<char*>(&packet), packet.size);
 }
 
-void RoomManager::update_items(Room& room)
+void RoomManager::update_items(Room& room, float dt)
 {
-	constexpr float DT = 0.016f;
 	constexpr float ITEM_RADIUS = 30.0f;
 	constexpr int HEAL_AMOUNT = 30;
 	constexpr float ITEM_RESPAWN_TIME = 10.0f;
@@ -1049,7 +1044,7 @@ void RoomManager::update_items(Room& room)
 		ItemState& item = room.items[i];
 
 		if (!item.active) {
-			item.respawn_timer -= DT;
+			item.respawn_timer -= dt;
 
 			if (item.respawn_timer <= 0.0f) {
 				item.active = true;
@@ -1083,5 +1078,5 @@ void RoomManager::update_items(Room& room)
 	}
 }
 
-void RoomManager::update_ai(Room& room) {}
+void RoomManager::update_ai(Room& room, float dt) {}
 void RoomManager::check_collisions(Room& room) {}

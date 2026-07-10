@@ -2,7 +2,7 @@
 
 void ScoreManager::start_game() // 게임 시작 시 초기화
 {
-    game_timer = 100.0f;
+    game_timer = 150.0f;
     red_score = 0.0f;
     blue_score = 0.0f;
 }
