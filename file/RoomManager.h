@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "protocol.h"
 #include <unordered_map>
 #include <array>
@@ -7,13 +7,13 @@
 #include "Character.h"
 #include "Score.h"
 
-//°¡·Î ¾à 3000 ¼¼·Î ¾à 2000 Áß¾Ó 0,0 
+//ê°€ë¡œ ì•½ 3000 ì„¸ë¡œ ì•½ 2000 ì¤‘ì•™ 0,0 
 constexpr float RED_SPAWN_X = 1157.0f;
 constexpr float RED_SPAWN_Y = 0.0f;
 
 constexpr float BLUE_SPAWN_X = -1157.0f;
 constexpr float BLUE_SPAWN_Y = 0.0f;
-//¸®½ºÆù À§Ä¡¿¡¼­ ¾à°£ ¶³¾îÁø À§Ä¡·Î ¸®½ºÆù (ÇÃ·¹ÀÌ¾î °ãÄ§ ¹æÁö)
+//ë¦¬ìŠ¤í° ìœ„ì¹˜ì—ì„œ ì•½ê°„ ë–¨ì–´ì§„ ìœ„ì¹˜ë¡œ ë¦¬ìŠ¤í° (í”Œë ˆì´ì–´ ê²¹ì¹¨ ë°©ì§€)
 constexpr float RESPAWN_OFFSET = 120.0f;
 
 struct PlayerState {
@@ -55,12 +55,12 @@ struct PlayerState {
 	SkillType active_skill = SkillType::NONE;
 	PassiveType passive_skill = PassiveType::NONE;
 
-	float attack_timer = 0.0f;       // ±âº» °ø°İ ÄğÅ¸ÀÓ ÁøÇà »óÅÂ
-	float skill_timer = 0.0f;        // ½ºÅ³ ÄğÅ¸ÀÓ ÁøÇà »óÅÂ
+	float attack_timer = 0.0f;       // ê¸°ë³¸ ê³µê²© ì¿¨íƒ€ì„ ì§„í–‰ ìƒíƒœ
+	float skill_timer = 0.0f;        // ìŠ¤í‚¬ ì¿¨íƒ€ì„ ì§„í–‰ ìƒíƒœ
 
-	int current_target_id = -1; // Å¬¶ó Ç¥½Ã¿ë
-	int last_attack_target = -1;     // ¸¶Áö¸·À¸·Î °ø°İÇÑ ´ë»ó
-	float last_damaged_time = 0.0f;  // ¸¶Áö¸·À¸·Î ÇÇÇØ¹ŞÀº ½Ã°£
+	int current_target_id = -1; // í´ë¼ í‘œì‹œìš©
+	int last_attack_target = -1;     // ë§ˆì§€ë§‰ìœ¼ë¡œ ê³µê²©í•œ ëŒ€ìƒ
+	float last_damaged_time = 0.0f;  // ë§ˆì§€ë§‰ìœ¼ë¡œ í”¼í•´ë°›ì€ ì‹œê°„
 
 	bool lobby_ready = false;
 
@@ -84,7 +84,7 @@ struct ItemState {
 };
 
 struct Room {
-	int room_id = -1; // room ¹øÈ£ : 1, 2, 3 ...? 
+	int room_id = -1; // room ë²ˆí˜¸ : 1, 2, 3 ...? 
 	RoomState state = RoomState::MATCHING;
 	bool active = false;
 	ScoreManager score;
@@ -192,7 +192,7 @@ private:
 	void update_respawns(Room& room, float dt);
 
 	void check_collisions(Room& room);
-	void send_room_snapshot(Room& room); //ÇÃ·ÀÀÌ¾î À§Ä¡, Ã¼·Â, ½ºÅ³ »óÅÂ µîµî º¸³»±â (¿©±â¼­ ¸Â³ª?)
+	void send_room_snapshot(Room& room); //í”Œë ì´ì–´ ìœ„ì¹˜, ì²´ë ¥, ìŠ¤í‚¬ ìƒíƒœ ë“±ë“± ë³´ë‚´ê¸° (ì—¬ê¸°ì„œ ë§ë‚˜?)
 
 
 	void broadcast_item_state(Room& room, int item_id, bool active);
@@ -204,7 +204,7 @@ private:
 
 	void kill_player(Room& room, PlayerState& target, int killer_id);
 	void respawn_player(Room& room, PlayerState& player);
-	void set_spawn_position(Room& room, PlayerState& player); //¸®½ºÆù À§Ä¡ ÁöÁ¤
+	void set_spawn_position(Room& room, PlayerState& player); //ë¦¬ìŠ¤í° ìœ„ì¹˜ ì§€ì •
 	
 	void apply_character_to_player(PlayerState& state, CharacterType character);
 
@@ -217,8 +217,8 @@ private:
 	int m_next_room_id = 1;
 
 	std::mutex m_request_mutex;
-	std::vector<int> m_match_requests; // ¸ÅÄª¿äÃ»´ë±â¾÷
-	std::vector<int> m_leave_requests; // ÅğÀå ¿äÃ» ´ë±â¾÷
+	std::vector<int> m_match_requests; // ë§¤ì¹­ìš”ì²­ëŒ€ê¸°ì—…
+	std::vector<int> m_leave_requests; // í‡´ì¥ ìš”ì²­ ëŒ€ê¸°ì—…
 };
 
 

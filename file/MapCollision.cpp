@@ -1,4 +1,4 @@
-#include "MapCollision.h"
+ï»¿#include "MapCollision.h"
 #include <algorithm>
 
 bool MapCollision::is_inside_map(float x, float y)
@@ -17,11 +17,11 @@ void MapCollision::clamp_to_map(float& x, float& y)
 
 bool MapCollision::is_walkable(float x, float y)
 {
-	// ¿ì¼±Àº ¸Ê °æ°è¸¸ °Ë»ç
+	// ìš°ì„ ì€ ë§µ ê²½ê³„ë§Œ ê²€ì‚¬
 	if (!is_inside_map(x, y))
 		return false;
 
-	// ³ªÁß¿¡ Å¸ÀÏ Ãæµ¹ °Ë»ç Ãß°¡
+	// ë‚˜ì¤‘ì— íƒ€ì¼ ì¶©ëŒ ê²€ì‚¬ ì¶”ê°€
 	// int tileX = ...
 	// int tileY = ...
 	// return collisionMap[tileY][tileX] == 0;
@@ -29,7 +29,7 @@ bool MapCollision::is_walkable(float x, float y)
 	return true;
 }
 
-// ³ªÁß¿¡ Å¸ÀÏ Ãæµ¹ °Ë»ç Ãß°¡
+// ë‚˜ì¤‘ì— íƒ€ì¼ ì¶©ëŒ ê²€ì‚¬ ì¶”ê°€
 bool MapCollision::is_blocked(float x, float y)
 {
 	return false;

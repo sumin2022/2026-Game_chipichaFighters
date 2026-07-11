@@ -1,6 +1,6 @@
-#include "Common.h"
+ï»¿#include "Common.h"
 
-// ¼ÒÄÏ ÇÔ¼ö ¿À·ù Ãâ·Â ÈÄ Á¾·á
+// ì†Œì¼“ í•¨ìˆ˜ ì˜¤ë¥˜ ì¶œë ¥ í›„ ì¢…ë£Œ
 void err_quit(const char* msg)
 {
 	LPVOID lpMsgBuf;
@@ -14,7 +14,7 @@ void err_quit(const char* msg)
 	exit(1);
 }
 
-// ¼ÒÄÏ ÇÔ¼ö ¿À·ù Ãâ·Â
+// ì†Œì¼“ í•¨ìˆ˜ ì˜¤ë¥˜ ì¶œë ¥
 void err_display(const char* msg)
 {
 	LPVOID lpMsgBuf;
@@ -27,7 +27,7 @@ void err_display(const char* msg)
 	LocalFree(lpMsgBuf);
 }
 
-// ¼ÒÄÏ ÇÔ¼ö ¿À·ù Ãâ·Â
+// ì†Œì¼“ í•¨ìˆ˜ ì˜¤ë¥˜ ì¶œë ¥
 void err_display(int errcode)
 {
 	LPVOID lpMsgBuf;
@@ -36,6 +36,6 @@ void err_display(int errcode)
 		NULL, errcode,
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 		(char*)&lpMsgBuf, 0, NULL);
-	printf("[¿À·ù] %s\n", (char*)lpMsgBuf);
+	printf("[ì˜¤ë¥˜] %s\n", (char*)lpMsgBuf);
 	LocalFree(lpMsgBuf);
 }

@@ -1,8 +1,8 @@
-#define _CRT_SECURE_NO_WARNINGS // ±¸Çü C ÇÔ¼ö »ç¿ë ½Ã °æ°í ²ô±â
-#define _WINSOCK_DEPRECATED_NO_WARNINGS // ±¸Çü ¼ÒÄÏ API »ç¿ë ½Ã °æ°í ²ô±â
+ï»¿#define _CRT_SECURE_NO_WARNINGS // êµ¬í˜• C í•¨ìˆ˜ ì‚¬ìš© ì‹œ ê²½ê³  ë„ê¸°
+#define _WINSOCK_DEPRECATED_NO_WARNINGS // êµ¬í˜• ì†Œì¼“ API ì‚¬ìš© ì‹œ ê²½ê³  ë„ê¸°
 
-#include <winsock2.h> // À©¼Ó2 ¸ÞÀÎ Çì´õ
-#include <ws2tcpip.h> // À©¼Ó2 È®Àå Çì´õ
+#include <winsock2.h> // ìœˆì†2 ë©”ì¸ í—¤ë”
+#include <ws2tcpip.h> // ìœˆì†2 í™•ìž¥ í—¤ë”
 #include <windows.h>
 #include <MSWSock.h>
 

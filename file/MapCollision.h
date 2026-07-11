@@ -1,22 +1,22 @@
-#pragma once
+ï»¿#pragma once
 
 class MapCollision {
 public:
 	
-	static bool is_inside_map(float x, float y);  // ¿ùµå ÁÂÇ¥°¡ ¸Ê ¾ÈÂÊ ¹üÀ§ÀÎÁö °Ë»ç
-	static bool is_blocked(float x, float y);     // º®ÀÎÁö
-	static bool is_walkable(float x, float y);   // ÇØ´ç À§Ä¡·Î ÀÌµ¿ÇÒ ¼ö ÀÖ´ÂÁö °Ë»ç
+	static bool is_inside_map(float x, float y);  // ì›”ë“œ ì¢Œí‘œê°€ ë§µ ì•ˆìª½ ë²”ìœ„ì¸ì§€ ê²€ì‚¬
+	static bool is_blocked(float x, float y);     // ë²½ì¸ì§€
+	static bool is_walkable(float x, float y);   // í•´ë‹¹ ìœ„ì¹˜ë¡œ ì´ë™í•  ìˆ˜ ìˆëŠ”ì§€ ê²€ì‚¬
 
-	// ¿ùµå ÁÂÇ¥¸¦ ¸Ê °æ°è ¾ÈÀ¸·Î Á¦ÇÑ
+	// ì›”ë“œ ì¢Œí‘œë¥¼ ë§µ ê²½ê³„ ì•ˆìœ¼ë¡œ ì œí•œ
 	static void clamp_to_map(float& x, float& y);
 
-	static bool can_see(float x1, float y1, float x2, float y2);      // ½Ã¾ß ÆÇÁ¤(º® ³Ê¸Ó °ø°İ ºÒ°¡)
-	static bool ray_cast(float x1, float y1, float x2, float y2);     // Åõ»çÃ¼ Ãæµ¹¿ë
+	static bool can_see(float x1, float y1, float x2, float y2);      // ì‹œì•¼ íŒì •(ë²½ ë„ˆë¨¸ ê³µê²© ë¶ˆê°€)
+	static bool ray_cast(float x1, float y1, float x2, float y2);     // íˆ¬ì‚¬ì²´ ì¶©ëŒìš©
 
 private:
 	static constexpr float MAP_WIDTH = 3000.0f;
 	static constexpr float MAP_HEIGHT = 2000.0f;
-	static constexpr float MAP_BOUNDARY_MARGIN = 50.0f; // ¸Ê °æ°è¿¡¼­ ÇÃ·¹ÀÌ¾î°¡ º®¿¡ ºÙ´Â °ÍÀ» ¹æÁöÇÏ±â À§ÇÑ ¿©À¯ °ø°£
+	static constexpr float MAP_BOUNDARY_MARGIN = 50.0f; // ë§µ ê²½ê³„ì—ì„œ í”Œë ˆì´ì–´ê°€ ë²½ì— ë¶™ëŠ” ê²ƒì„ ë°©ì§€í•˜ê¸° ìœ„í•œ ì—¬ìœ  ê³µê°„
 
 	static constexpr float MAP_MIN_X =
 		-(MAP_WIDTH * 0.5f) - MAP_BOUNDARY_MARGIN;

@@ -1,4 +1,4 @@
-#include "ServerMain.h"
+ï»¿#include "ServerMain.h"
 #include "RoomManager.h"
 #include <chrono>
 #include "SESSION.h"
@@ -6,13 +6,13 @@
 ServerMain::ServerMain() : server(INVALID_SOCKET) {
 	WSADATA wsa;
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
-		err_quit("WSAStartup() ½ÇÆĞ");
+		err_quit("WSAStartup() ì‹¤íŒ¨");
 	}
 }
 
 ServerMain::~ServerMain() {
 
-	//listen socket Á¤¸®
+	//listen socket ì •ë¦¬
 	if (server != INVALID_SOCKET) {
 		closesocket(server);
 		server = INVALID_SOCKET;
@@ -21,17 +21,17 @@ ServerMain::~ServerMain() {
 }
 
 // -------------------------------
-// ¼­¹ö ÃÊ±âÈ­
+// ì„œë²„ ì´ˆê¸°í™”
 // -------------------------------
 
 bool ServerMain::InitServer(int port) {
 	
 	int retval;
 	
-	// ¼ÒÄÏ »ı¼º
+	// ì†Œì¼“ ìƒì„±
 	server = WSASocket(AF_INET, SOCK_STREAM, 0, 0, 0, WSA_FLAG_OVERLAPPED);
 	if (server == INVALID_SOCKET) {
-		err_quit("socket() ½ÇÆĞ");
+		err_quit("socket() ì‹¤íŒ¨");
 		return false;
 	}
 
@@ -39,7 +39,7 @@ bool ServerMain::InitServer(int port) {
 	SOCKADDR_IN serveraddr{};
 	memset(&serveraddr, 0, sizeof(serveraddr));
 	serveraddr.sin_family = AF_INET;
-	serveraddr.sin_addr.s_addr = htonl(INADDR_ANY); //³ªÁß¿¡ PORT·Î ¹Ù²Ù±â 
+	serveraddr.sin_addr.s_addr = htonl(INADDR_ANY); //ë‚˜ì¤‘ì— PORTë¡œ ë°”ê¾¸ê¸° 
 	serveraddr.sin_port = htons(static_cast<u_short>(port));
 	retval = bind(server, reinterpret_cast<sockaddr*>(&serveraddr), sizeof(serveraddr));
 	if (retval == SOCKET_ERROR) {
@@ -56,27 +56,27 @@ bool ServerMain::InitServer(int port) {
 
 	if (!db.ConnectDB())
 	{
-		std::cout << "DB ¿¬°á ½ÇÆĞ" << "\n";
+		std::cout << "DB ì—°ê²° ì‹¤íŒ¨" << "\n";
 		return false;
 	}
 
-	std::cout << "DB ¿¬°á ¼º°ø" << "\n";
+	std::cout << "DB ì—°ê²° ì„±ê³µ" << "\n";
 
 	h_iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
 	CreateIoCompletionPort((HANDLE)server, h_iocp, -1, 0);
 
 	PostAccept();
 
-	// µğºñ Å×½ºÆ®
+	// ë””ë¹„ í…ŒìŠ¤íŠ¸
 	//db.RegisterUser("player1", "1234");
 
 	//if (db.LoginUser("player1", "1234"))
 	//{
-	//	std::cout << "·Î±×ÀÎ ¼º°ø\n";
+	//	std::cout << "ë¡œê·¸ì¸ ì„±ê³µ\n";
 	//}
 	//else
 	//{
-	//	std::cout << "·Î±×ÀÎ ½ÇÆĞ\n";
+	//	std::cout << "ë¡œê·¸ì¸ ì‹¤íŒ¨\n";
 	//}
 
 
@@ -85,7 +85,7 @@ bool ServerMain::InitServer(int port) {
 
 
 // -------------------------------
-// Å¬¶óÀÌ¾ğÆ® Á¢¼Ó ´ë±â
+// í´ë¼ì´ì–¸íŠ¸ ì ‘ì† ëŒ€ê¸°
 // -------------------------------
 void ServerMain::PostAccept() {
 
@@ -127,26 +127,26 @@ void ServerMain::GameThread()
 	using clock = std::chrono::steady_clock;
 	using namespace std::chrono;
 
-	const auto tick = milliseconds(16); // ¾à 60FPS
+	const auto tick = milliseconds(16); // ì•½ 60FPS
 
-	// ÀÌÀü ÇÁ·¹ÀÓ ½Ã°£°ú ´ÙÀ½ ½ÇÇà ¿¹Á¤ ½Ã°£À» ÀúÀå
+	// ì´ì „ í”„ë ˆì„ ì‹œê°„ê³¼ ë‹¤ìŒ ì‹¤í–‰ ì˜ˆì • ì‹œê°„ì„ ì €ì¥
 	auto previous = clock::now();
 	auto next_tick = previous + tick;
 
 	while (true) {
-		// ÇöÀç ½Ã°¢
+		// í˜„ì¬ ì‹œê°
 		auto now = clock::now();
 
-		// Áö³­ ÇÁ·¹ÀÓ°úÀÇ ½Ã°£ Â÷ÀÌ¸¦ °è»ê
+		// ì§€ë‚œ í”„ë ˆì„ê³¼ì˜ ì‹œê°„ ì°¨ì´ë¥¼ ê³„ì‚°
 		float dt = duration<float>(now - previous).count();
 		previous = now;
 
-		// µğ¹ö±ë Áß Áß´Ü, ³Ê¹« Å« dt °ªÀÌ µé¾î¿À´Â °æ¿ì¸¦ ¹æÁöÇÏ±â À§ÇØ ÃÖ´ë°ªÀ» Á¦ÇÑ
+		// ë””ë²„ê¹… ì¤‘ ì¤‘ë‹¨, ë„ˆë¬´ í° dt ê°’ì´ ë“¤ì–´ì˜¤ëŠ” ê²½ìš°ë¥¼ ë°©ì§€í•˜ê¸° ìœ„í•´ ìµœëŒ€ê°’ì„ ì œí•œ
 		dt = (std::min)(dt, 0.1f);
 
 		RoomManager::Instance().update_all_rooms(dt);
 
-		// sleep_untilÀ» »ç¿ëÇÏ¿© ÀÏÁ¤ÇÑ ¾÷µ¥ÀÌÆ® ÁÖ±â¸¦ À¯Áö
+		// sleep_untilì„ ì‚¬ìš©í•˜ì—¬ ì¼ì •í•œ ì—…ë°ì´íŠ¸ ì£¼ê¸°ë¥¼ ìœ ì§€
 		std::this_thread::sleep_until(next_tick);
 		next_tick += tick;
 	}

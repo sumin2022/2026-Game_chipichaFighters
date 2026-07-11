@@ -1,4 +1,4 @@
-#include "RoomManager.h"
+ï»¿#include "RoomManager.h"
 #include "SESSION.h"
 #include "MapCollision.h"
 #include <algorithm>
@@ -69,7 +69,7 @@ void RoomManager::update_room(Room& room, float dt)
 
 }
 
-void RoomManager::request_matchmaking(int player_id) //±×³É ¿äÃ»¸¸
+void RoomManager::request_matchmaking(int player_id) //ê·¸ëƒ¥ ìš”ì²­ë§Œ
 {
 	{
 		std::lock_guard<std::mutex> lock(m_request_mutex);
@@ -79,7 +79,7 @@ void RoomManager::request_matchmaking(int player_id) //±×³É ¿äÃ»¸¸
 	std::cout << "Matchmaking requested by player " << player_id << '\n';
 }
 
-void RoomManager::leave_room(int player_id) //±×³É ¿äÃ»¸¸	, ½ÇÁ¦·Î ¹æ¿¡¼­ ³ª°¡´Â °Ç update_room¿¡¼­ Ã³¸®
+void RoomManager::leave_room(int player_id) //ê·¸ëƒ¥ ìš”ì²­ë§Œ	, ì‹¤ì œë¡œ ë°©ì—ì„œ ë‚˜ê°€ëŠ” ê±´ update_roomì—ì„œ ì²˜ë¦¬
 {
 	{
 		std::lock_guard<std::mutex> lock(m_request_mutex);
@@ -117,7 +117,7 @@ void RoomManager::process_pending_requests()
 
 		std::cout << "Player " << player_id << " left room " << room_id << '\n';
 
-		// °ÔÀÓ ÁßÀÎ ¹æ¿¡¼­ ´©°¡ ³ª°¡¸é ÀÌ ¹æÀº Àç»ç¿ëÇÏÁö ¾Ê°í Á¦°Å
+		// ê²Œì„ ì¤‘ì¸ ë°©ì—ì„œ ëˆ„ê°€ ë‚˜ê°€ë©´ ì´ ë°©ì€ ì¬ì‚¬ìš©í•˜ì§€ ì•Šê³  ì œê±°
 		if (room.active) {
 			for (int i = 0; i < room.player_count; ++i) {
 				int pid = room.players[i];
@@ -139,7 +139,7 @@ void RoomManager::process_pending_requests()
 			continue;
 		}
 
-		// ¾ÆÁ÷ ¸ÅÄª ÁßÀÎ ¹æÀÌ¸é ÇØ´ç ÇÃ·¹ÀÌ¾î¸¸ Á¦°Å
+		// ì•„ì§ ë§¤ì¹­ ì¤‘ì¸ ë°©ì´ë©´ í•´ë‹¹ í”Œë ˆì´ì–´ë§Œ ì œê±°
 		room.remove_player(player_id);
 		m_player_room.erase(player_id);
 
@@ -228,11 +228,11 @@ void RoomManager::start_room(int room_id)
 	if (room.state != RoomState::LOBBY) return;
 	if (!room.all_ready()) return;
 
-	room.score.start_game(); // Á¡¼ö ÃÊ±âÈ­
+	room.score.start_game(); // ì ìˆ˜ ì´ˆê¸°í™”
 	room.state = RoomState::INGAME;
 	room.active = true;
 
-	// ÇÃ·¹ÀÌ¾î »óÅÂ ÃÊ±âÈ­
+	// í”Œë ˆì´ì–´ ìƒíƒœ ì´ˆê¸°í™”
 	for (int i = 0; i < room.player_count; ++i) {
 		PlayerState& player = room.states[i];
 
@@ -253,7 +253,7 @@ void RoomManager::start_room(int room_id)
 		set_spawn_position(room, player);
 	}
 
-	//°ÔÀÓ ½ÃÀÛ ÆĞÅ¶ Àü¼Û
+	//ê²Œì„ ì‹œì‘ íŒ¨í‚· ì „ì†¡
 	for (int i = 0; i < room.player_count; ++i) {
 		int player_id = room.players[i];
 		if (player_id == -1) continue;
@@ -418,7 +418,7 @@ void RoomManager::apply_character_to_player(PlayerState& state, CharacterType ch
 	state.lobby_ready = false;
 }
 
-constexpr float MOVE_INPUT_TIMEOUT = 0.1f;	//ÆĞÅ¶ ²÷±â´Â°Ç 0.1ÃÊ Á¤µµ´Â Çã¿ë 
+constexpr float MOVE_INPUT_TIMEOUT = 0.1f;	//íŒ¨í‚· ëŠê¸°ëŠ”ê±´ 0.1ì´ˆ ì •ë„ëŠ” í—ˆìš© 
 void RoomManager::update_movement(Room& room, float dt)
 {
 
@@ -447,11 +447,11 @@ void RoomManager::update_movement(Room& room, float dt)
 			dx /= len;
 			dy /= len;
 
-			// ÀÌµ¿ ÈÄ ¿¹»ó À§Ä¡ °è»ê
+			// ì´ë™ í›„ ì˜ˆìƒ ìœ„ì¹˜ ê³„ì‚°
 			float nextX = p.x + dx * p.move_speed * dt;
 			float nextY = p.y + dy * p.move_speed * dt;
 
-			// ¸Ê °æ°è¸¦ ¹ş¾î³ªÁö ¾Êµµ·Ï Á¦ÇÑ
+			// ë§µ ê²½ê³„ë¥¼ ë²—ì–´ë‚˜ì§€ ì•Šë„ë¡ ì œí•œ
 			MapCollision::clamp_to_map(nextX, nextY);
 
 			if (MapCollision::is_walkable(nextX, nextY)) {
@@ -509,7 +509,7 @@ void RoomManager::update_attacks(Room& room, float dt)
 
 			float dot = dirX * attacker.faceX + dirY * attacker.faceY;
 
-			// 0.7 Á¤µµ¸é Àü¹æ ¾à 90µµ ¾ÈÂÊ
+			// 0.7 ì •ë„ë©´ ì „ë°© ì•½ 90ë„ ì•ˆìª½
 			if (dot < 0.7f) continue;
 
 			bestDistSq = distSq;
@@ -629,14 +629,14 @@ void RoomManager::set_face_dir(int player_id, float faceX, float faceY)
 	state->faceY = faceY / len;
 }
 
-//½ºÅ³ ÆÇÁ¤½Ã °Å¸® °è»ê¿ë
+//ìŠ¤í‚¬ íŒì •ì‹œ ê±°ë¦¬ ê³„ì‚°ìš©
 static float dist_sq(float x1, float y1, float x2, float y2)
 {
 	float dx = x1 - x2;
 	float dy = y1 - y2;
 	return dx * dx + dy * dy;
 }
-//½ºÅ³ µ¥¹ÌÁö Àû¿ë
+//ìŠ¤í‚¬ ë°ë¯¸ì§€ ì ìš©
 static void apply_damage(PlayerState& target, int damage)
 {
 	if (!target.alive) return;
@@ -647,7 +647,7 @@ static void apply_damage(PlayerState& target, int damage)
 		target.hp = 0;
 	}
 }
-//½ºÅ³ Èú Àû¿ë
+//ìŠ¤í‚¬ í ì ìš©
 static void apply_heal(PlayerState& target, int heal)
 {
 	if (!target.alive) return;
@@ -684,8 +684,8 @@ void RoomManager::update_skills(Room& room, float dt)
 		switch (caster.active_skill) {
 		case SkillType::DEALER_SKILL:
 		{
-			// ÀÚ±â ÁÖº¯ ¿øÇü ¹üÀ§ °ø°İ
-			// skill.damage, skill.dealer_area_range »ç¿ë
+			// ìê¸° ì£¼ë³€ ì›í˜• ë²”ìœ„ ê³µê²©
+			// skill.damage, skill.dealer_area_range ì‚¬ìš©
 			float range_sq = skill.dealer_area_range * skill.dealer_area_range;
 
 			for (int j = 0; j < room.player_count; ++j) {
@@ -710,9 +710,9 @@ void RoomManager::update_skills(Room& room, float dt)
 		}
 		case SkillType::ARCHER_SKILL:
 		{
-			// ¹æÇâÀ¸·Î È­»ì ÆÇÁ¤
-			// skill.penetration_damage, skill.range »ç¿ë
-			// ¹æÇâÀ¸·Î °üÅë È­»ì ÆÇÁ¤
+			// ë°©í–¥ìœ¼ë¡œ í™”ì‚´ íŒì •
+			// skill.penetration_damage, skill.range ì‚¬ìš©
+			// ë°©í–¥ìœ¼ë¡œ ê´€í†µ í™”ì‚´ íŒì •
 			float dirX = caster.faceX;
 			float dirY = caster.faceY;
 
@@ -727,7 +727,7 @@ void RoomManager::update_skills(Room& room, float dt)
 			}
 
 			float current_damage = skill.penetration_damage;
-			float hit_width = 50.0f; // È­»ì ÆÇÁ¤ Æø, ÀÓ½Ã°ª
+			float hit_width = 50.0f; // í™”ì‚´ íŒì • í­, ì„ì‹œê°’
 			float hit_width_sq = hit_width * hit_width;
 
 			for (int j = 0; j < room.player_count; ++j) {
@@ -767,9 +767,9 @@ void RoomManager::update_skills(Room& room, float dt)
 		}
 		case SkillType::TANKER_SKILL:
 		{
-			// Å¸°ÙÆÃ µÈ »ó´ë¿¡°Ô ÅõÃ´ ÆÇÁ¤
-			// skill.damage, skill.extra_damage, skill.range »ç¿ë
-			// ±âº» °ø°İÃ³·³ °¡Àå °¡±î¿î »ó´ë Å¸°ÙÆÃ
+			// íƒ€ê²ŸíŒ… ëœ ìƒëŒ€ì—ê²Œ íˆ¬ì²™ íŒì •
+			// skill.damage, skill.extra_damage, skill.range ì‚¬ìš©
+			// ê¸°ë³¸ ê³µê²©ì²˜ëŸ¼ ê°€ì¥ ê°€ê¹Œìš´ ìƒëŒ€ íƒ€ê²ŸíŒ…
 			PlayerState* target = nullptr;
 			float best_dist_sq = skill.range * skill.range;
 
@@ -796,7 +796,7 @@ void RoomManager::update_skills(Room& room, float dt)
 				if (target->hp <= 0) {
 					kill_player(room, *target, caster.id);
 				}
-				// stun_durationÀº ÇöÀç PlayerState¿¡ stun_timer °°Àº °Ô ¾øÀ¸¸é ¾ÆÁ÷ Àû¿ë ºÒ°¡
+				// stun_durationì€ í˜„ì¬ PlayerStateì— stun_timer ê°™ì€ ê²Œ ì—†ìœ¼ë©´ ì•„ì§ ì ìš© ë¶ˆê°€
 				// target->stun_timer = skill.stun_duration;
 
 				skill_casted = true;
@@ -806,9 +806,9 @@ void RoomManager::update_skills(Room& room, float dt)
 		}
 		case SkillType::HEALER_SKILL:
 		{
-			// ¹æÇâ »ç°Å¸® À§Ä¡¿¡ ÀåÆÇ »ı¼º ÈÄ ¹üÀ§ Èú
-			// skill.heal, skill.range, skill.heal_area_range »ç¿ë
-			// ¹æÇâ »ç°Å¸® À§Ä¡¿¡ ÀåÆÇ »ı¼º ÈÄ ¹üÀ§ Èú
+			// ë°©í–¥ ì‚¬ê±°ë¦¬ ìœ„ì¹˜ì— ì¥íŒ ìƒì„± í›„ ë²”ìœ„ í
+			// skill.heal, skill.range, skill.heal_area_range ì‚¬ìš©
+			// ë°©í–¥ ì‚¬ê±°ë¦¬ ìœ„ì¹˜ì— ì¥íŒ ìƒì„± í›„ ë²”ìœ„ í
 			float dirX = caster.faceX;
 			float dirY = caster.faceY;
 
@@ -871,7 +871,7 @@ void RoomManager::kill_player(Room& room, PlayerState& target, int killer_id)
 	target.move_input_timer = 0.0f;
 	target.auto_attack = false;
 	target.skill_requested = false;
-	target.respawn_timer = 5.0f; // ÀÓ½Ã ¸®½ºÆù ½Ã°£
+	target.respawn_timer = 5.0f; // ì„ì‹œ ë¦¬ìŠ¤í° ì‹œê°„
 	target.death_count++;
 
 	PlayerState* killer = find_player_state(room, killer_id);
@@ -933,7 +933,7 @@ void RoomManager::respawn_player(Room& room, PlayerState& player)
 	std::cout << "[RESPAWN] player=" << player.id << "\n";
 }
 
-// ¸®½ºÆù À§Ä¡¸¦ ÆÀº°·Î ³ª´²¼­ ¼³Á¤
+// ë¦¬ìŠ¤í° ìœ„ì¹˜ë¥¼ íŒ€ë³„ë¡œ ë‚˜ëˆ ì„œ ì„¤ì •
 void RoomManager::set_spawn_position(Room& room, PlayerState& player)
 {
 	int teamIndex = 0;
@@ -985,7 +985,7 @@ void RoomManager::send_room_snapshot(Room& room)
 		packet.red_score = room.score.get_red_score();
 		packet.blue_score = room.score.get_blue_score();
 		packet.time_left = room.score.get_time_left();
-		//Å³µ« ½Ç½Ã°£ Àû¿ë?
+		//í‚¬ëƒ ì‹¤ì‹œê°„ ì ìš©?
 		packet.players[i].kill_count = p.kill_count;
 		packet.players[i].death_count = p.death_count;
 	}

@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "protocol.h"
 
 struct Room;
@@ -28,18 +28,18 @@ public:
     float get_time_left() const { return game_timer; }
 
 private:
-    float game_timer = 150.0f; // 2ºĞ 30ÃÊ
+    float game_timer = 150.0f; // 2ë¶„ 30ì´ˆ
     float red_score = 0;
     float blue_score = 0;
 
-    CaptureZone zone{ //Á¡·ÉÁö À§Ä¡
+    CaptureZone zone{ //ì ë ¹ì§€ ìœ„ì¹˜
     -310.0f,  // min_x = centerX - 300
      290.0f,  // max_x = centerX + 300
     -300.0f,  // min_y = centerY - 300
      300.0f   // max_y = centerY + 300
     };
 
-	bool is_in_capture_zone(float x, float y) const; // Á¡·ÉÁö ¾È¿¡ ÀÖ´ÂÁö È®ÀÎ
-	float get_capture_multiplier(int count) const;  // Á¡·ÉÁö ¾È¿¡ ÀÖ´Â ÇÃ·¹ÀÌ¾î ¼ö¿¡ µû¸¥ Á¡¼ö ¹èÀ² °è»ê
+	bool is_in_capture_zone(float x, float y) const; // ì ë ¹ì§€ ì•ˆì— ìˆëŠ”ì§€ í™•ì¸
+	float get_capture_multiplier(int count) const;  // ì ë ¹ì§€ ì•ˆì— ìˆëŠ” í”Œë ˆì´ì–´ ìˆ˜ì— ë”°ë¥¸ ì ìˆ˜ ë°°ìœ¨ ê³„ì‚°
 
 };

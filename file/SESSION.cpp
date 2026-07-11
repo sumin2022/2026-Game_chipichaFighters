@@ -1,4 +1,4 @@
-#include "SESSION.h"
+ï»¿#include "SESSION.h"
 #include <algorithm>
 #include "RoomManager.h"
 
@@ -106,10 +106,10 @@ void SESSION::process_packet(unsigned char* p)
 
 	case CS_LOGIN:
 	{
-		// DB È®ÀÎ
-		// ¼º°øÇÏ¸é m_is_logged_in = true;
-		// m_username ÀúÀå
-		// SC_LOGIN_RESULT Àü¼Û
+		// DB í™•ì¸
+		// ì„±ê³µí•˜ë©´ m_is_logged_in = true;
+		// m_username ì €ì¥
+		// SC_LOGIN_RESULT ì „ì†¡
 		CS_Login* packet = reinterpret_cast<CS_Login*>(p);
 		strncpy_s(m_username, packet->username, MAX_NAME_LEN);
 
@@ -140,7 +140,7 @@ void SESSION::process_packet(unsigned char* p)
 		std::cout << "[RECV] CS_READY / player=" << m_id
 			<< " matchmaking request\n";
 
-		// RoomManager¿¡ ¸ÅÄª ¿äÃ»
+		// RoomManagerì— ë§¤ì¹­ ìš”ì²­
 		RoomManager::Instance().request_matchmaking(m_id);
 
 		break;
@@ -183,7 +183,7 @@ void SESSION::process_packet(unsigned char* p)
 		//	if (cl.m_is_connected)
 		//		cl.send_move_packet(m_id);
 		//}
-		// ³ªÁß¿¡ ¹æ¿¡	ÀÖ´Â ÇÃ·¹ÀÌ¾îÇÑÅ×¸¸ º¸³»µµ·Ï ¼öÁ¤ÇÏ±â
+		// ë‚˜ì¤‘ì— ë°©ì—	ìˆëŠ” í”Œë ˆì´ì–´í•œí…Œë§Œ ë³´ë‚´ë„ë¡ ìˆ˜ì •í•˜ê¸°
 		break;
 	}
 	case CS_FACE_DIR:
@@ -203,7 +203,7 @@ void SESSION::process_packet(unsigned char* p)
 	case CS_ATTACK:
 	{
 		if (!m_in_game) return;
-		// °ø°İ ¿äÃ» ÀúÀå
+		// ê³µê²© ìš”ì²­ ì €ì¥
 		CS_Attack* packet = reinterpret_cast<CS_Attack*>(p);
 
 		RoomManager::Instance().request_attack(m_id);
@@ -215,7 +215,7 @@ void SESSION::process_packet(unsigned char* p)
 	case CS_SKILL:
 	{
 		if (!m_in_game) return;
-		// ½ºÅ³ ¿äÃ» ÀúÀå
+		// ìŠ¤í‚¬ ìš”ì²­ ì €ì¥
 		CS_Skill* packet = reinterpret_cast<CS_Skill*>(p);
 
 		RoomManager::Instance().request_skill(m_id);
@@ -243,7 +243,7 @@ void send_login_fail(SOCKET client, const char* message)
 	wsa_buf.buf = reinterpret_cast<char*>(&packet);
 	wsa_buf.len = packet.size;
 
-	WSASend(client, &wsa_buf, 1, 0, 0, nullptr, nullptr);// ?ÀÌ°Å ¿Ö WSASendÀÓ? do_send?
+	WSASend(client, &wsa_buf, 1, 0, 0, nullptr, nullptr);// ?ì´ê±° ì™œ WSASendì„? do_send?
 }
 
 void SESSION::send_game_start()
