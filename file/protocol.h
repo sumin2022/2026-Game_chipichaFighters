@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <array>
 #include <cstdint>
 
@@ -8,7 +8,7 @@ constexpr int WORLD_HEIGHT = 400;
 constexpr int MAX_PLAYERS = 18;
 constexpr int MAX_NAME_LEN = 20;
 constexpr int MAX_ROOM_AI = 6;
-constexpr int MAX_ROOM_PLAYERS = 2;  // 원래 6명
+constexpr int MAX_ROOM_PLAYERS = 6; // 원래 6명
 
 enum struct PACKET_STAGE : std::uint8_t {
   DEFAULT,
@@ -20,11 +20,10 @@ enum struct PACKET_STAGE : std::uint8_t {
 };
 
 enum struct PACKET_TYPE : std::uint8_t {
-  // 클라이언트에서 서버에게 3초마다 패킷 전송, 서버는 받은 패킷에 응답 처리,
-  // 10초 이상 응답 없을시 연결 끊김 처리
-  // default
-  CS_CONNECTION_CHECK,  // 클라이언트에서 서버로 연결 확인 요청
-  SC_CONNECTION_CHECK,  // 서버에서 클라이언트로 연결 확인 응답
+    // 클라이언트에서 서버에게 3초마다 패킷 전송, 서버는 받은 패킷에 응답 처리, 10초 이상 응답 없을시 연결 끊김 처리
+    // default
+	CS_CONNECTION_CHECK, // 클라이언트에서 서버로 연결 확인 요청
+	SC_CONNECTION_CHECK, // 서버에서 클라이언트로 연결 확인 응답
 
   // title
   CS_LOGIN,
@@ -90,12 +89,10 @@ struct TZPacket {
 struct TZPacketHeader : TZPacket<PACKET_TYPE::None, TZPacketHeader> {};
 
 // default - 연결 상태 확인
-struct CS_ConnectionCheck
-    : TZPacket<PACKET_TYPE::CS_CONNECTION_CHECK, CS_ConnectionCheck> {};
+struct CS_ConnectionCheck : TZPacket<PACKET_TYPE::CS_CONNECTION_CHECK, CS_ConnectionCheck>{};
 // 클라이언트가 서버에게 연결 확인 요청
 
-struct SC_ConnectionCheck
-    : TZPacket<PACKET_TYPE::SC_CONNECTION_CHECK, SC_ConnectionCheck> {};
+struct SC_ConnectionCheck : TZPacket<PACKET_TYPE::SC_CONNECTION_CHECK, SC_ConnectionCheck> {};
 // 클라이언트가 서버에게 연결 확인 요청
 
 // title - 로그인 요청
@@ -130,16 +127,14 @@ struct SC_RoomEnter : TZPacket<PACKET_TYPE::SC_ROOM_ENTER, SC_RoomEnter> {
 };
 
 // match - 캐릭터 선택 요청
-struct CS_SelectCharacter
-    : TZPacket<PACKET_TYPE::CS_SELECT_CHARACTER, CS_SelectCharacter> {
-  CharacterType character{CharacterType::CHAR_NONE};
+struct CS_SelectCharacter : TZPacket<PACKET_TYPE::CS_SELECT_CHARACTER, CS_SelectCharacter> {
+    CharacterType character{ CharacterType::CHAR_NONE };
 };
 
 // match - 특정 플레이어의 캐릭터 선택 결과 알림
-struct SC_CharacterSelected
-    : TZPacket<PACKET_TYPE::SC_CHARACTER_SELECTED, SC_CharacterSelected> {
-  int player_id{};
-  CharacterType character{CharacterType::CHAR_NONE};
+struct SC_CharacterSelected : TZPacket<PACKET_TYPE::SC_CHARACTER_SELECTED, SC_CharacterSelected> {
+    int player_id{};
+    CharacterType character{ CharacterType::CHAR_NONE };
 };
 
 // match - 게임 시작 준비 상태 변경 요청
@@ -147,11 +142,10 @@ struct CS_GameReady : TZPacket<PACKET_TYPE::CS_GAME_READY, CS_GameReady> {
   bool ready{};
 };
 
-// match - 매칭 방에서 다른 플레이어 준비 상태 알림
-struct SC_LobbyReadyState
-    : TZPacket<PACKET_TYPE::SC_LOBBY_READY_STATE, SC_LobbyReadyState> {
-  int player_id{};
-  bool ready{};
+// match - 매칭 방에서 다른 플레이어 준비 상태 알림 
+struct SC_LobbyReadyState : TZPacket<PACKET_TYPE::SC_LOBBY_READY_STATE, SC_LobbyReadyState> {
+    int player_id{};
+    bool ready{};
 };
 
 // match - 모든 준비 완료 후 게임 시작 알림
@@ -189,10 +183,9 @@ struct SC_AddPlayer : TZPacket<PACKET_TYPE::SC_ADD_PLAYER, SC_AddPlayer> {
   short y{};
 };
 
-// battle - 게임 중 플레이어 제거 알림 (연결 종료/퇴장용)
-struct SC_RemovePlayer
-    : TZPacket<PACKET_TYPE::SC_REMOVE_PLAYER, SC_RemovePlayer> {
-  int playerid{};
+// battle - 게임 중 플레이어 제거 알림 (연결 종료/퇴장용) 
+struct SC_RemovePlayer : TZPacket<PACKET_TYPE::SC_REMOVE_PLAYER, SC_RemovePlayer> {
+    int playerid{};
 };
 //==============================================================================================
 
@@ -226,18 +219,16 @@ struct NetPlayerState {
 };
 
 // battle - 방 전체 상태 주기 동기화
-struct SC_RoomSnapshot
-    : TZPacket<PACKET_TYPE::SC_ROOM_SNAPSHOT, SC_RoomSnapshot> {
-  int count{};
-  int red_score{};
-  int blue_score{};
-  float time_left{};
-  NetPlayerState players[MAX_ROOM_AI]{};
+struct SC_RoomSnapshot : TZPacket<PACKET_TYPE::SC_ROOM_SNAPSHOT, SC_RoomSnapshot> {
+    int count{};
+    int red_score{};
+    int blue_score{};
+    float time_left{};
+    NetPlayerState players[MAX_ROOM_AI]{};
 };
 
 // battle - 현재 상태 확인용 패킷 (아직 내용 없음)
-struct SC_CurrentState
-    : TZPacket<PACKET_TYPE::SC_CURRENT_STATE, SC_CurrentState> {};
+struct SC_CurrentState : TZPacket<PACKET_TYPE::SC_CURRENT_STATE, SC_CurrentState> {};
 
 // battle - 플레이어 사망 알림
 struct SC_Death : TZPacket<PACKET_TYPE::SC_DEATH, SC_Death> {

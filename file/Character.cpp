@@ -1,4 +1,4 @@
-#include "Character.h"
+﻿#include "Character.h"
 
 const CharacterStats& CharacterManager::GetStats(CharacterType type)
 {

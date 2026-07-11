@@ -1,4 +1,4 @@
-#include "MapCollision.h"
+﻿#include "MapCollision.h"
 #include <algorithm>
 
 bool MapCollision::is_inside_map(float x, float y)

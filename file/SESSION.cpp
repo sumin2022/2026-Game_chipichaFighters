@@ -94,13 +94,14 @@ void SESSION::process_packet(unsigned char *p) {
   switch (header->type) {
     using enum PACKET_TYPE;
 
-  case CS_LOGIN: {
-    // DB 확인
-    // 성공하면 m_is_logged_in = true;
-    // m_username 저장
-    // SC_LOGIN_RESULT 전송
-    CS_Login *packet = reinterpret_cast<CS_Login *>(p);
-    strncpy_s(m_username, packet->username, MAX_NAME_LEN);
+	case CS_LOGIN:
+	{
+		// DB 확인
+		// 성공하면 m_is_logged_in = true;
+		// m_username 저장
+		// SC_LOGIN_RESULT 전송
+		CS_Login* packet = reinterpret_cast<CS_Login*>(p);
+		strncpy_s(m_username, packet->username, MAX_NAME_LEN);
 
     m_is_logged_in = true;
 
@@ -130,8 +131,8 @@ void SESSION::process_packet(unsigned char *p) {
     std::cout << "[RECV] CS_READY / player=" << m_id
               << " matchmaking request\n";
 
-    // RoomManager에 매칭 요청
-    RoomManager::Instance().request_matchmaking(m_id);
+		// RoomManager에 매칭 요청
+		RoomManager::Instance().request_matchmaking(m_id);
 
     break;
   }
@@ -167,40 +168,40 @@ void SESSION::process_packet(unsigned char *p) {
     // std::cout << "Player[" << m_id << "] moved to (" << m_x << ", " << m_y <<
     // ")\n";
 
-    // for (auto& cl : clients) {
-    //	if (cl.m_is_connected)
-    //		cl.send_move_packet(m_id);
-    // }
-    //  나중에 방에	있는 플레이어한테만 보내도록 수정하기
-    break;
-  }
-  case CS_FACE_DIR: {
-    if (!m_in_game)
-      return;
+		//for (auto& cl : clients) {
+		//	if (cl.m_is_connected)
+		//		cl.send_move_packet(m_id);
+		//}
+		// 나중에 방에	있는 플레이어한테만 보내도록 수정하기
+		break;
+	}
+	case CS_FACE_DIR:
+	{
+		if (!m_in_game) return;
 
     CS_FaceDir *packet = reinterpret_cast<CS_FaceDir *>(p);
 
     RoomManager::Instance().set_face_dir(m_id, packet->faceX, packet->faceY);
 
-    break;
-  }
-  case CS_ATTACK: {
-    if (!m_in_game)
-      return;
-    // 공격 요청 저장
-    CS_Attack *packet = reinterpret_cast<CS_Attack *>(p);
+		break;
+	}
+	case CS_ATTACK:
+	{
+		if (!m_in_game) return;
+		// 공격 요청 저장
+		CS_Attack* packet = reinterpret_cast<CS_Attack*>(p);
 
     RoomManager::Instance().request_attack(m_id);
 
-    // std::cout << "Player[" << m_id << "] attack dir: "
-    //	<< aimX << ", " << aimY << "\n";
-    break;
-  }
-  case CS_SKILL: {
-    if (!m_in_game)
-      return;
-    // 스킬 요청 저장
-    CS_Skill *packet = reinterpret_cast<CS_Skill *>(p);
+		//std::cout << "Player[" << m_id << "] attack dir: "
+		//	<< aimX << ", " << aimY << "\n";
+		break;
+	}
+	case CS_SKILL:
+	{
+		if (!m_in_game) return;
+		// 스킬 요청 저장
+		CS_Skill* packet = reinterpret_cast<CS_Skill*>(p);
 
     RoomManager::Instance().request_skill(m_id);
 
@@ -226,8 +227,7 @@ void send_login_fail(SOCKET client, const char *message) {
   wsa_buf.buf = reinterpret_cast<char *>(&packet);
   wsa_buf.len = packet.size;
 
-  WSASend(client, &wsa_buf, 1, 0, 0, nullptr,
-          nullptr); // ?이거 왜 WSASend임? do_send?
+	WSASend(client, &wsa_buf, 1, 0, 0, nullptr, nullptr);// ?이거 왜 WSASend임? do_send?
 }
 
 void SESSION::send_game_start() {

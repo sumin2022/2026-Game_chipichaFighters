@@ -58,12 +58,12 @@ struct PlayerState {
   SkillType active_skill = SkillType::NONE;
   PassiveType passive_skill = PassiveType::NONE;
 
-  float attack_timer = 0.0f; // 기본 공격 쿨타임 진행 상태
-  float skill_timer = 0.0f;  // 스킬 쿨타임 진행 상태
+	float attack_timer = 0.0f;       // 기본 공격 쿨타임 진행 상태
+	float skill_timer = 0.0f;        // 스킬 쿨타임 진행 상태
 
-  int current_target_id = -1;     // 클라 표시용
-  int last_attack_target = -1;    // 마지막으로 공격한 대상
-  float last_damaged_time = 0.0f; // 마지막으로 피해받은 시간
+	int current_target_id = -1; // 클라 표시용
+	int last_attack_target = -1;     // 마지막으로 공격한 대상
+	float last_damaged_time = 0.0f;  // 마지막으로 피해받은 시간
 
   bool lobby_ready = false;
 
@@ -82,11 +82,11 @@ struct ItemState {
 };
 
 struct Room {
-  int room_id = -1; // room 번호 : 1, 2, 3 ...?
-  RoomState state = RoomState::MATCHING;
-  bool active = false;
-  ScoreManager score;
-  ItemState items[2];
+	int room_id = -1; // room 번호 : 1, 2, 3 ...? 
+	RoomState state = RoomState::MATCHING;
+	bool active = false;
+	ScoreManager score;
+	ItemState items[2];
 
   std::array<int, MAX_ROOM_PLAYERS> players;
   std::array<PlayerState, MAX_ROOM_PLAYERS> states;
@@ -209,7 +209,7 @@ private:
 
   int m_next_room_id = 1;
 
-  std::mutex m_request_mutex;
-  std::vector<int> m_match_requests; // 매칭요청대기업
-  std::vector<int> m_leave_requests; // 퇴장 요청 대기업
+	std::mutex m_request_mutex;
+	std::vector<int> m_match_requests; // 매칭요청대기업
+	std::vector<int> m_leave_requests; // 퇴장 요청 대기업
 };

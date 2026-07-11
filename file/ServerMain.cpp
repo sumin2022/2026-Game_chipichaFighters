@@ -1,24 +1,24 @@
-#include "ServerMain.h"
+﻿#include "ServerMain.h"
 #include "RoomManager.h"
 #include "SESSION.h"
 #include <chrono>
 
 
 ServerMain::ServerMain() : server(INVALID_SOCKET) {
-  WSADATA wsa;
-  if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
-    err_quit("WSAStartup() 실패");
-  }
+	WSADATA wsa;
+	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
+		err_quit("WSAStartup() 실패");
+	}
 }
 
 ServerMain::~ServerMain() {
 
-  // listen socket 정리
-  if (server != INVALID_SOCKET) {
-    closesocket(server);
-    server = INVALID_SOCKET;
-  }
-  WSACleanup();
+	//listen socket 정리
+	if (server != INVALID_SOCKET) {
+		closesocket(server);
+		server = INVALID_SOCKET;
+	}
+	WSACleanup();
 }
 
 // -------------------------------
@@ -26,28 +26,27 @@ ServerMain::~ServerMain() {
 // -------------------------------
 
 bool ServerMain::InitServer(int port) {
+	
+	int retval;
+	
+	// 소켓 생성
+	server = WSASocket(AF_INET, SOCK_STREAM, 0, 0, 0, WSA_FLAG_OVERLAPPED);
+	if (server == INVALID_SOCKET) {
+		err_quit("socket() 실패");
+		return false;
+	}
 
-  int retval;
-
-  // 소켓 생성
-  server = WSASocket(AF_INET, SOCK_STREAM, 0, 0, 0, WSA_FLAG_OVERLAPPED);
-  if (server == INVALID_SOCKET) {
-    err_quit("socket() 실패");
-    return false;
-  }
-
-  // bind
-  SOCKADDR_IN serveraddr{};
-  memset(&serveraddr, 0, sizeof(serveraddr));
-  serveraddr.sin_family = AF_INET;
-  serveraddr.sin_addr.s_addr = htonl(INADDR_ANY); // 나중에 PORT로 바꾸기
-  serveraddr.sin_port = htons(static_cast<u_short>(port));
-  retval = bind(server, reinterpret_cast<sockaddr *>(&serveraddr),
-                sizeof(serveraddr));
-  if (retval == SOCKET_ERROR) {
-    err_quit("bind()");
-    return false;
-  }
+	// bind
+	SOCKADDR_IN serveraddr{};
+	memset(&serveraddr, 0, sizeof(serveraddr));
+	serveraddr.sin_family = AF_INET;
+	serveraddr.sin_addr.s_addr = htonl(INADDR_ANY); //나중에 PORT로 바꾸기 
+	serveraddr.sin_port = htons(static_cast<u_short>(port));
+	retval = bind(server, reinterpret_cast<sockaddr*>(&serveraddr), sizeof(serveraddr));
+	if (retval == SOCKET_ERROR) {
+		err_quit("bind()");
+		return false;
+	}
 
   // listen
   retval = listen(server, SOMAXCONN);
@@ -56,29 +55,31 @@ bool ServerMain::InitServer(int port) {
     return false;
   }
 
-  if (!db.ConnectDB()) {
-    std::cout << "DB 연결 실패" << "\n";
-    return false;
-  }
+	if (!db.ConnectDB())
+	{
+		std::cout << "DB 연결 실패" << "\n";
+		return false;
+	}
 
-  std::cout << "DB 연결 성공" << "\n";
+	std::cout << "DB 연결 성공" << "\n";
 
   h_iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
   CreateIoCompletionPort((HANDLE)server, h_iocp, -1, 0);
 
   PostAccept();
 
-  // 디비 테스트
-  // db.RegisterUser("player1", "1234");
+	// 디비 테스트
+	//db.RegisterUser("player1", "1234");
 
-  // if (db.LoginUser("player1", "1234"))
-  //{
-  //	std::cout << "로그인 성공\n";
-  // }
-  // else
-  //{
-  //	std::cout << "로그인 실패\n";
-  // }
+	//if (db.LoginUser("player1", "1234"))
+	//{
+	//	std::cout << "로그인 성공\n";
+	//}
+	//else
+	//{
+	//	std::cout << "로그인 실패\n";
+	//}
+
 
   return true;
 }
