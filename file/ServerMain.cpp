@@ -113,23 +113,34 @@ void ServerMain::PostAccept() {
   }
 }
 
-void ServerMain::GameThread() {
-  using namespace std::chrono;
+void ServerMain::GameThread()
+{
+	using clock = std::chrono::steady_clock;
+	using namespace std::chrono;
 
-  const auto tick = milliseconds(16); // 약 60FPS
+	const auto tick = milliseconds(16); // 약 60FPS
 
-  while (true) {
-    auto start = steady_clock::now();
+	// 이전 프레임 시간과 다음 실행 예정 시간을 저장
+	auto previous = clock::now();
+	auto next_tick = previous + tick;
 
-    RoomManager::Instance().update_all_rooms();
+	while (true) {
+		// 현재 시각
+		auto now = clock::now();
 
-    auto end = steady_clock::now();
-    auto elapsed = end - start;
+		// 지난 프레임과의 시간 차이를 계산
+		float dt = duration<float>(now - previous).count();
+		previous = now;
 
-    if (elapsed < tick) {
-      std::this_thread::sleep_for(tick - elapsed);
-    }
-  }
+		// 디버깅 중 중단, 너무 큰 dt 값이 들어오는 경우를 방지하기 위해 최대값을 제한
+		dt = (std::min)(dt, 0.1f);
+
+		RoomManager::Instance().update_all_rooms(dt);
+
+		// sleep_until을 사용하여 일정한 업데이트 주기를 유지
+		std::this_thread::sleep_until(next_tick);
+		next_tick += tick;
+	}
 }
 
 void ServerMain::WorkerThread() {

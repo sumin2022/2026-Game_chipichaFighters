@@ -6,12 +6,18 @@
 #include <mutex>
 #include <unordered_map>
 #include <vector>
+#include <mutex>
+#include "Character.h"
+#include "Score.h"
 
-constexpr float RED_SPAWN_X = 50.0f;
-constexpr float RED_SPAWN_Y = 200.0f;
+//가로 약 3000 세로 약 2000 중앙 0,0 
+constexpr float RED_SPAWN_X = 1157.0f;
+constexpr float RED_SPAWN_Y = 0.0f;
 
-constexpr float BLUE_SPAWN_X = 350.0f;
-constexpr float BLUE_SPAWN_Y = 200.0f;
+constexpr float BLUE_SPAWN_X = -1157.0f;
+constexpr float BLUE_SPAWN_Y = 0.0f;
+//리스폰 위치에서 약간 떨어진 위치로 리스폰 (플레이어 겹침 방지)
+constexpr float RESPAWN_OFFSET = 120.0f;
 
 struct PlayerState {
   int id = -1;
@@ -149,8 +155,8 @@ public:
   void leave_room(int player_id);
   void start_room(int room_id);
 
-  void broadcast_room(int room_id, char *packet, int size);
-  void update_all_rooms();
+	void broadcast_room(int room_id, char* packet, int size);
+	void update_all_rooms(float dt);
 
   void select_character(int player_id, CharacterType character);
   void set_lobby_ready(int player_id, bool ready);
@@ -169,16 +175,18 @@ private:
 
   void process_pending_requests();
 
-  void update_room(Room &room);
+	void update_room(Room& room, float dt);
 
-  void update_ai(Room &room);
-  void update_movement(Room &room);
-  void update_skills(Room &room);
-  void update_attacks(Room &room);
-  void check_collisions(Room &room);
-  void send_room_snapshot(
-      Room &room); // 플렝이어 위치, 체력, 스킬 상태 등등 보내기 (여기서 맞나?)
-  void update_items(Room &room);
+	void update_ai(Room& room, float dt);
+	void update_movement(Room& room, float dt);
+	void update_skills(Room& room, float dt);
+	void update_attacks(Room& room, float dt);
+	void update_items(Room& room, float dt);
+	void update_respawns(Room& room, float dt);
+
+	void check_collisions(Room& room);
+	void send_room_snapshot(Room& room); //플렝이어 위치, 체력, 스킬 상태 등등 보내기 (여기서 맞나?)
+
 
   void broadcast_item_state(Room &room, int item_id, bool active);
 
@@ -187,11 +195,11 @@ private:
   void assign_teams(Room &room);
   PlayerState *find_player_state(Room &room, int player_id);
 
-  void kill_player(Room &room, PlayerState &target, int killer_id);
-  void update_respawns(Room &room);
-  void respawn_player(Room &room, PlayerState &player);
-
-  void apply_character_to_player(PlayerState &state, CharacterType character);
+	void kill_player(Room& room, PlayerState& target, int killer_id);
+	void respawn_player(Room& room, PlayerState& player);
+	void set_spawn_position(Room& room, PlayerState& player); //리스폰 위치 지정
+	
+	void apply_character_to_player(PlayerState& state, CharacterType character);
 
   void end_room(Room &room);
   void init_items(Room &room);

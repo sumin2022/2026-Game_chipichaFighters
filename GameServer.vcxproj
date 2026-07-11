@@ -25,6 +25,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="file\main.cpp" />
+    <ClCompile Include="file\MapCollision.cpp" />
     <ClCompile Include="file\RoomManager.cpp" />
     <ClCompile Include="file\Score.cpp" />
     <ClCompile Include="file\ServerMain.cpp" />
@@ -37,6 +38,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="file\ExpOver.h" />
+    <ClInclude Include="file\MapCollision.h" />
     <ClInclude Include="file\protocol.h" />
     <ClInclude Include="file\RoomManager.h" />
     <ClInclude Include="file\Score.h" />
