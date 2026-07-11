@@ -1,0 +1,6 @@
+*.h text eol=crlf working-tree-encoding=UTF-8
+*.hpp text eol=crlf working-tree-encoding=UTF-8
+*.cpp text eol=crlf working-tree-encoding=UTF-8
+*.md text eol=lf working-tree-encoding=UTF-8
+*.sln text eol=crlf working-tree-encoding=UTF-8
+*.slnx text eol=crlf working-tree-encoding=UTF-8
