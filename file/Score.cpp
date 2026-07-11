@@ -1,13 +1,13 @@
 #include "RoomManager.h"
 
-void ScoreManager::start_game() // °ÔÀÓ ½ÃÀÛ ½Ã ÃÊ±âÈ­
+void ScoreManager::start_game() // ê²Œìž„ ì‹œìž‘ ì‹œ ì´ˆê¸°í™”
 {
     game_timer = 150.0f;
     red_score = 0.0f;
     blue_score = 0.0f;
 }
 
-bool ScoreManager::is_in_capture_zone(float x, float y) const // Á¡·ÉÁö ¾È¿¡ ÀÖ´ÂÁö È®ÀÎ
+bool ScoreManager::is_in_capture_zone(float x, float y) const // ì ë ¹ì§€ ì•ˆì— ìžˆëŠ”ì§€ í™•ì¸
 {
     return x >= zone.min_x &&
         x <= zone.max_x &&
@@ -15,7 +15,7 @@ bool ScoreManager::is_in_capture_zone(float x, float y) const // Á¡·ÉÁö ¾È¿¡ ÀÖ´
         y <= zone.max_y;
 }
 
-float ScoreManager::get_capture_multiplier(int count) const // Á¡·ÉÁö ¾È¿¡ ÀÖ´Â ÇÃ·¹ÀÌ¾î ¼ö¿¡ µû¸¥ Á¡¼ö ¹èÀ² °è»ê
+float ScoreManager::get_capture_multiplier(int count) const // ì ë ¹ì§€ ì•ˆì— ìžˆëŠ” í”Œë ˆì´ì–´ ìˆ˜ì— ë”°ë¥¸ ì ìˆ˜ ë°°ìœ¨ ê³„ì‚°
 {
     switch (count) {
     case 1:
@@ -29,7 +29,7 @@ float ScoreManager::get_capture_multiplier(int count) const // Á¡·ÉÁö ¾È¿¡ ÀÖ´Â 
     }
 }
 
-void ScoreManager::update(Room& room, float dt) // °ÔÀÓ ½Ã°£ ¾÷µ¥ÀÌÆ®
+void ScoreManager::update(Room& room, float dt) // ê²Œìž„ ì‹œê°„ ì—…ë°ì´íŠ¸
 {
     game_timer -= dt;
 
@@ -60,12 +60,12 @@ void ScoreManager::update(Room& room, float dt) // °ÔÀÓ ½Ã°£ ¾÷µ¥ÀÌÆ®
     }
 }
 
-bool ScoreManager::is_time_over() const // °ÔÀÓ ½Ã°£ÀÌ ³¡³µ´ÂÁö È®ÀÎ
+bool ScoreManager::is_time_over() const // ê²Œìž„ ì‹œê°„ì´ ëë‚¬ëŠ”ì§€ í™•ì¸
 {
     return game_timer <= 0.0f;
 }
 
-void ScoreManager::make_result(Room& room, SC_GameResult& packet) // °ÔÀÓ °á°ú ÆÐÅ¶ »ý¼º
+void ScoreManager::make_result(Room& room, SC_GameResult& packet) // ê²Œìž„ ê²°ê³¼ íŒ¨í‚· ìƒì„±
 {
     packet.size = sizeof(SC_GameResult);
     packet.type = PACKET_TYPE::SC_GAME_RESULT;

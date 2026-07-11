@@ -1,23 +1,23 @@
 #include "RoomManager.h"
-#include "SESSION.h"
-#include "MapCollision.h"
+
 #include <algorithm>
 #include <cmath>
+
+#include "MapCollision.h"
+#include "SESSION.h"
 
 constexpr float ITEM_POS_X[2] = {100.0f, 300.0f};
 constexpr float ITEM_POS_Y[2] = {200.0f, 200.0f};
 
 void RoomManager::broadcast_room(int room_id, char *packet, int size) {
   auto room_it = m_rooms.find(room_id);
-  if (room_it == m_rooms.end())
-    return;
+  if (room_it == m_rooms.end()) return;
 
   Room &room = room_it->second;
 
   for (int i = 0; i < room.player_count; ++i) {
     int player_id = room.players[i];
-    if (player_id == -1)
-      continue;
+    if (player_id == -1) continue;
 
     SESSION &session = clients[player_id];
 
@@ -27,28 +27,25 @@ void RoomManager::broadcast_room(int room_id, char *packet, int size) {
   }
 }
 
-void RoomManager::update_all_rooms(float dt)
-{
-	process_pending_requests();
+void RoomManager::update_all_rooms(float dt) {
+  process_pending_requests();
 
-	for (auto it = m_rooms.begin(); it != m_rooms.end();) {
-		Room& room = it->second;
+  for (auto it = m_rooms.begin(); it != m_rooms.end();) {
+    Room &room = it->second;
 
-		update_room(room, dt);
+    update_room(room, dt);
 
-		if (room.state == RoomState::ENDED) {
-			std::cout << "Room " << room.room_id << " removed\n";
-			it = m_rooms.erase(it);
-		}
-		else {
-			++it;
-		}
-	}
+    if (room.state == RoomState::ENDED) {
+      std::cout << "Room " << room.room_id << " removed\n";
+      it = m_rooms.erase(it);
+    } else {
+      ++it;
+    }
+  }
 }
 
-void RoomManager::update_room(Room& room, float dt)
-{
-	if (!room.active) return;
+void RoomManager::update_room(Room &room, float dt) {
+  if (!room.active) return;
 
   constexpr float DT = 0.016f;
 
@@ -59,18 +56,17 @@ void RoomManager::update_room(Room& room, float dt)
     return;
   }
 
-	update_ai(room, dt);
-	update_respawns(room, dt);
-	update_movement(room, dt);
-	update_skills(room, dt);
-	update_attacks(room, dt);
-	update_items(room, dt);
-	check_collisions(room);
-	send_room_snapshot(room);
-
+  update_ai(room, dt);
+  update_respawns(room, dt);
+  update_movement(room, dt);
+  update_skills(room, dt);
+  update_attacks(room, dt);
+  update_items(room, dt);
+  check_collisions(room);
+  send_room_snapshot(room);
 }
 
-void RoomManager::request_matchmaking(int player_id) // 그냥 요청만
+void RoomManager::request_matchmaking(int player_id)  // 그냥 요청만
 {
   {
     std::lock_guard<std::mutex> lock(m_request_mutex);
@@ -80,8 +76,8 @@ void RoomManager::request_matchmaking(int player_id) // 그냥 요청만
   std::cout << "Matchmaking requested by player " << player_id << '\n';
 }
 
-void RoomManager::leave_room(int player_id) // 그냥 요청만	, 실제로 방에서
-                                            // 나가는 건 update_room에서 처리
+void RoomManager::leave_room(int player_id)  // 그냥 요청만	, 실제로 방에서
+                                             // 나가는 건 update_room에서 처리
 {
   {
     std::lock_guard<std::mutex> lock(m_request_mutex);
@@ -104,8 +100,7 @@ void RoomManager::process_pending_requests() {
 
   for (int player_id : leave_requests) {
     auto player_room_it = m_player_room.find(player_id);
-    if (player_room_it == m_player_room.end())
-      continue;
+    if (player_room_it == m_player_room.end()) continue;
 
     int room_id = player_room_it->second;
 
@@ -123,8 +118,7 @@ void RoomManager::process_pending_requests() {
     if (room.active) {
       for (int i = 0; i < room.player_count; ++i) {
         int pid = room.players[i];
-        if (pid == -1)
-          continue;
+        if (pid == -1) continue;
 
         clients[pid].m_in_game = false;
         clients[pid].m_room_id = -1;
@@ -156,12 +150,9 @@ void RoomManager::process_pending_requests() {
   }
 
   for (int player_id : match_requests) {
-    if (!clients[player_id].m_is_connected)
-      continue;
-    if (!clients[player_id].m_is_logged_in)
-      continue;
-    if (clients[player_id].m_in_game)
-      continue;
+    if (!clients[player_id].m_is_connected) continue;
+    if (!clients[player_id].m_is_logged_in) continue;
+    if (clients[player_id].m_in_game) continue;
 
     if (m_player_room.find(player_id) != m_player_room.end()) {
       continue;
@@ -202,18 +193,14 @@ void RoomManager::process_pending_requests() {
 
 bool RoomManager::join_room(int room_id, int player_id) {
   auto room_it = m_rooms.find(room_id);
-  if (room_it == m_rooms.end())
-    return false;
+  if (room_it == m_rooms.end()) return false;
 
   Room &room = room_it->second;
 
-  if (room.active)
-    return false;
-  if (room.is_full())
-    return false;
+  if (room.active) return false;
+  if (room.is_full()) return false;
 
-  if (!room.add_player(player_id))
-    return false;
+  if (!room.add_player(player_id)) return false;
 
   m_player_room[player_id] = room_id;
 
@@ -228,65 +215,59 @@ bool RoomManager::join_room(int room_id, int player_id) {
 
 void RoomManager::start_room(int room_id) {
   auto room_it = m_rooms.find(room_id);
-  if (room_it == m_rooms.end())
-    return;
+  if (room_it == m_rooms.end()) return;
 
   Room &room = room_it->second;
 
-  if (room.state != RoomState::LOBBY)
-    return;
-  if (!room.all_ready())
-    return;
+  if (room.state != RoomState::LOBBY) return;
+  if (!room.all_ready()) return;
 
-	room.score.start_game(); // 점수 초기화
-	room.state = RoomState::INGAME;
-	room.active = true;
+  room.score.start_game();  // 점수 초기화
+  room.state = RoomState::INGAME;
+  room.active = true;
 
-	// 플레이어 상태 초기화
-	for (int i = 0; i < room.player_count; ++i) {
-		PlayerState& player = room.states[i];
+  // 플레이어 상태 초기화
+  for (int i = 0; i < room.player_count; ++i) {
+    PlayerState &player = room.states[i];
 
-		player.alive = true;
-		player.hp = player.max_hp;
-		player.respawn_timer = 0.0f;
+    player.alive = true;
+    player.hp = player.max_hp;
+    player.respawn_timer = 0.0f;
 
-		player.current_target_id = -1;
+    player.current_target_id = -1;
 
-		player.moveX = 0.0f;
-		player.moveY = 0.0f;
-		player.moving = false;
-		player.move_input_timer = 0.0f;
+    player.moveX = 0.0f;
+    player.moveY = 0.0f;
+    player.moving = false;
+    player.move_input_timer = 0.0f;
 
-		player.auto_attack = false;
-		player.skill_requested = false;
+    player.auto_attack = false;
+    player.skill_requested = false;
 
-		set_spawn_position(room, player);
-	}
+    set_spawn_position(room, player);
+  }
 
-	// 게임 시작 패킷 전송
-	for (int i = 0; i < room.player_count; ++i) {
-		int player_id = room.players[i];
-		if (player_id == -1) continue;
+  // 게임 시작 패킷 전송
+  for (int i = 0; i < room.player_count; ++i) {
+    int player_id = room.players[i];
+    if (player_id == -1) continue;
 
     clients[player_id].m_in_game = true;
     clients[player_id].m_room_id = room_id;
 
-		clients[player_id].send_game_start();
-	}
-	std::cout << "Room " << room_id << " started\n";
+    clients[player_id].send_game_start();
+  }
+  std::cout << "Room " << room_id << " started\n";
 }
 
 void RoomManager::enter_lobby(int room_id) {
   auto room_it = m_rooms.find(room_id);
-  if (room_it == m_rooms.end())
-    return;
+  if (room_it == m_rooms.end()) return;
 
   Room &room = room_it->second;
 
-  if (room.state != RoomState::MATCHING)
-    return;
-  if (!room.is_full())
-    return;
+  if (room.state != RoomState::MATCHING) return;
+  if (!room.is_full()) return;
 
   assign_teams(room);
 
@@ -328,23 +309,19 @@ void RoomManager::select_character(int player_id, CharacterType character) {
     return;
 
   auto it = m_player_room.find(player_id);
-  if (it == m_player_room.end())
-    return;
+  if (it == m_player_room.end()) return;
 
   int room_id = it->second;
 
   auto room_it = m_rooms.find(room_id);
-  if (room_it == m_rooms.end())
-    return;
+  if (room_it == m_rooms.end()) return;
 
   Room &room = room_it->second;
 
-  if (room.state != RoomState::LOBBY)
-    return;
+  if (room.state != RoomState::LOBBY) return;
 
   PlayerState *state = find_player_state(room, player_id);
-  if (state == nullptr)
-    return;
+  if (state == nullptr) return;
 
   apply_character_to_player(*state, character);
 
@@ -359,26 +336,21 @@ void RoomManager::select_character(int player_id, CharacterType character) {
 
 void RoomManager::set_lobby_ready(int player_id, bool ready) {
   auto it = m_player_room.find(player_id);
-  if (it == m_player_room.end())
-    return;
+  if (it == m_player_room.end()) return;
 
   int room_id = it->second;
 
   auto room_it = m_rooms.find(room_id);
-  if (room_it == m_rooms.end())
-    return;
+  if (room_it == m_rooms.end()) return;
 
   Room &room = room_it->second;
 
-  if (room.state != RoomState::LOBBY)
-    return;
+  if (room.state != RoomState::LOBBY) return;
 
   PlayerState *state = find_player_state(room, player_id);
-  if (state == nullptr)
-    return;
+  if (state == nullptr) return;
 
-  if (state->character == CharacterType::CHAR_NONE)
-    return;
+  if (state->character == CharacterType::CHAR_NONE) return;
 
   state->lobby_ready = ready;
 
@@ -436,17 +408,14 @@ void RoomManager::apply_character_to_player(PlayerState &state,
   state.lobby_ready = false;
 }
 
-constexpr float MOVE_INPUT_TIMEOUT = 0.1f; //패킷 끊기는건 0.1초 정도는 허용
-void RoomManager::update_movement(Room& room, float dt)
-{
-
+constexpr float MOVE_INPUT_TIMEOUT = 0.1f;  // 패킷 끊기는건 0.1초 정도는 허용
+void RoomManager::update_movement(Room &room, float dt) {
   for (int i = 0; i < room.player_count; ++i) {
     PlayerState &p = room.states[i];
 
-    if (!p.alive)
-      continue;
+    if (!p.alive) continue;
 
-		p.move_input_timer -= dt;
+    p.move_input_timer -= dt;
 
     if (p.move_input_timer <= 0.0f) {
       p.moving = false;
@@ -466,27 +435,25 @@ void RoomManager::update_movement(Room& room, float dt)
       dx /= len;
       dy /= len;
 
-			// 이동 후 예상 위치 계산
-			float nextX = p.x + dx * p.move_speed * dt;
-			float nextY = p.y + dy * p.move_speed * dt;
+      // 이동 후 예상 위치 계산
+      float nextX = p.x + dx * p.move_speed * dt;
+      float nextY = p.y + dy * p.move_speed * dt;
 
-			// 맵 경계를 벗어나지 않도록 제한
-			MapCollision::clamp_to_map(nextX, nextY);
+      // 맵 경계를 벗어나지 않도록 제한
+      MapCollision::clamp_to_map(nextX, nextY);
 
-			if (MapCollision::is_walkable(nextX, nextY)) {
-				p.x = nextX;
-				p.y = nextY;
-			}
-		}
+      if (MapCollision::is_walkable(nextX, nextY)) {
+        p.x = nextX;
+        p.y = nextY;
+      }
+    }
 
     clients[p.id].m_x = static_cast<short>(p.x);
     clients[p.id].m_y = static_cast<short>(p.y);
   }
 }
 
-void RoomManager::update_attacks(Room& room, float dt)
-{
-
+void RoomManager::update_attacks(Room &room, float dt) {
   for (int i = 0; i < room.player_count; ++i) {
     PlayerState &attacker = room.states[i];
 
@@ -500,32 +467,27 @@ void RoomManager::update_attacks(Room& room, float dt)
       continue;
     }
 
-		attacker.attack_timer = (std::max)(0.0f, attacker.attack_timer - dt);
+    attacker.attack_timer = (std::max)(0.0f, attacker.attack_timer - dt);
 
     PlayerState *target = nullptr;
     float bestDistSq = attacker.attack_range * attacker.attack_range;
 
     for (int j = 0; j < room.player_count; ++j) {
-      if (i == j)
-        continue;
+      if (i == j) continue;
 
       PlayerState &enemy = room.states[j];
-      if (!enemy.alive)
-        continue;
+      if (!enemy.alive) continue;
 
-      if (is_same_team(attacker, enemy))
-        continue;
+      if (is_same_team(attacker, enemy)) continue;
 
       float dx = enemy.x - attacker.x;
       float dy = enemy.y - attacker.y;
       float distSq = dx * dx + dy * dy;
 
-      if (distSq > bestDistSq)
-        continue;
+      if (distSq > bestDistSq) continue;
 
       float len = sqrtf(distSq);
-      if (len <= 0.0f)
-        continue;
+      if (len <= 0.0f) continue;
 
       float dirX = dx / len;
       float dirY = dy / len;
@@ -533,8 +495,7 @@ void RoomManager::update_attacks(Room& room, float dt)
       float dot = dirX * attacker.faceX + dirY * attacker.faceY;
 
       // 0.7 정도면 전방 약 90도 안쪽
-      if (dot < 0.7f)
-        continue;
+      if (dot < 0.7f) continue;
 
       bestDistSq = distSq;
       target = &enemy;
@@ -542,10 +503,8 @@ void RoomManager::update_attacks(Room& room, float dt)
 
     attacker.current_target_id = target ? target->id : -1;
 
-    if (target == nullptr)
-      continue;
-    if (attacker.attack_timer > 0.0f)
-      continue;
+    if (target == nullptr) continue;
+    if (attacker.attack_timer > 0.0f) continue;
 
     attacker.last_attack_target = target->id;
 
@@ -564,27 +523,23 @@ void RoomManager::update_attacks(Room& room, float dt)
 
 void RoomManager::request_attack(int player_id) {
   auto it = m_player_room.find(player_id);
-  if (it == m_player_room.end())
-    return;
+  if (it == m_player_room.end()) return;
 
   Room &room = m_rooms[it->second];
   PlayerState *state = find_player_state(room, player_id);
-  if (state == nullptr)
-    return;
+  if (state == nullptr) return;
 
   state->auto_attack = true;
 }
 
 void RoomManager::set_move_input(int player_id, float axisX, float axisY) {
   auto it = m_player_room.find(player_id);
-  if (it == m_player_room.end())
-    return;
+  if (it == m_player_room.end()) return;
 
   int room_id = it->second;
 
   auto room_it = m_rooms.find(room_id);
-  if (room_it == m_rooms.end())
-    return;
+  if (room_it == m_rooms.end()) return;
 
   Room &room = room_it->second;
 
@@ -614,14 +569,12 @@ void RoomManager::set_move_input(int player_id, float axisX, float axisY) {
 
 void RoomManager::request_skill(int player_id) {
   auto it = m_player_room.find(player_id);
-  if (it == m_player_room.end())
-    return;
+  if (it == m_player_room.end()) return;
 
   int room_id = it->second;
 
   auto room_it = m_rooms.find(room_id);
-  if (room_it == m_rooms.end())
-    return;
+  if (room_it == m_rooms.end()) return;
 
   Room &room = room_it->second;
 
@@ -637,24 +590,19 @@ void RoomManager::request_skill(int player_id) {
 
 void RoomManager::set_face_dir(int player_id, float faceX, float faceY) {
   auto it = m_player_room.find(player_id);
-  if (it == m_player_room.end())
-    return;
+  if (it == m_player_room.end()) return;
 
   auto room_it = m_rooms.find(it->second);
-  if (room_it == m_rooms.end())
-    return;
+  if (room_it == m_rooms.end()) return;
 
   Room &room = room_it->second;
 
   PlayerState *state = find_player_state(room, player_id);
-  if (state == nullptr)
-    return;
-  if (!state->alive)
-    return;
+  if (state == nullptr) return;
+  if (!state->alive) return;
 
   float len = sqrtf(faceX * faceX + faceY * faceY);
-  if (len <= 0.0f)
-    return;
+  if (len <= 0.0f) return;
 
   state->faceX = faceX / len;
   state->faceY = faceY / len;
@@ -668,8 +616,7 @@ static float dist_sq(float x1, float y1, float x2, float y2) {
 }
 // 스킬 데미지 적용
 static void apply_damage(PlayerState &target, int damage) {
-  if (!target.alive)
-    return;
+  if (!target.alive) return;
 
   target.hp -= damage;
 
@@ -679,215 +626,193 @@ static void apply_damage(PlayerState &target, int damage) {
 }
 // 스킬 힐 적용
 static void apply_heal(PlayerState &target, int heal) {
-  if (!target.alive)
-    return;
+  if (!target.alive) return;
 
   target.hp += heal;
-  if (target.hp > target.max_hp)
-    target.hp = target.max_hp;
+  if (target.hp > target.max_hp) target.hp = target.max_hp;
 }
 
-void RoomManager::update_skills(Room& room, float dt)
-{
-
+void RoomManager::update_skills(Room &room, float dt) {
   for (int i = 0; i < room.player_count; ++i) {
     PlayerState &caster = room.states[i];
 
-    if (!caster.alive)
-      continue;
+    if (!caster.alive) continue;
 
-		caster.skill_timer = (std::max)(0.0f, caster.skill_timer - dt);
+    caster.skill_timer = (std::max)(0.0f, caster.skill_timer - dt);
 
-    if (!caster.skill_requested)
-      continue;
+    if (!caster.skill_requested) continue;
 
     caster.skill_requested = false;
 
-    if (caster.skill_timer > 0.0f)
-      continue;
-    if (caster.active_skill == SkillType::NONE)
-      continue;
+    if (caster.skill_timer > 0.0f) continue;
+    if (caster.active_skill == SkillType::NONE) continue;
 
     const CharacterStats &stats = CharacterManager::GetStats(caster.character);
     const SkillStats &skill = stats.skill;
 
-    if (caster.mp < skill.mana_cost)
-      continue;
+    if (caster.mp < skill.mana_cost) continue;
 
     bool skill_casted = false;
 
     switch (caster.active_skill) {
-    case SkillType::DEALER_SKILL: {
-      // 자기 주변 원형 범위 공격
-      // skill.damage, skill.dealer_area_range 사용
-      float range_sq = skill.dealer_area_range * skill.dealer_area_range;
+      case SkillType::DEALER_SKILL: {
+        // 자기 주변 원형 범위 공격
+        // skill.damage, skill.dealer_area_range 사용
+        float range_sq = skill.dealer_area_range * skill.dealer_area_range;
 
-      for (int j = 0; j < room.player_count; ++j) {
-        if (i == j)
-          continue;
+        for (int j = 0; j < room.player_count; ++j) {
+          if (i == j) continue;
 
-        PlayerState &target = room.states[j];
-        if (!target.alive)
-          continue;
+          PlayerState &target = room.states[j];
+          if (!target.alive) continue;
 
-        if (is_same_team(caster, target))
-          continue;
+          if (is_same_team(caster, target)) continue;
 
-        if (dist_sq(caster.x, caster.y, target.x, target.y) <= range_sq) {
-          apply_damage(target, skill.damage);
-          if (target.hp <= 0) {
-            kill_player(room, target, caster.id);
+          if (dist_sq(caster.x, caster.y, target.x, target.y) <= range_sq) {
+            apply_damage(target, skill.damage);
+            if (target.hp <= 0) {
+              kill_player(room, target, caster.id);
+            }
           }
         }
-      }
-
-      skill_casted = true;
-      break;
-    }
-    case SkillType::ARCHER_SKILL: {
-      // 방향으로 화살 판정
-      // skill.penetration_damage, skill.range 사용
-      // 방향으로 관통 화살 판정
-      float dirX = caster.faceX;
-      float dirY = caster.faceY;
-
-      float len = sqrtf(dirX * dirX + dirY * dirY);
-      if (len <= 0.0f) {
-        dirX = caster.faceX;
-        dirY = caster.faceY;
-      } else {
-        dirX /= len;
-        dirY /= len;
-      }
-
-      float current_damage = skill.penetration_damage;
-      float hit_width = 50.0f; // 화살 판정 폭, 임시값
-      float hit_width_sq = hit_width * hit_width;
-
-      for (int j = 0; j < room.player_count; ++j) {
-        if (i == j)
-          continue;
-
-        PlayerState &target = room.states[j];
-        if (!target.alive)
-          continue;
-
-        if (is_same_team(caster, target))
-          continue;
-
-        float vx = target.x - caster.x;
-        float vy = target.y - caster.y;
-
-        float forward_dist = vx * dirX + vy * dirY;
-
-        if (forward_dist < 0.0f)
-          continue;
-        if (forward_dist > skill.range)
-          continue;
-
-        float closestX = caster.x + dirX * forward_dist;
-        float closestY = caster.y + dirY * forward_dist;
-
-        if (dist_sq(target.x, target.y, closestX, closestY) <= hit_width_sq) {
-          apply_damage(target, static_cast<int>(current_damage));
-          if (target.hp <= 0) {
-            kill_player(room, target, caster.id);
-          }
-
-          current_damage *= (1.0f - skill.damage_reduce_per_hit);
-          if (current_damage <= 0.0f)
-            break;
-        }
-      }
-
-      skill_casted = true;
-      break;
-    }
-    case SkillType::TANKER_SKILL: {
-      // 타겟팅 된 상대에게 투척 판정
-      // skill.damage, skill.extra_damage, skill.range 사용
-      // 기본 공격처럼 가장 가까운 상대 타겟팅
-      PlayerState *target = nullptr;
-      float best_dist_sq = skill.range * skill.range;
-
-      for (int j = 0; j < room.player_count; ++j) {
-        if (i == j)
-          continue;
-
-        PlayerState &enemy = room.states[j];
-        if (!enemy.alive)
-          continue;
-
-        if (is_same_team(caster, enemy))
-          continue;
-
-        float d = dist_sq(caster.x, caster.y, enemy.x, enemy.y);
-
-        if (d <= best_dist_sq) {
-          best_dist_sq = d;
-          target = &enemy;
-        }
-      }
-
-      if (target != nullptr) {
-        apply_damage(*target, skill.damage + skill.extra_damage);
-
-        if (target->hp <= 0) {
-          kill_player(room, *target, caster.id);
-        }
-        // stun_duration은 현재 PlayerState에 stun_timer 같은 게 없으면 아직
-        // 적용 불가 target->stun_timer = skill.stun_duration;
 
         skill_casted = true;
+        break;
       }
+      case SkillType::ARCHER_SKILL: {
+        // 방향으로 화살 판정
+        // skill.penetration_damage, skill.range 사용
+        // 방향으로 관통 화살 판정
+        float dirX = caster.faceX;
+        float dirY = caster.faceY;
 
-      break;
-    }
-    case SkillType::HEALER_SKILL: {
-      // 방향 사거리 위치에 장판 생성 후 범위 힐
-      // skill.heal, skill.range, skill.heal_area_range 사용
-      // 방향 사거리 위치에 장판 생성 후 범위 힐
-      float dirX = caster.faceX;
-      float dirY = caster.faceY;
-
-      float len = sqrtf(dirX * dirX + dirY * dirY);
-      if (len <= 0.0f) {
-        dirX = caster.faceX;
-        dirY = caster.faceY;
-      } else {
-        dirX /= len;
-        dirY /= len;
-      }
-
-      float areaX = caster.x + dirX * skill.range;
-      float areaY = caster.y + dirY * skill.range;
-
-      float area_range_sq = skill.heal_area_range * skill.heal_area_range;
-
-      for (int j = 0; j < room.player_count; ++j) {
-        PlayerState &target = room.states[j];
-        if (!target.alive)
-          continue;
-
-        if (dist_sq(areaX, areaY, target.x, target.y) > area_range_sq)
-          continue;
-
-        if (is_same_team(caster, target)) {
-          apply_heal(target, skill.heal);
+        float len = sqrtf(dirX * dirX + dirY * dirY);
+        if (len <= 0.0f) {
+          dirX = caster.faceX;
+          dirY = caster.faceY;
         } else {
-          apply_damage(target, skill.damage);
+          dirX /= len;
+          dirY /= len;
+        }
 
-          if (target.hp <= 0) {
-            kill_player(room, target, caster.id);
+        float current_damage = skill.penetration_damage;
+        float hit_width = 50.0f;  // 화살 판정 폭, 임시값
+        float hit_width_sq = hit_width * hit_width;
+
+        for (int j = 0; j < room.player_count; ++j) {
+          if (i == j) continue;
+
+          PlayerState &target = room.states[j];
+          if (!target.alive) continue;
+
+          if (is_same_team(caster, target)) continue;
+
+          float vx = target.x - caster.x;
+          float vy = target.y - caster.y;
+
+          float forward_dist = vx * dirX + vy * dirY;
+
+          if (forward_dist < 0.0f) continue;
+          if (forward_dist > skill.range) continue;
+
+          float closestX = caster.x + dirX * forward_dist;
+          float closestY = caster.y + dirY * forward_dist;
+
+          if (dist_sq(target.x, target.y, closestX, closestY) <= hit_width_sq) {
+            apply_damage(target, static_cast<int>(current_damage));
+            if (target.hp <= 0) {
+              kill_player(room, target, caster.id);
+            }
+
+            current_damage *= (1.0f - skill.damage_reduce_per_hit);
+            if (current_damage <= 0.0f) break;
           }
         }
-      }
 
-      skill_casted = true;
-      break;
-    }
-    default:
-      break;
+        skill_casted = true;
+        break;
+      }
+      case SkillType::TANKER_SKILL: {
+        // 타겟팅 된 상대에게 투척 판정
+        // skill.damage, skill.extra_damage, skill.range 사용
+        // 기본 공격처럼 가장 가까운 상대 타겟팅
+        PlayerState *target = nullptr;
+        float best_dist_sq = skill.range * skill.range;
+
+        for (int j = 0; j < room.player_count; ++j) {
+          if (i == j) continue;
+
+          PlayerState &enemy = room.states[j];
+          if (!enemy.alive) continue;
+
+          if (is_same_team(caster, enemy)) continue;
+
+          float d = dist_sq(caster.x, caster.y, enemy.x, enemy.y);
+
+          if (d <= best_dist_sq) {
+            best_dist_sq = d;
+            target = &enemy;
+          }
+        }
+
+        if (target != nullptr) {
+          apply_damage(*target, skill.damage + skill.extra_damage);
+
+          if (target->hp <= 0) {
+            kill_player(room, *target, caster.id);
+          }
+          // stun_duration은 현재 PlayerState에 stun_timer 같은 게 없으면 아직
+          // 적용 불가 target->stun_timer = skill.stun_duration;
+
+          skill_casted = true;
+        }
+
+        break;
+      }
+      case SkillType::HEALER_SKILL: {
+        // 방향 사거리 위치에 장판 생성 후 범위 힐
+        // skill.heal, skill.range, skill.heal_area_range 사용
+        // 방향 사거리 위치에 장판 생성 후 범위 힐
+        float dirX = caster.faceX;
+        float dirY = caster.faceY;
+
+        float len = sqrtf(dirX * dirX + dirY * dirY);
+        if (len <= 0.0f) {
+          dirX = caster.faceX;
+          dirY = caster.faceY;
+        } else {
+          dirX /= len;
+          dirY /= len;
+        }
+
+        float areaX = caster.x + dirX * skill.range;
+        float areaY = caster.y + dirY * skill.range;
+
+        float area_range_sq = skill.heal_area_range * skill.heal_area_range;
+
+        for (int j = 0; j < room.player_count; ++j) {
+          PlayerState &target = room.states[j];
+          if (!target.alive) continue;
+
+          if (dist_sq(areaX, areaY, target.x, target.y) > area_range_sq)
+            continue;
+
+          if (is_same_team(caster, target)) {
+            apply_heal(target, skill.heal);
+          } else {
+            apply_damage(target, skill.damage);
+
+            if (target.hp <= 0) {
+              kill_player(room, target, caster.id);
+            }
+          }
+        }
+
+        skill_casted = true;
+        break;
+      }
+      default:
+        break;
     }
     if (skill_casted) {
       caster.mp -= static_cast<int>(skill.mana_cost);
@@ -897,8 +822,7 @@ void RoomManager::update_skills(Room& room, float dt)
 }
 
 void RoomManager::kill_player(Room &room, PlayerState &target, int killer_id) {
-  if (!target.alive)
-    return;
+  if (!target.alive) return;
 
   target.hp = 0;
   target.alive = false;
@@ -908,7 +832,7 @@ void RoomManager::kill_player(Room &room, PlayerState &target, int killer_id) {
   target.move_input_timer = 0.0f;
   target.auto_attack = false;
   target.skill_requested = false;
-  target.respawn_timer = 5.0f; // 임시 리스폰 시간
+  target.respawn_timer = 5.0f;  // 임시 리스폰 시간
   target.death_count++;
 
   PlayerState *killer = find_player_state(room, killer_id);
@@ -923,16 +847,13 @@ void RoomManager::kill_player(Room &room, PlayerState &target, int killer_id) {
   std::cout << "[DEATH] player=" << target.id << "\n";
 }
 
-void RoomManager::update_respawns(Room& room, float dt)
-{
-
+void RoomManager::update_respawns(Room &room, float dt) {
   for (int i = 0; i < room.player_count; ++i) {
     PlayerState &player = room.states[i];
 
-    if (player.alive)
-      continue;
+    if (player.alive) continue;
 
-		player.respawn_timer -= dt;
+    player.respawn_timer -= dt;
 
     if (player.respawn_timer <= 0.0f) {
       respawn_player(room, player);
@@ -955,30 +876,39 @@ void RoomManager::respawn_player(Room &room, PlayerState &player) {
   player.auto_attack = false;
   player.skill_requested = false;
 
-	set_spawn_position(room, player);
+  set_spawn_position(room, player);
 
-	for (int i = 0; i < room.player_count; ++i) {
-		if (room.states[i].id == player.id)
-			break;
+  for (int i = 0; i < room.player_count; ++i) {
+    clients[room.players[i]].send_respawn(player.id, player.x, player.y,
+                                          player.hp);
+  }
 
-		if (room.states[i].team == player.team)
-			++teamIndex;
-	}
+  std::cout << "[RESPAWN] player=" << player.id << "\n";
+}
 
-	float offsets[3] = { -RESPAWN_OFFSET, 0.0f, RESPAWN_OFFSET };
+// 리스폰 위치를 팀별로 나눠서 설정
+void RoomManager::set_spawn_position(Room &room, PlayerState &player) {
+  int teamIndex = 0;
 
-	if (player.team == TeamType::TEAM_RED) {
-		player.x = RED_SPAWN_X;
-		player.y = RED_SPAWN_Y + offsets[teamIndex];
-		player.faceX = 1.0f;
-		player.faceY = 0.0f;
-	}
-	else {
-		player.x = BLUE_SPAWN_X;
-		player.y = BLUE_SPAWN_Y + offsets[teamIndex];
-		player.faceX = -1.0f;
-		player.faceY = 0.0f;
-	}
+  for (int i = 0; i < room.player_count; ++i) {
+    if (room.states[i].id == player.id) break;
+
+    if (room.states[i].team == player.team) ++teamIndex;
+  }
+
+  float offsets[3] = {-RESPAWN_OFFSET, 0.0f, RESPAWN_OFFSET};
+
+  if (player.team == TeamType::TEAM_RED) {
+    player.x = RED_SPAWN_X;
+    player.y = RED_SPAWN_Y + offsets[teamIndex];
+    player.faceX = 1.0f;
+    player.faceY = 0.0f;
+  } else {
+    player.x = BLUE_SPAWN_X;
+    player.y = BLUE_SPAWN_Y + offsets[teamIndex];
+    player.faceX = -1.0f;
+    player.faceY = 0.0f;
+  }
 }
 
 void RoomManager::send_room_snapshot(Room &room) {
@@ -1012,8 +942,7 @@ void RoomManager::send_room_snapshot(Room &room) {
 }
 
 void RoomManager::end_room(Room &room) {
-  if (room.state == RoomState::ENDED)
-    return;
+  if (room.state == RoomState::ENDED) return;
 
   room.state = RoomState::ENDED;
   room.active = false;
@@ -1025,14 +954,12 @@ void RoomManager::end_room(Room &room) {
 
   for (int i = 0; i < room.player_count; ++i) {
     int pid = room.players[i];
-    if (pid == -1)
-      continue;
+    if (pid == -1) continue;
 
     clients[pid].m_in_game = false;
     clients[pid].m_room_id = -1;
     m_player_room.erase(pid);
   }
-
 }
 
 void RoomManager::init_items(Room &room) {
@@ -1055,17 +982,16 @@ void RoomManager::broadcast_item_state(Room &room, int item_id, bool active) {
   broadcast_room(room.room_id, reinterpret_cast<char *>(&packet), packet.size);
 }
 
-void RoomManager::update_items(Room& room, float dt)
-{
-	constexpr float ITEM_RADIUS = 30.0f;
-	constexpr int HEAL_AMOUNT = 30;
-	constexpr float ITEM_RESPAWN_TIME = 10.0f;
+void RoomManager::update_items(Room &room, float dt) {
+  constexpr float ITEM_RADIUS = 30.0f;
+  constexpr int HEAL_AMOUNT = 30;
+  constexpr float ITEM_RESPAWN_TIME = 10.0f;
 
   for (int i = 0; i < 2; ++i) {
     ItemState &item = room.items[i];
 
-		if (!item.active) {
-			item.respawn_timer -= dt;
+    if (!item.active) {
+      item.respawn_timer -= dt;
 
       if (item.respawn_timer <= 0.0f) {
         item.active = true;
@@ -1079,10 +1005,8 @@ void RoomManager::update_items(Room& room, float dt)
     for (int j = 0; j < room.player_count; ++j) {
       PlayerState &player = room.states[j];
 
-      if (!player.alive)
-        continue;
-      if (player.hp >= player.max_hp)
-        continue;
+      if (!player.alive) continue;
+      if (player.hp >= player.max_hp) continue;
 
       float dx = player.x - item.x;
       float dy = player.y - item.y;
@@ -1101,5 +1025,5 @@ void RoomManager::update_items(Room& room, float dt)
   }
 }
 
-void RoomManager::update_ai(Room& room, float dt) {}
-void RoomManager::check_collisions(Room& room) {}
+void RoomManager::update_ai(Room &room, float dt) {}
+void RoomManager::check_collisions(Room &room) {}
