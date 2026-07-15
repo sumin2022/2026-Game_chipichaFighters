@@ -1,4 +1,11 @@
-﻿#pragma once
+#pragma once
+#include <array>
+#include <cstdint>
+
+enum class TileType : std::uint8_t {
+	WALKABLE = 0,
+	BLOCKED = 1
+};
 
 class MapCollision {
 public:
@@ -29,4 +36,27 @@ private:
 
 	static constexpr float MAP_MAX_Y =
 		(MAP_HEIGHT * 0.5f) + MAP_BOUNDARY_MARGIN;
+
+	// 내부 충돌 타일은 정확한 3000 × 2000 범위만 사용
+	static constexpr float TILE_MAP_MIN_X = -1500.0f;
+	static constexpr float TILE_MAP_MIN_Y = -1000.0f;
+
+	static constexpr int TILE_SIZE = 50;
+
+	static constexpr int MAP_COLS = 60; // X축, 가로
+	static constexpr int MAP_ROWS = 40; // Y축, 세로
+
+	using CollisionMap =
+		std::array<std::array<TileType, MAP_COLS>, MAP_ROWS>;
+
+	static bool world_to_tile(
+		float worldX,
+		float worldY,
+		int& tileX,
+		int& tileY
+	);
+
+	static CollisionMap create_collision_map();
+
+	static const CollisionMap collision_map;
 };
