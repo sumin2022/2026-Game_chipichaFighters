@@ -5,6 +5,7 @@
 void UTestZoneConnectSubsystem::Initialize(
     FSubsystemCollectionBase &Collection) {
   Super::Initialize(Collection);
+  RoomId = -1;
 }
 
 void UTestZoneConnectSubsystem::Deinitialize() {
@@ -235,6 +236,8 @@ EConnectResult UTestZoneConnectSubsystem::ConnectToServer(FString IPAddress,
     Socket->SetNonBlocking(true);
     RecvStart = 0;
     RecvEnd = 0;
+    PreviousLoginInfo.IPAddress = IPAddress;
+    PreviousLoginInfo.Port = Port;
     return EConnectResult::Success;
   } else {
     ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->DestroySocket(Socket);
@@ -273,6 +276,8 @@ void UTestZoneConnectSubsystem::SendLogin(FString const &Username,
   UE_LOG(LogTemp, Error, TEXT("send login packet %d %d %d %hs"),
          (res - LoginPacket.username), LoginPacket.size, LoginPacket.type,
          LoginPacket.username);
+  PreviousLoginInfo.Username = Username;
+  PreviousLoginInfo.Password = Password;
 }
 
 void UTestZoneConnectSubsystem::SendMove(float axisX, float axisY) {
@@ -367,4 +372,14 @@ void UTestZoneConnectSubsystem::SendGameReady(bool ready) {
   if (not bSuccess || BytesSent != sizeof(GameReadyPacket)) {
     UE_LOG(LogTemp, Error, TEXT("Failed to send game ready packet"));
   }
+}
+
+ void UTestZoneConnectSubsystem::SetEntryRoomState(
+    TArray<FEntryRoomPlayerInfo> const &param_state) {
+  EntryRoomState = param_state;
+ }
+
+ TArray<FEntryRoomPlayerInfo> const &
+UTestZoneConnectSubsystem::GetEntryRoomState() {
+  return EntryRoomState;
 }
