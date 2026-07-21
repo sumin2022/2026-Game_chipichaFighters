@@ -1,4 +1,4 @@
-﻿#include "RoomManager.h"
+#include "RoomManager.h"
 #include "SESSION.h"
 #include "MapCollision.h"
 #include <algorithm>
@@ -286,8 +286,18 @@ void RoomManager::enter_lobby(int room_id)
 	packet.room_id = room_id;
 	packet.player_count = room.player_count;
 
+	// 플레이어 닉네임 정보 추가
 	for (int i = 0; i < room.player_count; ++i) {
-		packet.player_ids[i] = room.players[i];
+		int player_id = room.players[i];
+
+		packet.player_ids[i] = player_id;
+
+		strncpy_s(
+			packet.usernames[i],
+			clients[player_id].m_username,
+			MAX_NAME_LEN
+		);
+
 		packet.teams[i] = static_cast<int>(room.states[i].team);
 	}
 
