@@ -86,6 +86,9 @@ struct FEntryRoomPlayerInfo {
 USTRUCT(BlueprintType)
 struct FLoginInfo {
   GENERATED_BODY()
+  
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  bool bIsReceivedLoginResult = false;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FString IPAddress;
@@ -141,6 +144,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnRespawn,          //
                                               float, x, float, y,  //
                                               int32, hp);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnItemState,  //
+                                             int32, item_id, bool, active);
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_SevenParams(
     FOnGameResult,                                                //
     int32, red_score, int32, blue_score, ETeamType, winner_team,  //
@@ -177,6 +183,8 @@ class TESTZONE_API UTestZoneConnectSubsystem : public UGameInstanceSubsystem {
   UFUNCTION(BlueprintCallable, Category = "TestZone|Network")
   EConnectResult ConnectToServer(FString IPAddress, int32 Port);
 
+  void SendConnectionCheck();
+
   UFUNCTION(BlueprintCallable, Category = "TestZone|Network")
   void SendLogin(FString const &Username, FString const &Password);
 
@@ -195,6 +203,9 @@ class TESTZONE_API UTestZoneConnectSubsystem : public UGameInstanceSubsystem {
   void SendSelectCharacter(ECharacterType characterId);
   UFUNCTION(BlueprintCallable, Category = "TestZone|Network")
   void SendGameReady(bool ready);
+
+  UFUNCTION(BlueprintCallable, Category = "TestZone|Network")
+  bool CheckPrevLogin() const;
 
   UFUNCTION(BlueprintCallable, Category = "TestZone|Network")
   void SetEntryRoomState(TArray<FEntryRoomPlayerInfo> const &param_state);
@@ -240,6 +251,9 @@ class TESTZONE_API UTestZoneConnectSubsystem : public UGameInstanceSubsystem {
   FOnRespawn OnRespawn;
 
   UPROPERTY(BlueprintAssignable, Category = "TestZone|Network")
+  FOnItemState OnItemState;
+
+  UPROPERTY(BlueprintAssignable, Category = "TestZone|Network")
   FOnGameResult OnGameResult;
 
   UPROPERTY(BlueprintAssignable, Category = "TestZone|Network")
@@ -265,6 +279,7 @@ class TESTZONE_API UTestZoneConnectSubsystem : public UGameInstanceSubsystem {
   size_t RecvEnd;
   int32 RoomId;
   TArray<FEntryRoomPlayerInfo> EntryRoomState;
+  
   FLoginInfo PreviousLoginInfo;
 
 };
