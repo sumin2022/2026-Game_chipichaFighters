@@ -278,10 +278,20 @@ void RoomManager::enter_lobby(int room_id) {
   packet.room_id = room_id;
   packet.player_count = room.player_count;
 
-  for (int i = 0; i < room.player_count; ++i) {
-    packet.player_ids[i] = room.players[i];
-    packet.teams[i] = static_cast<int>(room.states[i].team);
-  }
+	// 플레이어 닉네임 정보 추가
+	for (int i = 0; i < room.player_count; ++i) {
+		int player_id = room.players[i];
+
+		packet.player_ids[i] = player_id;
+
+		strncpy_s(
+			packet.usernames[i],
+			clients[player_id].m_username,
+			MAX_NAME_LEN
+		);
+
+		packet.teams[i] = static_cast<int>(room.states[i].team);
+	}
 
   broadcast_room(room_id, reinterpret_cast<char *>(&packet), packet.size);
 

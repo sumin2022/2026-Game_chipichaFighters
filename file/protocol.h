@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <array>
 #include <cstdint>
 
@@ -120,10 +120,12 @@ struct SC_AvatarInfo : TZPacket<PACKET_TYPE::SC_AVATAR_INFO, SC_AvatarInfo> {
 
 // match - 방 입장 시 방 정보와 플레이어 목록 전달
 struct SC_RoomEnter : TZPacket<PACKET_TYPE::SC_ROOM_ENTER, SC_RoomEnter> {
-  int room_id{};
-  int player_count{};
-  int player_ids[MAX_ROOM_PLAYERS]{};
-  int teams[MAX_ROOM_PLAYERS]{};
+    int room_id{};
+    int player_count{};
+	// 플레이어 수에 따라 플레이어 닉네임을 보내줌
+	char usernames[MAX_ROOM_PLAYERS][MAX_NAME_LEN]{};
+    int player_ids[MAX_ROOM_PLAYERS]{};
+    int teams[MAX_ROOM_PLAYERS]{};
 };
 
 // match - 캐릭터 선택 요청
