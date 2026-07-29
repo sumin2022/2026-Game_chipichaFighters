@@ -20,8 +20,8 @@ enum struct PACKET_STAGE : std::uint8_t {
 };
 
 enum struct PACKET_TYPE : std::uint8_t {
-    // 클라이언트에서 서버에게 3초마다 패킷 전송, 서버는 받은 패킷에 응답 처리, 10초 이상 응답 없을시 연결 끊김 처리
-    // default
+	// 클라이언트에서 서버에게 3초마다 패킷 전송, 서버는 받은 패킷에 응답 처리, 10초 이상 응답 없을시 연결 끊김 처리
+	// default
 	CS_CONNECTION_CHECK, // 클라이언트에서 서버로 연결 확인 요청
 	SC_CONNECTION_CHECK, // 서버에서 클라이언트로 연결 확인 응답
 
@@ -53,6 +53,9 @@ enum struct PACKET_TYPE : std::uint8_t {
 	SC_DEATH,
 	SC_RESPAWN,
 	SC_ITEM_STATE,
+	SC_ATTACK, //서버에서 클라이언트로 공격 알림
+	SC_SKILL, //서버에서 클라이언트로 스킬 사용 알림
+	SC_SKILL_HIT, //서버에서 클라이언트로 스킬 히트 알림
 
 	// result
 	SC_GAME_RESULT,
@@ -177,7 +180,7 @@ struct CS_Attack : TZPacket<PACKET_TYPE::CS_ATTACK, CS_Attack> {};
 
 // battle - 스킬 사용 요청
 struct CS_Skill : TZPacket<PACKET_TYPE::CS_SKILL, CS_Skill> {
-    short skillId{};
+    short skill_id{}; //캐릭터 별 스킬이 다르긴 하나 어차피 캐릭터 당 스킬 하나여서 상관없음.
 };
 
 //==============================================================================================
@@ -257,6 +260,23 @@ struct SC_ItemState : TZPacket<PACKET_TYPE::SC_ITEM_STATE, SC_ItemState> {
     bool active{};
 };
 
+// battle - 기본 공격 발생 알림
+struct SC_Attack : TZPacket<PACKET_TYPE::SC_ATTACK, SC_Attack> {
+	int attacker_id{};	// 공격자 ID
+	int target_id{};    // 공격 대상 ID
+};
+
+// battle - 스킬 사용 알림
+struct SC_Skill : TZPacket<PACKET_TYPE::SC_SKILL, SC_Skill> {
+	int caster_id{};								// 스킬 시전자 ID
+};
+
+// battle - 스킬 적중 알림
+struct SC_SkillHit : TZPacket<PACKET_TYPE::SC_SKILL_HIT, SC_SkillHit> {
+	int caster_id{};							// 스킬 시전자 ID
+	int target_id{};							// 스킬 적중 대상 ID
+};
+
 //==============================================================================================
 
 // result - 게임 종료 결과 전달
@@ -305,6 +325,9 @@ inline PACKET_STAGE GetPacketStage(PACKET_TYPE type)
     case SC_DEATH:
     case SC_RESPAWN:
     case SC_ITEM_STATE:
+	case SC_ATTACK:
+	case SC_SKILL:
+	case SC_SKILL_HIT:
         return PACKET_STAGE::BATTLE;
 
     case SC_GAME_RESULT:
