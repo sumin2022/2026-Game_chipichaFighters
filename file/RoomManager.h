@@ -187,8 +187,8 @@ private:
 	void check_collisions(Room& room);
 	void send_room_snapshot(Room& room); //플렝이어 위치, 체력, 스킬 상태 등등 보내기 (여기서 맞나?)
 
-
-  void broadcast_item_state(Room &room, int item_id, bool active);
+	void broadcast_skill_hit(Room& room, int caster_id, int target_id); //스킬 적중 알림
+	void broadcast_item_state(Room& room, int item_id, bool active);
 
   bool is_same_team(const PlayerState &a, const PlayerState &b) const;
   void enter_lobby(int room_id);

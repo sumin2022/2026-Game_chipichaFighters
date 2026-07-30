@@ -517,7 +517,14 @@ void RoomManager::update_attacks(Room &room, float dt) {
     if (target == nullptr) continue;
     if (attacker.attack_timer > 0.0f) continue;
 
-    attacker.last_attack_target = target->id;
+		attacker.last_attack_target = target->id;
+
+		// 공격 패킷 브로드캐스팅
+		SC_Attack packet;
+		packet.attacker_id = attacker.id;
+		packet.target_id = target->id;
+
+		broadcast_room(room.room_id, reinterpret_cast<char*>(&packet), packet.size);
 
     target->hp -= attacker.attack_damage;
     attacker.attack_timer = attacker.attack_cooldown;
@@ -683,13 +690,15 @@ void RoomManager::update_skills(Room &room, float dt) {
 
           if (is_same_team(caster, target)) continue;
 
-          if (dist_sq(caster.x, caster.y, target.x, target.y) <= range_sq) {
-            apply_damage(target, skill.damage);
-            if (target.hp <= 0) {
-              kill_player(room, target, caster.id);
-            }
-          }
-        }
+				if (dist_sq(caster.x, caster.y, target.x, target.y) <= range_sq) {
+					apply_damage(target, skill.damage);
+					broadcast_skill_hit(room, caster.id, target.id);
+
+					if (target.hp <= 0) {
+						kill_player(room, target, caster.id);
+					}
+				}
+			}
 
 			skill_casted = true;
 			break;
@@ -734,11 +743,13 @@ void RoomManager::update_skills(Room &room, float dt) {
           float closestX = caster.x + dirX * forward_dist;
           float closestY = caster.y + dirY * forward_dist;
 
-          if (dist_sq(target.x, target.y, closestX, closestY) <= hit_width_sq) {
-            apply_damage(target, static_cast<int>(current_damage));
-            if (target.hp <= 0) {
-              kill_player(room, target, caster.id);
-            }
+				if (dist_sq(target.x, target.y, closestX, closestY) <= hit_width_sq) {
+					apply_damage(target, static_cast<int>(current_damage));
+					broadcast_skill_hit(room, caster.id, target.id);
+
+					if (target.hp <= 0) {
+						kill_player(room, target, caster.id);
+					}
 
             current_damage *= (1.0f - skill.damage_reduce_per_hit);
             if (current_damage <= 0.0f) break;
@@ -772,8 +783,9 @@ void RoomManager::update_skills(Room &room, float dt) {
           }
         }
 
-        if (target != nullptr) {
-          apply_damage(*target, skill.damage + skill.extra_damage);
+			if (target != nullptr) {
+				apply_damage(*target, skill.damage + skill.extra_damage);
+				broadcast_skill_hit(room, caster.id, target->id);
 
 				if (target->hp <= 0) {
 					kill_player(room, *target, caster.id);
@@ -815,10 +827,12 @@ void RoomManager::update_skills(Room &room, float dt) {
           if (dist_sq(areaX, areaY, target.x, target.y) > area_range_sq)
             continue;
 
-          if (is_same_team(caster, target)) {
-            apply_heal(target, skill.heal);
-          } else {
-            apply_damage(target, skill.damage);
+				if (is_same_team(caster, target)) {
+					apply_heal(target, skill.heal);
+				}
+				else {
+					apply_damage(target, skill.damage);
+					broadcast_skill_hit(room, caster.id, target.id);
 
             if (target.hp <= 0) {
               kill_player(room, target, caster.id);
@@ -826,17 +840,23 @@ void RoomManager::update_skills(Room &room, float dt) {
           }
         }
 
-        skill_casted = true;
-        break;
-      }
-      default:
-        break;
-    }
-    if (skill_casted) {
-      caster.mp -= static_cast<int>(skill.mana_cost);
-      caster.skill_timer = skill.cooldown;
-    }
-  }
+			skill_casted = true;
+			break;
+		}
+		default:
+			break;
+		}
+		if (skill_casted) {
+			caster.mp -= static_cast<int>(skill.mana_cost);
+			caster.skill_timer = skill.cooldown;
+
+			// 스킬 사용 후 브로드캐스팅
+			SC_Skill packet;
+			packet.caster_id = caster.id;
+
+			broadcast_room(room.room_id, reinterpret_cast<char*>(&packet), packet.size);
+		}
+	}
 }
 
 void RoomManager::kill_player(Room &room, PlayerState &target, int killer_id) {
@@ -1042,6 +1062,24 @@ void RoomManager::update_items(Room &room, float dt) {
       }
     }
   }
+}
+
+void RoomManager::broadcast_skill_hit(Room& room, int caster_id, int target_id)
+{
+	SC_SkillHit packet;
+	packet.caster_id = caster_id;
+	packet.target_id = target_id;
+
+	broadcast_room(room.room_id, reinterpret_cast<char*>(&packet), packet.size);
+}
+
+void RoomManager::broadcast_skill_hit(Room& room, int caster_id, int target_id)
+{
+	SC_SkillHit packet;
+	packet.caster_id = caster_id;
+	packet.target_id = target_id;
+
+	broadcast_room(room.room_id, reinterpret_cast<char*>(&packet), packet.size);
 }
 
 void RoomManager::update_ai(Room &room, float dt) {}
