@@ -31,9 +31,7 @@ public class TestZone : ModuleRules
 
     PublicIncludePaths.AddRange(new string[] {
             "TestZone",
-            "TestZone/Test_CodeSet",
-            "TestZone/Network",
-            "TestZone/Gameplay"
+            "TestZone/Test_CodeSet"
         });
 
     // Uncomment if you are using Slate UI
