@@ -36,6 +36,7 @@
 *.xcodeproj
 *.xcworkspace
 *.sln
+*.slnx
 *.suo
 *.opensdf
 *.opendb
@@ -48,7 +49,7 @@ Binaries/*
 Plugins/*/Binaries/*
 
 # Builds
-Build/*
+Build/
 
 # Whitelist PakBlacklist-<BuildConfiguration>.txt files
 !Build/*/
@@ -148,7 +149,11 @@ vcpkg_installed/
 Testing/
 .cache/
 
-
 # lore
-.lore/
 # .loreignore
+
+# git
+.git/
+.github/
+.gitattributes
+
