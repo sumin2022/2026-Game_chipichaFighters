@@ -43,3 +43,7 @@
 *.lib filter=lfs merge=lfs -text
 *.exe filter=lfs merge=lfs -text
 *.zip filter=lfs merge=lfs -text
+
+
+# .lore 폴더는 LFS 필터 제외
+.lore/** -filter -diff -merge -text
