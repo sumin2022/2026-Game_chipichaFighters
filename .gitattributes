@@ -47,3 +47,4 @@
 
 # .lore 폴더는 LFS 필터 제외
 .lore/** -filter -diff -merge -text
+Content/** -filter -diff -merge -text
