@@ -1,4 +1,4 @@
-﻿#include "DBLogin.h"
+#include "DBLogin.h"
 #include <iostream>
 
 DBLogin::DBLogin() {
@@ -82,4 +82,31 @@ bool DBLogin::LoginUser(std::string id, std::string pw)
 
     std::cout << "Password incorrect\n";
     return false;
+}
+
+bool DBLogin::UserExists(const std::string& id)
+{
+	std::string query =
+		"SELECT id FROM users WHERE id='" + id + "'";
+
+	if (mysql_query(conn, query.c_str()))
+	{
+		std::cout << "UserExists query failed: "
+			<< mysql_error(conn) << '\n';
+		return false;
+	}
+
+	MYSQL_RES* res = mysql_store_result(conn);
+
+	if (res == nullptr) {
+		return false;
+	}
+
+	MYSQL_ROW row = mysql_fetch_row(res);
+
+	bool exists = (row != nullptr);
+
+	mysql_free_result(res);
+
+	return exists;
 }

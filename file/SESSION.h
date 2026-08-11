@@ -1,9 +1,10 @@
-﻿#pragma once
+#pragma once
 #include "Common.h"
 #include "ExpOver.h"
 #include "protocol.h"
 
 class EXP_OVER;
+class DBLogin;
 
 class SESSION {
 public:
@@ -27,7 +28,8 @@ public:
 	void send_add_player(int player_id);
 	void send_remove_player(int player_id);
 	void send_login_success();
-	void process_packet(unsigned char* p);
+	void send_login_fail(const char* message);
+	void process_packet(unsigned char* p, DBLogin& db);
 
 	void send_current_state();
 	void send_death(int dead_id, int killer_id);
@@ -38,4 +40,4 @@ public:
 
 extern std::array<SESSION, MAX_PLAYERS> clients;
 
-void send_login_fail(SOCKET client, const char* message);
+

@@ -13,6 +13,7 @@ void RoomManager::broadcast_room(int room_id, char* packet, int size)
 	if (room_it == m_rooms.end()) return;
 
 	Room& room = room_it->second;
+	//auto* header = reinterpret_cast<TZPacketHeader*>(packet); //출력용
 
 	for (int i = 0; i < room.player_count; ++i) {
 		int player_id = room.players[i];
@@ -49,9 +50,9 @@ void RoomManager::update_room(Room& room, float dt)
 {
 	if (!room.active) return;
 
-	constexpr float DT = 0.016f;
+	//constexpr float DT = 0.016f;
 
-	room.score.update(room, DT);
+	room.score.update(room, dt);
 
 	if (room.score.is_time_over()) {
 		end_room(room);
@@ -153,11 +154,22 @@ void RoomManager::process_pending_requests()
 	}
 
 	for (int player_id : match_requests) {
-		if (!clients[player_id].m_is_connected) continue;
-		if (!clients[player_id].m_is_logged_in) continue;
-		if (clients[player_id].m_in_game) continue;
+		if (!clients[player_id].m_is_connected) {
+			std::cout << "[MATCH SKIP] disconnected: " << player_id << '\n';
+			continue;
+		}
+		if (!clients[player_id].m_is_logged_in) {
+			std::cout << "[MATCH SKIP] not logged in: " << player_id << '\n';
+			continue;
+		}
+		if (clients[player_id].m_in_game) {
+			std::cout << "[MATCH SKIP] still in game: " << player_id << '\n';
+			continue;
+		}
 
 		if (m_player_room.find(player_id) != m_player_room.end()) {
+			std::cout << "[MATCH SKIP] already in room: "
+				<< m_player_room[player_id] << '\n';
 			continue;
 		}
 
@@ -279,6 +291,7 @@ void RoomManager::enter_lobby(int room_id)
 	assign_teams(room);
 
 	room.state = RoomState::LOBBY;
+	std::cout << "[ROOM ENTER] packet create start\n";
 
 	SC_RoomEnter packet;
 	packet.size = sizeof(SC_RoomEnter);
@@ -290,6 +303,13 @@ void RoomManager::enter_lobby(int room_id)
 	for (int i = 0; i < room.player_count; ++i) {
 		int player_id = room.players[i];
 
+		std::cout
+			<< "[ROOM ENTER DATA] index=" << i
+			<< " player=" << player_id
+			<< " username=" << clients[player_id].m_username
+			<< '\n';
+
+
 		packet.player_ids[i] = player_id;
 
 		strncpy_s(
@@ -300,6 +320,13 @@ void RoomManager::enter_lobby(int room_id)
 
 		packet.teams[i] = static_cast<int>(room.states[i].team);
 	}
+
+	std::cout
+		<< "[ROOM ENTER SEND] room=" << room_id
+		<< " size=" << packet.size
+		<< " type=" << static_cast<int>(packet.type)
+		<< '\n';
+
 
 	broadcast_room(room_id, reinterpret_cast<char*>(&packet), packet.size);
 

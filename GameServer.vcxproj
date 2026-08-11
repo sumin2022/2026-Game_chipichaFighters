@@ -21,7 +21,9 @@
   <ItemGroup>
     <ClCompile Include="file\Character.cpp" />
     <ClCompile Include="file\Common.cpp" />
-    <ClCompile Include="file\DBLogin.cpp" />
+    <ClCompile Include="file\DBLogin.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="file\main.cpp" />
     <ClCompile Include="file\MapCollision.cpp" />
     <ClCompile Include="file\RoomManager.cpp" />

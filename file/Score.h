@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "protocol.h"
 
 struct Room;
@@ -28,7 +28,8 @@ public:
     float get_time_left() const { return game_timer; }
 
 private:
-    float game_timer = 150.0f; // 2분 30초
+	static constexpr float GAME_DURATION = 15.0f; // 테스트용
+	float game_timer = GAME_DURATION;
     float red_score = 0;
     float blue_score = 0;
 
