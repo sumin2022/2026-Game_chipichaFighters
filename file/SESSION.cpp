@@ -1,6 +1,6 @@
 #include "SESSION.h"
 #include "RoomManager.h"
-#include <algorithm>
+#include "DBLogin.h"
 
 std::array<SESSION, MAX_PLAYERS> clients;
 
@@ -88,11 +88,12 @@ void SESSION::send_move_packet(int mover) {
   do_send(packet.size, reinterpret_cast<char *>(&packet));
 }
 
-void SESSION::process_packet(unsigned char *p) {
-  TZPacketHeader *header = reinterpret_cast<TZPacketHeader *>(p);
+void SESSION::process_packet(unsigned char* p, DBLogin& db)
+{
+	TZPacketHeader* header = reinterpret_cast<TZPacketHeader*>(p);
 
-  switch (header->type) {
-    using enum PACKET_TYPE;
+	switch (header->type) {
+		using enum PACKET_TYPE;
 
 	case CS_LOGIN:
 	{
@@ -101,32 +102,93 @@ void SESSION::process_packet(unsigned char *p) {
 		// m_username 저장
 		// SC_LOGIN_RESULT 전송
 		CS_Login* packet = reinterpret_cast<CS_Login*>(p);
-		strncpy_s(m_username, packet->username, MAX_NAME_LEN);
+		std::string username = packet->username;
+		std::string password = packet->password;
+
+		if (username.empty()) {
+			send_login_fail("Invalid username.");
+			break;
+		}
+
+		bool login_success = false;
+
+		// AI 테스트 봇인지 확인
+		bool is_bot =
+			username.rfind("Bot", 0) == 0;
+
+		bool exists = db.UserExists(username);
+
+		if (is_bot)
+		{
+			// 봇은 비밀번호 검사 생략
+			if (!exists)
+			{
+				// 테스트용 비밀번호로 자동 등록
+				if (!db.RegisterUser(username, "BOT_TEST"))
+				{
+					send_login_fail("Bot registration failed.");
+					break;
+				}
+			}
+
+			login_success = true;
+		}
+		else
+		{
+			if (exists)
+			{
+				// 기존 계정이면 비밀번호 확인
+				login_success =
+					db.LoginUser(username, password);
+
+				if (!login_success)
+				{
+					send_login_fail("Password incorrect.");
+					break;
+				}
+			}
+			else
+			{
+				// 처음 접속한 계정이면 자동 회원가입
+				if (!db.RegisterUser(username, password))
+				{
+					send_login_fail("Registration failed.");
+					break;
+				}
+
+				login_success = true;
+			}
+		}
+
+		if (!login_success)
+		{
+			send_login_fail("Login failed.");
+			break;
+		}
+
+		// 인증 성공한 이후에만 SESSION에 저장
+		strncpy_s(
+			m_username,
+			username.c_str(),
+			MAX_NAME_LEN
+		);
 
     m_is_logged_in = true;
 
-    std::cout << "Player[" << m_id << "] logged in as " << m_username
-              << std::endl;
+		std::cout
+			<< "Player[" << m_id
+			<< "] logged in as "
+			<< m_username
+			<< std::endl;
 
     send_login_success();
     send_avatar_info();
 
-    // for (auto& other : clients) {
-    //	if (!other.m_is_connected) continue;
-    //	if (other.m_id == m_id) continue;
-    //	send_add_player(other.m_id);
-    // }
-
-    // for (auto& other : clients) {
-    //	if (!other.m_is_connected) continue;
-    //	if (other.m_id == m_id) continue;
-    //	other.send_add_player(m_id);
-    // }
-    break;
-  }
-  case CS_READY: {
-    if (!m_is_logged_in)
-      return;
+		break;
+	}
+	case CS_READY:
+	{
+		if (!m_is_logged_in) return;
 
     std::cout << "[RECV] CS_READY / player=" << m_id
               << " matchmaking request\n";
@@ -216,18 +278,15 @@ void SESSION::process_packet(unsigned char *p) {
   }
 }
 
-void send_login_fail(SOCKET client, const char *message) {
-  SC_LoginResult packet;
-  packet.size = sizeof(SC_LoginResult);
-  packet.type = PACKET_TYPE::SC_LOGIN_RESULT;
-  packet.success = false;
-  strncpy_s(packet.message, message, sizeof(packet.message));
+void SESSION::send_login_fail(const char* message)
+{
+	SC_LoginResult packet;
+	packet.size = sizeof(SC_LoginResult);
+	packet.type = PACKET_TYPE::SC_LOGIN_RESULT;
+	packet.success = false;
+	strncpy_s(packet.message, message, sizeof(packet.message));
 
-  WSABUF wsa_buf;
-  wsa_buf.buf = reinterpret_cast<char *>(&packet);
-  wsa_buf.len = packet.size;
-
-	WSASend(client, &wsa_buf, 1, 0, 0, nullptr, nullptr);// ?이거 왜 WSASend임? do_send?
+	do_send(packet.size,reinterpret_cast<char*>(&packet));
 }
 
 void SESSION::send_game_start() {

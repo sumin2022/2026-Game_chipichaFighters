@@ -220,7 +220,7 @@ void ServerMain::HandleRecv(int player_index, DWORD num_bytes,
     if (remain_data < packet_size)
       break;
 
-		session.process_packet(reinterpret_cast<unsigned char*>(packet_start));
+		session.process_packet(reinterpret_cast<unsigned char*>(packet_start), db);
 
     remain_data -= packet_size;
     packet_start += packet_size;

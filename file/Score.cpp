@@ -1,8 +1,8 @@
-﻿#include "RoomManager.h"
+#include "RoomManager.h"
 
 void ScoreManager::start_game() // 게임 시작 시 초기화
 {
-    game_timer = 150.0f;
+	game_timer = GAME_DURATION;
     red_score = 0.0f;
     blue_score = 0.0f;
 }

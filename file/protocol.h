@@ -8,7 +8,7 @@ constexpr int WORLD_HEIGHT = 400;
 constexpr int MAX_PLAYERS = 18;
 constexpr int MAX_NAME_LEN = 20;
 constexpr int MAX_ROOM_AI = 6;
-constexpr int MAX_ROOM_PLAYERS = 6; // 원래 6명
+constexpr int MAX_ROOM_PLAYERS = 2; // 원래 6명
 
 enum struct PACKET_STAGE : std::uint8_t {
   DEFAULT,
@@ -100,7 +100,8 @@ struct SC_ConnectionCheck : TZPacket<PACKET_TYPE::SC_CONNECTION_CHECK, SC_Connec
 
 // title - 로그인 요청
 struct CS_Login : TZPacket<PACKET_TYPE::CS_LOGIN, CS_Login> {
-  char username[MAX_NAME_LEN]{};
+    char username[MAX_NAME_LEN]{};
+	char password[MAX_NAME_LEN]{};
 };
 
 // title - 클라이언트 매칭 준비 요청
@@ -129,6 +130,7 @@ struct SC_RoomEnter : TZPacket<PACKET_TYPE::SC_ROOM_ENTER, SC_RoomEnter> {
 	char usernames[MAX_ROOM_PLAYERS][MAX_NAME_LEN]{};
     int player_ids[MAX_ROOM_PLAYERS]{};
     int teams[MAX_ROOM_PLAYERS]{};
+	//TeamType teams[MAX_ROOM_PLAYERS]{};
 };
 
 // match - 캐릭터 선택 요청
