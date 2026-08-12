@@ -186,13 +186,17 @@ struct CS_Skill : TZPacket<PACKET_TYPE::CS_SKILL, CS_Skill> {
 };
 
 //==============================================================================================
-// *현재는 사용하지 않음, 나중에 필요하면 구현*
-// battle - 게임 중 플레이어 추가 알림 (재접속/중도 참가용)
+// *구현완료*
+// battle - 게임 중 플레이어 추가 알림 (재접속용)
 struct SC_AddPlayer : TZPacket<PACKET_TYPE::SC_ADD_PLAYER, SC_AddPlayer> {
-    int playerId{};
-    char username[MAX_NAME_LEN]{};
-    short x{};
-    short y{};
+	int playerId{};
+	char username[MAX_NAME_LEN]{};
+
+	TeamType team{ TeamType::TEAM_NONE };
+	CharacterType character{ CharacterType::CHAR_NONE };
+
+	float x{};
+	float y{};
 };
 
 // battle - 게임 중 플레이어 제거 알림 (연결 종료/퇴장용) 
