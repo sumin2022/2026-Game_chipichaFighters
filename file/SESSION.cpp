@@ -47,20 +47,6 @@ void SESSION::send_avatar_info() {
   do_send(packet.size, reinterpret_cast<char *>(&packet));
 }
 
-void SESSION::send_add_player(int player_id) {
-  SC_AddPlayer packet;
-  packet.size = sizeof(SC_AddPlayer);
-  packet.type = PACKET_TYPE::SC_ADD_PLAYER;
-  packet.playerId = player_id;
-
-  SESSION &pl = clients[player_id];
-  memcpy(packet.username, pl.m_username, sizeof(packet.username));
-  packet.x = pl.m_x;
-  packet.y = pl.m_y;
-
-  do_send(packet.size, reinterpret_cast<char *>(&packet));
-}
-
 void SESSION::send_login_success() {
   SC_LoginResult packet;
   packet.size = sizeof(SC_LoginResult);

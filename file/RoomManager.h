@@ -81,6 +81,17 @@ struct ItemState {
   float respawn_timer;
 };
 
+struct DisconnectedPlayer
+{
+	std::string username;
+
+	TeamType team = TeamType::TEAM_NONE;
+	CharacterType character = CharacterType::CHAR_NONE;
+
+	int kill_count = 0;
+	int death_count = 0;
+};
+
 struct Room {
 	int room_id = -1; // room 번호 : 1, 2, 3 ...? 
 	RoomState state = RoomState::MATCHING;
@@ -88,9 +99,11 @@ struct Room {
 	ScoreManager score;
 	ItemState items[2];
 
-  std::array<int, MAX_ROOM_PLAYERS> players;
-  std::array<PlayerState, MAX_ROOM_PLAYERS> states;
-  int player_count = 0;
+	std::array<int, MAX_ROOM_PLAYERS> players;
+	std::array<PlayerState, MAX_ROOM_PLAYERS> states;
+	int player_count = 0;
+
+	std::vector<DisconnectedPlayer> disconnected_players;
 
   Room() { players.fill(-1); }
 
@@ -155,7 +168,7 @@ public:
   void leave_room(int player_id);
   void start_room(int room_id);
 
-	void broadcast_room(int room_id, char* packet, int size);
+	void broadcast_room(int room_id, char* packet, int size, int exclude_player_id = -1);
 	void update_all_rooms(float dt);
 
   void select_character(int player_id, CharacterType character);
@@ -201,8 +214,18 @@ private:
 	
 	void apply_character_to_player(PlayerState& state, CharacterType character);
 
-  void end_room(Room &room);
-  void init_items(Room &room);
+	void end_room(Room& room);
+	void init_items(Room& room);
+
+	// 재접속 기록 검색함수
+	DisconnectedPlayer* find_disconnected_player(Room& room, const std::string& username);
+
+	// 재접속 처리 함수
+	void reconnect_player(Room& room, int player_id);
+	// 방에 플레이어 추가 브로드캐스트
+	void broadcast_add_player(Room& room, int player_id);
+	// 재접속 한 플레이어에게 방정보 보내기
+	void send_ingame_room_info(Room& room, int player_id);
 
   std::unordered_map<int, Room> m_rooms;
   std::unordered_map<int, int> m_player_room;
@@ -213,3 +236,8 @@ private:
 	std::vector<int> m_match_requests; // 매칭요청대기업
 	std::vector<int> m_leave_requests; // 퇴장 요청 대기업
 };
+
+
+
+
+

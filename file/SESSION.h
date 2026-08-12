@@ -25,7 +25,6 @@ public:
 	void do_send(int num_bytes, char* mess);
 	void send_avatar_info();
 	void send_move_packet(int mover);
-	void send_add_player(int player_id);
 	void send_remove_player(int player_id);
 	void send_login_success();
 	void send_login_fail(const char* message);

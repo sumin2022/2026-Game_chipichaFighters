@@ -9,16 +9,17 @@
 constexpr float ITEM_POS_X[2] = {100.0f, 300.0f};
 constexpr float ITEM_POS_Y[2] = {200.0f, 200.0f};
 
-void RoomManager::broadcast_room(int room_id, char *packet, int size) {
-  auto room_it = m_rooms.find(room_id);
-  if (room_it == m_rooms.end()) return;
+void RoomManager::broadcast_room(int room_id, char* packet, int size, int exclude_player_id)
+{
+	auto room_it = m_rooms.find(room_id);
+	if (room_it == m_rooms.end()) return;
 
 	Room& room = room_it->second;
 	//auto* header = reinterpret_cast<TZPacketHeader*>(packet); //출력용
 
-  for (int i = 0; i < room.player_count; ++i) {
-    int player_id = room.players[i];
-    if (player_id == -1) continue;
+	for (int i = 0; i < room.player_count; ++i) {
+		int player_id = room.players[i];
+		if (player_id == -1 || player_id == exclude_player_id) continue;
 
     SESSION &session = clients[player_id];
 
@@ -115,26 +116,63 @@ void RoomManager::process_pending_requests() {
     std::cout << "Player " << player_id << " left room " << room_id << '\n';
 
 		// 게임 중인 방에서 누가 나가면 이 방은 재사용하지 않고 제거
-		if (room.active) {
-			for (int i = 0; i < room.player_count; ++i) {
+		if (room.active)
+		{
+			PlayerState* state =
+				find_player_state(room, player_id);
+
+			// 재접속을 위해 정보 저장
+			if (state != nullptr)
+			{
+				DisconnectedPlayer disconnected;
+
+				disconnected.username = clients[player_id].m_username;
+
+				disconnected.team = state->team;
+
+				disconnected.character = state->character;
+					
+				disconnected.kill_count = state->kill_count;
+
+				disconnected.death_count = state->death_count;
+					
+				// 같은 계정의 예전 기록 제거
+				room.disconnected_players.erase(
+					std::remove_if(room.disconnected_players.begin(),
+						room.disconnected_players.end(),
+						[&](const DisconnectedPlayer& p)
+						{
+							return p.username == disconnected.username;
+						}),
+					room.disconnected_players.end()
+				);
+
+				room.disconnected_players.push_back(disconnected);
+			}
+
+			// 남은 플레이어들에게 퇴장 알림
+			for (int i = 0;i < room.player_count;++i)
+			{
 				int pid = room.players[i];
-				if (pid == -1) continue;
 
-        clients[pid].m_in_game = false;
-        clients[pid].m_room_id = -1;
+				if (pid == -1 || pid == player_id)continue;
 
-        if (pid != player_id && clients[pid].m_is_connected) {
-          clients[pid].send_game_result();
-        }
+				if (clients[pid].m_is_connected)
+				{
+					clients[pid].send_remove_player(player_id);
+				}
+			}
+			room.remove_player(player_id);
+			m_player_room.erase(player_id);
 
-        m_player_room.erase(pid);
-      }
+			clients[player_id].m_in_game = false;
+			clients[player_id].m_room_id = -1;
 
-      m_rooms.erase(room_id);
+			std::cout<< "Player " << player_id
+				<< " disconnected from room "<< room_id << '\n';
 
-      std::cout << "Active room " << room_id << " removed\n";
-      continue;
-    }
+			continue;
+		}
 
 		// 아직 매칭 중인 방이면 해당 플레이어만 제거
 		room.remove_player(player_id);
@@ -143,11 +181,12 @@ void RoomManager::process_pending_requests() {
     clients[player_id].m_in_game = false;
     clients[player_id].m_room_id = -1;
 
-    if (room.player_count == 0) {
-      m_rooms.erase(room_id);
-      std::cout << "Empty room " << room_id << " removed\n";
-    }
-  }
+		// 인게임 중에는 방이 비어도(다 튕겨도) 유지됨(시간은 지난다), 그외엔 0명이면 방 제거
+		if (room.state != RoomState::INGAME && room.player_count == 0) {
+			m_rooms.erase(room_id);
+			std::cout << "Empty room " << room_id << " removed\n";
+		}
+	}
 
 	for (int player_id : match_requests) {
 		if (!clients[player_id].m_is_connected) {
@@ -169,17 +208,48 @@ void RoomManager::process_pending_requests() {
 			continue;
 		}
 
-    int target_room_id = -1;
+		int target_room_id = -1;
+		bool reconnect = false;
 
-    for (auto &[room_id, room] : m_rooms) {
-      if (!room.active && !room.is_full()) {
-        target_room_id = room_id;
-        break;
-      }
-    }
+		//재접속 시도
+		std::string username =
+			clients[player_id].m_username;
 
-    if (target_room_id == -1) {
-      target_room_id = m_next_room_id++;
+		for (auto& [room_id, room] : m_rooms)
+		{
+			if (room.state != RoomState::INGAME)
+				continue;
+
+			if (room.is_full())
+				continue;
+
+			if (find_disconnected_player(room, username) != nullptr)
+			{
+				target_room_id = room_id;
+				reconnect = true;
+				break;
+			}
+		}
+
+		// 매칭중인 방합류
+		if (target_room_id == -1)
+		{
+			for (auto& [room_id, room] : m_rooms)
+			{
+				if (room.state !=
+					RoomState::MATCHING)
+					continue;
+
+				if (room.is_full())
+					continue;
+
+				target_room_id = room_id;
+				break;
+			}
+		}
+		// 매칭중인 방이 없을 시 새 방 생성
+		if (target_room_id == -1) {
+			target_room_id = m_next_room_id++;
 
       Room new_room;
       new_room.room_id = target_room_id;
@@ -188,18 +258,31 @@ void RoomManager::process_pending_requests() {
 
       m_rooms.emplace(target_room_id, new_room);
 
-      std::cout << "Room created: " << target_room_id << '\n';
-    }
+			std::cout << "Room created: " << target_room_id << '\n';
+		}
 
-    join_room(target_room_id, player_id);
+		if (reconnect)
+		{
+			auto room_it = m_rooms.find(target_room_id);
 
-    auto room_it = m_rooms.find(target_room_id);
-    if (room_it != m_rooms.end()) {
-      if (room_it->second.is_full()) {
-        enter_lobby(target_room_id);
-      }
-    }
-  }
+			if (room_it != m_rooms.end())
+			{
+				reconnect_player(room_it->second,player_id);
+			}
+		}
+		else {
+
+			join_room(target_room_id, player_id);
+
+			auto room_it = m_rooms.find(target_room_id);
+			if (room_it != m_rooms.end()) {
+				if (room_it->second.is_full()) {
+					enter_lobby(target_room_id);
+				}
+			}
+		}
+		
+	}
 }
 
 bool RoomManager::join_room(int room_id, int player_id) {
@@ -1106,14 +1189,164 @@ void RoomManager::broadcast_skill_hit(Room& room, int caster_id, int target_id)
 	broadcast_room(room.room_id, reinterpret_cast<char*>(&packet), packet.size);
 }
 
-void RoomManager::broadcast_skill_hit(Room& room, int caster_id, int target_id)
+// 재접속 기록 검색함수
+DisconnectedPlayer* RoomManager::find_disconnected_player(Room& room, const std::string& username)
 {
-	SC_SkillHit packet;
-	packet.caster_id = caster_id;
-	packet.target_id = target_id;
+	for (auto& player :room.disconnected_players)
+	{
+		if (player.username == username)
+			return &player;
+	}
 
-	broadcast_room(room.room_id, reinterpret_cast<char*>(&packet), packet.size);
+	return nullptr;
 }
 
-void RoomManager::update_ai(Room &room, float dt) {}
-void RoomManager::check_collisions(Room &room) {}
+void RoomManager::reconnect_player(Room& room,int player_id)
+{
+	if (room.state != RoomState::INGAME)
+		return;
+
+	if (room.is_full())
+		return;
+
+	std::string username = clients[player_id].m_username;
+
+	DisconnectedPlayer* disconnected 
+		= find_disconnected_player(room, username);
+
+	// 이 방에서 나갔던 사람이 아니면
+	// 절대 입장 불가
+	if (disconnected == nullptr)
+		return;
+
+	// 삭제하기 전에 필요한 정보 복사
+	TeamType saved_team = disconnected->team;
+
+	CharacterType saved_character = disconnected->character;
+
+	int saved_kills = disconnected->kill_count;
+
+	int saved_deaths = disconnected->death_count;
+
+	if (!room.add_player(player_id))
+		return;
+
+	PlayerState* state = find_player_state(room, player_id);
+
+	if (state == nullptr)
+		return;
+
+	// 기존 정보 복원
+	state->team = saved_team;
+
+	apply_character_to_player(*state, saved_character);
+
+	state->kill_count = saved_kills;
+
+	state->death_count = saved_deaths;
+
+	// 재접속은 스폰 지점에서 다시 시작
+	state->alive = true;
+	state->hp = state->max_hp;
+
+	state->moveX = 0.0f;
+	state->moveY = 0.0f;
+
+	state->moving = false;
+	state->move_input_timer = 0.0f;
+
+	state->auto_attack = false;
+	state->skill_requested = false;
+
+	state->current_target_id = -1;
+
+	set_spawn_position(room, *state);
+
+	// 세션 다시 방과 연결
+	m_player_room[player_id] = room.room_id;
+
+	clients[player_id].m_room_id = room.room_id;
+
+	clients[player_id].m_in_game = true;
+
+	// 이제 재접속 기록 삭제
+	room.disconnected_players.erase(
+		std::remove_if(
+			room.disconnected_players.begin(),
+			room.disconnected_players.end(),
+			[&](const DisconnectedPlayer& p)
+			{
+				return p.username == username;
+			}),
+		room.disconnected_players.end()
+	);
+
+	// 기존 사람들에게 복귀 알림
+	broadcast_add_player(
+		room,
+		player_id
+	);
+
+	// 재접속한 사람에게 현재 방 정보
+	send_ingame_room_info(
+		room,
+		player_id
+	);
+
+	// 이미 진행 중인 게임으로 이동
+	clients[player_id].send_game_start();
+
+	std::cout << "[RECONNECT] " << username
+		<< " returned to room " << room.room_id << '\n';
+}
+
+void RoomManager::broadcast_add_player(Room& room, int player_id)
+{
+	PlayerState* state = find_player_state(room, player_id);
+	if (state == nullptr) return;
+
+	SC_AddPlayer packet;
+	packet.playerId = player_id;
+	strncpy_s(packet.username, clients[player_id].m_username, MAX_NAME_LEN);
+
+	packet.team = state->team;
+	packet.character = state->character;
+	packet.x = state->x;
+	packet.y = state->y;
+
+	broadcast_room(
+		room.room_id,
+		reinterpret_cast<char*>(&packet),
+		packet.size,
+		player_id
+	);
+}
+
+void RoomManager::send_ingame_room_info(Room& room,int player_id)
+{
+	SC_RoomEnter packet;
+
+	packet.room_id = room.room_id;
+
+	packet.player_count = room.player_count;
+
+	for (int i = 0;i < room.player_count;++i)
+	{
+		int pid = room.players[i];
+
+		packet.player_ids[i] = pid;
+
+		packet.teams[i] = static_cast<int>(room.states[i].team);
+
+		strncpy_s(
+			packet.usernames[i],
+			clients[pid].m_username,
+			MAX_NAME_LEN
+		);
+	}
+
+	clients[player_id].do_send(packet.size, reinterpret_cast<char*>(&packet));
+}
+
+void RoomManager::update_ai(Room& room, float dt) {}
+void RoomManager::check_collisions(Room& room) {}
