@@ -992,6 +992,27 @@ void RoomManager::update_skills(Room& room, float dt)
 			SC_Skill packet;
 			packet.caster_id = caster.id;
 
+			switch (caster.character) {
+			case CharacterType::CHAR_DEALER:
+				packet.skill_id = SkillId::DEALER_SKILL;
+				break;
+
+			case CharacterType::CHAR_ARCHER:
+				packet.skill_id = SkillId::ARCHER_SKILL;
+				break;
+
+			case CharacterType::CHAR_TANKER:
+				packet.skill_id = SkillId::TANKER_SKILL;
+				break;
+
+			case CharacterType::CHAR_HEALER:
+				packet.skill_id = SkillId::HEALER_SKILL;
+				break;
+
+			default:
+				break;
+			}
+
 			broadcast_room(room.room_id, reinterpret_cast<char*>(&packet), packet.size);
 		}
 	}

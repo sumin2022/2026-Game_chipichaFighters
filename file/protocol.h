@@ -79,6 +79,18 @@ enum struct TeamType : std::int32_t {
 	TEAM_BLUE = 2
 };
 
+enum struct SkillId : std::uint8_t {
+	DEALER_SKILL = 0,
+	ARCHER_SKILL = 1,
+	TANKER_SKILL = 2,
+	HEALER_SKILL = 3,
+
+	DEALER_PASSIVE = 4,
+	ARCHER_PASSIVE = 5,
+	TANKER_PASSIVE = 6,
+	HEALER_PASSIVE = 7
+};
+
 #pragma pack(push, 1)
 
 template <PACKET_TYPE Type, typename Derived>
@@ -185,8 +197,6 @@ struct CS_Skill : TZPacket<PACKET_TYPE::CS_SKILL, CS_Skill> {
     short skill_id{}; //캐릭터 별 스킬이 다르긴 하나 어차피 캐릭터 당 스킬 하나여서 상관없음.
 };
 
-//==============================================================================================
-// *구현완료*
 // battle - 게임 중 플레이어 추가 알림 (재접속용)
 struct SC_AddPlayer : TZPacket<PACKET_TYPE::SC_ADD_PLAYER, SC_AddPlayer> {
 	int playerId{};
@@ -203,7 +213,6 @@ struct SC_AddPlayer : TZPacket<PACKET_TYPE::SC_ADD_PLAYER, SC_AddPlayer> {
 struct SC_RemovePlayer : TZPacket<PACKET_TYPE::SC_REMOVE_PLAYER, SC_RemovePlayer> {
     int playerid{};
 };
-//==============================================================================================
 
 // battle - 특정 플레이어 이동 위치 알림
 struct SC_MovePlayer : TZPacket<PACKET_TYPE::SC_MOVE_PLAYER, SC_MovePlayer> {
@@ -273,8 +282,10 @@ struct SC_Attack : TZPacket<PACKET_TYPE::SC_ATTACK, SC_Attack> {
 };
 
 // battle - 스킬 사용 알림
+//   스킬 아이디 정의,(패시브 포함), 시전자랑 스킬 아이디 전송
 struct SC_Skill : TZPacket<PACKET_TYPE::SC_SKILL, SC_Skill> {
-	int caster_id{};								// 스킬 시전자 ID
+	int caster_id{};	 // 스킬 시전자 ID
+	SkillId skill_id{};  // 사용한 스킬 ID
 };
 
 // battle - 스킬 적중 알림
