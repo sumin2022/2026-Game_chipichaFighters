@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "protocol.h"
 
 enum class AttackType {
@@ -53,6 +53,7 @@ struct PassiveStats {
 
 	float attack_speed_buff_duration = 0.0f;   // 원거리 딜러 공속 증가 지속시간
 	float attack_cooldown_reduce = 0.0f;       // 원거리 딜러 공속 증가량
+	float passive_cooldown = 0.0f;             // 패시브 자체 쿨타임
 
 	float self_heal_rate = 0.0f;               // 힐러: 아군 치유량 대비 자가 치유 비율
 };

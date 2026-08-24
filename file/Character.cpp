@@ -1,4 +1,4 @@
-﻿#include "Character.h"
+#include "Character.h"
 
 const CharacterStats& CharacterManager::GetStats(CharacterType type)
 {
@@ -31,11 +31,12 @@ const CharacterStats& CharacterManager::GetStats(CharacterType type)
 
 		PassiveStats{
 			PassiveType::TANKER_PASSIVE, // type
-			0.30f,                      // lifesteal_rate
-			0.0f,                       // reflect_damage
-			0.0f,                       // attack_speed_buff_duration
-			0.0f,                       // attack_cooldown_reduce
-			0.0f                        // self_heal_rate
+			0.20f,      // 피해량의 20% 흡혈
+			0.0f,
+			0.0f,
+			0.0f,
+			0.0f,
+			0.0f
 		}
 	};
 
@@ -66,11 +67,12 @@ const CharacterStats& CharacterManager::GetStats(CharacterType type)
 
 		PassiveStats{
 			PassiveType::DEALER_PASSIVE, // type
-			0.0f,                       // lifesteal_rate
-			15.0f,                      // reflect_damage
-			0.0f,                       // attack_speed_buff_duration
-			0.0f,                       // attack_cooldown_reduce
-			0.0f                        // self_heal_rate
+			0.0f,       // lifesteal_rate
+			0.30f,      // 받은 기본 공격 피해의 30% 반사
+			0.0f,       // attack_speed_buff_duration
+			0.0f,       // attack_cooldown_reduce
+			0.0f,       // passive_cooldown
+			0.0f        // self_heal_rate
 		}
 	};
 
@@ -103,8 +105,9 @@ const CharacterStats& CharacterManager::GetStats(CharacterType type)
 			PassiveType::ARCHER_PASSIVE, // type
 			0.0f,                       // lifesteal_rate
 			0.0f,                       // reflect_damage
-			5.0f,                       // attack_speed_buff_duration
-			0.5f,                       // attack_cooldown_reduce
+			3.0f,						// 공속 증가 3초
+			0.5f,						// 공격 쿨타임 50% 감소
+			6.0f,						// 패시브 쿨타임 6초
 			0.0f                        // self_heal_rate
 		}
 	};
@@ -136,11 +139,12 @@ const CharacterStats& CharacterManager::GetStats(CharacterType type)
 
 		PassiveStats{
 			PassiveType::HEALER_PASSIVE, // type
-			0.0f,                       // lifesteal_rate
-			0.0f,                       // reflect_damage
-			0.0f,                       // attack_speed_buff_duration
-			0.0f,                       // attack_cooldown_reduce
-			0.30f                       // self_heal_rate
+			0.0f,
+			0.0f,
+			0.0f,
+			0.0f,
+			0.0f,
+			0.40f       // 아군 실제 치유량의 40% 자가 치유
 		}
 	};
 
