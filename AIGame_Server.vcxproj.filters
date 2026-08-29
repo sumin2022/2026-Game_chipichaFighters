@@ -1,0 +1,153 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="소스 파일">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="헤더 파일">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="리소스 파일">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="소스 파일\AI">
+      <UniqueIdentifier>{5ade3a1e-9fea-4ce6-9d81-a65fd3ea2f50}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\AI\Core">
+      <UniqueIdentifier>{95f3c649-c915-4eac-a124-89dc49e78326}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\AI\State">
+      <UniqueIdentifier>{62fb864a-f5fe-4073-ae49-b29d7c5cfe87}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\AI\Action">
+      <UniqueIdentifier>{893a635c-6ac9-4a92-a8d6-233393e01bb6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\AI\Learning">
+      <UniqueIdentifier>{6495d4ae-5fa3-4eab-9600-63e0ed005610}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\AI\Feature">
+      <UniqueIdentifier>{ad9045d4-3d7b-42d9-b83c-d64e79f9a510}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\AI\Reward">
+      <UniqueIdentifier>{73bf1303-03f7-4785-b4a6-dadea17c77d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\DB">
+      <UniqueIdentifier>{b478e4ba-1834-4336-9e09-fe0817585b63}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="file\main.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="file\Common.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="file\Network.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="file\Bot.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="file\AI\AI.cpp">
+      <Filter>소스 파일\AI\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="file\AI\ActionMapper.cpp">
+      <Filter>소스 파일\AI\Action</Filter>
+    </ClCompile>
+    <ClCompile Include="file\AI\RandomPolicy.cpp">
+      <Filter>소스 파일\AI\Learning</Filter>
+    </ClCompile>
+    <ClCompile Include="file\AI\FeatureExtractor.cpp">
+      <Filter>소스 파일\AI\Feature</Filter>
+    </ClCompile>
+    <ClCompile Include="file\AI\RewardCalculator.cpp">
+      <Filter>소스 파일\AI\Reward</Filter>
+    </ClCompile>
+    <ClCompile Include="file\AI\ReplayBuffer.cpp">
+      <Filter>소스 파일\AI\Learning</Filter>
+    </ClCompile>
+    <ClCompile Include="file\AI\DQNAgent.cpp">
+      <Filter>소스 파일\AI\Learning</Filter>
+    </ClCompile>
+    <ClCompile Include="file\AI\TrainingManager.cpp">
+      <Filter>소스 파일\AI\Learning</Filter>
+    </ClCompile>
+    <ClCompile Include="file\BotManager.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="file\AIDatabase.cpp">
+      <Filter>소스 파일\DB</Filter>
+    </ClCompile>
+    <ClCompile Include="file\DBThread.cpp">
+      <Filter>소스 파일\DB</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="file\Common.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="file\Network.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="file\Bot.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="file\Character.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="file\AIBrain.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="file\BotManager.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="file\AI\AI.h">
+      <Filter>소스 파일\AI\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="file\AI\Action.h">
+      <Filter>소스 파일\AI\Action</Filter>
+    </ClInclude>
+    <ClInclude Include="file\AI\ActionMapper.h">
+      <Filter>소스 파일\AI\Action</Filter>
+    </ClInclude>
+    <ClInclude Include="file\AI\RandomPolicy.h">
+      <Filter>소스 파일\AI\Learning</Filter>
+    </ClInclude>
+    <ClInclude Include="file\AI\FeatureExtractor.h">
+      <Filter>소스 파일\AI\Feature</Filter>
+    </ClInclude>
+    <ClInclude Include="file\AI\AIConfig.h">
+      <Filter>소스 파일\AI\State</Filter>
+    </ClInclude>
+    <ClInclude Include="file\AI\RLState.h">
+      <Filter>소스 파일\AI\State</Filter>
+    </ClInclude>
+    <ClInclude Include="file\AI\RoomObservation.h">
+      <Filter>소스 파일\AI\State</Filter>
+    </ClInclude>
+    <ClInclude Include="file\AI\RewardCalculator.h">
+      <Filter>소스 파일\AI\Reward</Filter>
+    </ClInclude>
+    <ClInclude Include="file\AI\ReplayBuffer.h">
+      <Filter>소스 파일\AI\Learning</Filter>
+    </ClInclude>
+    <ClInclude Include="file\AI\DQNAgent.h">
+      <Filter>소스 파일\AI\Learning</Filter>
+    </ClInclude>
+    <ClInclude Include="file\AI\TrainingManager.h">
+      <Filter>소스 파일\AI\Learning</Filter>
+    </ClInclude>
+    <ClInclude Include="file\AI\Normalization.h">
+      <Filter>소스 파일\AI\Feature</Filter>
+    </ClInclude>
+    <ClInclude Include="file\AIDatabase.h">
+      <Filter>소스 파일\DB</Filter>
+    </ClInclude>
+    <ClInclude Include="file\DBThread.h">
+      <Filter>소스 파일\DB</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

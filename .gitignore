@@ -67,3 +67,25 @@ vcpkg_installed/
 # test output & cache
 Testing/
 .cache/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.VC.db
+*.VC.VC.opendb
+
+# Visual Studio Build output
+Debug/
+Release/
+x64/
+x86/
+
+*.idb
+*.tlog
+*.lastbuildstate
+*.exp
+
+# Keep trained AI models
+!models/
+!models/**
