@@ -5,10 +5,10 @@
 constexpr short PORT = 9000;
 constexpr int WORLD_WIDTH = 400;
 constexpr int WORLD_HEIGHT = 400;
-constexpr int MAX_PLAYERS = 18;
+constexpr int MAX_PLAYERS = 200;
 constexpr int MAX_NAME_LEN = 20;
 constexpr int MAX_ROOM_AI = 6;
-constexpr int MAX_ROOM_PLAYERS = 2; // 원래 6명
+constexpr int MAX_ROOM_PLAYERS = 6; // 원래 6명
 
 enum struct PACKET_STAGE : std::uint8_t {
     DEFAULT,
