@@ -40,11 +40,34 @@ bool MapCollision::is_blocked(float x, float y)
 
 bool MapCollision::can_see(float x1, float y1, float x2, float y2)
 {
+	float dx = x2 - x1;
+	float dy = y2 - y1;
+
+	float distance = std::sqrt(dx * dx + dy * dy);
+
+	if (distance <= 0.0f)
+		return true;
+
+	dx /= distance;
+	dy /= distance;
+
+	// 타일 크기보다 작은 간격으로 검사
+	constexpr float STEP = 20.0f;
+
+	for (float d = STEP; d < distance; d += STEP)
+	{
+		float checkX = x1 + dx * d;
+		float checkY = y1 + dy * d;
+
+		if (is_blocked(checkX, checkY))
+			return false;
+	}
+
 	return true;
 }
 bool MapCollision::ray_cast(float x1, float y1, float x2, float y2)
 {
-	return true;
+	return can_see(x1, y1, x2, y2);
 }
 
 const MapCollision::CollisionMap MapCollision::collision_map =

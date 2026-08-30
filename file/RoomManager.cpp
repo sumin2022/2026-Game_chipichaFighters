@@ -526,6 +526,9 @@ void RoomManager::apply_character_to_player(PlayerState &state,
   state.attack_timer = 0.0f;
   state.skill_timer = 0.0f;
 
+	state.passive_timer = 0.0f;
+	state.passive_cooldown_timer = 0.0f;
+
   state.last_attack_target = -1;
   state.last_damaged_time = 0.0f;
 
@@ -580,9 +583,16 @@ void RoomManager::update_movement(Room& room, float dt)
   }
 }
 
-void RoomManager::update_attacks(Room &room, float dt) {
-  for (int i = 0; i < room.player_count; ++i) {
-    PlayerState &attacker = room.states[i];
+void RoomManager::update_attacks(Room& room, float dt)
+{
+
+	for (int i = 0; i < room.player_count; ++i) {
+		PlayerState& attacker = room.states[i];
+
+		// 패시브 타이머는 공격 여부와 관계없이 계속 감소
+		attacker.passive_timer = (std::max)(0.0f, attacker.passive_timer - dt);
+
+		attacker.passive_cooldown_timer = (std::max)(0.0f, attacker.passive_cooldown_timer - dt);
 
     if (!attacker.alive) {
       attacker.current_target_id = -1;
@@ -624,9 +634,13 @@ void RoomManager::update_attacks(Room &room, float dt) {
 			// 0.7 정도면 전방 약 90도 안쪽
 			if (dot < 0.7f) continue;
 
-      bestDistSq = distSq;
-      target = &enemy;
-    }
+			// 중간에 벽이 있으면 타겟팅 불가
+			if (!MapCollision::can_see(attacker.x,attacker.y,enemy.x,enemy.y))
+				continue;
+
+			bestDistSq = distSq;
+			target = &enemy;
+		}
 
     attacker.current_target_id = target ? target->id : -1;
 
@@ -642,17 +656,111 @@ void RoomManager::update_attacks(Room &room, float dt) {
 
 		broadcast_room(room.room_id, reinterpret_cast<char*>(&packet), packet.size);
 
-    target->hp -= attacker.attack_damage;
-    attacker.attack_timer = attacker.attack_cooldown;
+		const CharacterStats& attacker_stats =CharacterManager::GetStats(attacker.character);
 
-    std::cout << "[ATTACK] " << attacker.id << " -> " << target->id
-              << " damage=" << attacker.attack_damage << " hp=" << target->hp
-              << "\n";
+		const CharacterStats& target_stats =CharacterManager::GetStats(target->character);
 
-    if (target->hp <= 0) {
-      kill_player(room, *target, attacker.id);
-    }
-  }
+		// 기본 공격 피해
+		int damage = attacker.attack_damage;
+
+		int actual_damage = (std::min)(damage, target->hp);
+
+		target->hp -= damage;
+
+		if (target->hp < 0)
+			target->hp = 0;
+
+
+		// =======================================
+		// 탱커 패시브
+		// 가한 피해의 20% 흡혈
+		// =======================================
+		if (attacker.passive_skill == PassiveType::TANKER_PASSIVE)
+		{
+			int heal_amount = static_cast<int>(damage * attacker_stats.passive.lifesteal_rate);
+
+			if (heal_amount > 0)
+			{
+				attacker.hp = (std::min)(attacker.max_hp,attacker.hp + heal_amount);
+
+				broadcast_skill(room,attacker.id,SkillId::TANKER_PASSIVE);
+			}
+		}
+
+
+		// =======================================
+		// 딜러 패시브
+		// 기본 공격으로 받은 피해의 30% 반사
+		// 스킬 피해에는 적용하지 않음
+		// =======================================
+		if (target->passive_skill == PassiveType::DEALER_PASSIVE)
+		{
+			int reflect_damage = static_cast<int>(actual_damage * target_stats.passive.reflect_damage);
+
+			if (reflect_damage > 0)
+			{
+				attacker.hp -= reflect_damage;
+
+				if (attacker.hp < 0)
+					attacker.hp = 0;
+
+				broadcast_skill(room,target->id,SkillId::DEALER_PASSIVE);
+
+				std::cout
+					<< "[DEALER PASSIVE] "
+					<< target->id
+					<< " reflect=" << reflect_damage
+					<< " to=" << attacker.id
+					<< "\n";
+			}
+		}
+
+
+		// =======================================
+		// 아처 패시브
+		// 기본 공격 적중 시 발동
+		// 3초 공속 증가 / 쿨타임 6초
+		// =======================================
+		if (attacker.passive_skill == PassiveType::ARCHER_PASSIVE && attacker.passive_cooldown_timer <= 0.0f)
+		{
+			attacker.passive_timer = attacker_stats.passive.attack_speed_buff_duration;
+
+			attacker.passive_cooldown_timer = attacker_stats.passive.passive_cooldown;
+
+			broadcast_skill(room,attacker.id,SkillId::ARCHER_PASSIVE);
+		}
+
+
+		// 다음 기본 공격 쿨타임 결정
+		if (attacker.passive_skill == PassiveType::ARCHER_PASSIVE && attacker.passive_timer > 0.0f)
+		{
+			attacker.attack_timer =
+				attacker.attack_cooldown * (1.0f - attacker_stats.passive.attack_cooldown_reduce);
+		}
+		else
+		{
+			attacker.attack_timer = attacker.attack_cooldown;
+		}
+
+
+		std::cout << "[ATTACK] " << attacker.id
+			<< " -> " << target->id
+			<< " damage=" << damage
+			<< " hp=" << target->hp << "\n";
+
+
+		// 반사 피해로 공격자가 먼저 죽을 수도 있음
+		if (attacker.hp <= 0)
+		{
+			kill_player(room, attacker, target->id);
+		}
+
+		// 원래 공격 대상 사망
+		if (target->hp <= 0)
+		{
+			kill_player(room, *target, attacker.id);
+		}
+	}
 }
 
 void RoomManager::request_attack(int player_id) {
@@ -761,12 +869,19 @@ static void apply_damage(PlayerState& target, int damage)
   }
 }
 //스킬 힐 적용
-static void apply_heal(PlayerState& target, int heal)
+static int apply_heal(PlayerState& target, int heal)
 {
-	if (!target.alive) return;
+	if (!target.alive)
+		return 0;
 
-  target.hp += heal;
-  if (target.hp > target.max_hp) target.hp = target.max_hp;
+	int old_hp = target.hp;
+
+	target.hp += heal;
+
+	if (target.hp > target.max_hp)
+		target.hp = target.max_hp;
+
+	return target.hp - old_hp;
 }
 
 void RoomManager::update_skills(Room &room, float dt) {
@@ -860,6 +975,10 @@ void RoomManager::update_skills(Room &room, float dt) {
           float closestY = caster.y + dirY * forward_dist;
 
 				if (dist_sq(target.x, target.y, closestX, closestY) <= hit_width_sq) {
+
+					if (!MapCollision::ray_cast(caster.x,caster.y,target.x,target.y))
+						continue;
+
 					apply_damage(target, static_cast<int>(current_damage));
 					broadcast_skill_hit(room, caster.id, target.id);
 
@@ -893,11 +1012,15 @@ void RoomManager::update_skills(Room &room, float dt) {
 
           float d = dist_sq(caster.x, caster.y, enemy.x, enemy.y);
 
-          if (d <= best_dist_sq) {
-            best_dist_sq = d;
-            target = &enemy;
-          }
-        }
+				if (d > best_dist_sq)
+					continue;
+
+				if (!MapCollision::can_see(caster.x,caster.y,enemy.x,enemy.y))
+					continue;
+
+				best_dist_sq = d;
+				target = &enemy;
+			}
 
 			if (target != nullptr) {
 				apply_damage(*target, skill.damage + skill.extra_damage);
@@ -916,6 +1039,7 @@ void RoomManager::update_skills(Room &room, float dt) {
 		}
 		case SkillType::HEALER_SKILL:
 		{
+			int total_ally_heal = 0;
 			// 방향 사거리 위치에 장판 생성 후 범위 힐
 			// skill.heal, skill.range, skill.heal_area_range 사용
 			// 방향 사거리 위치에 장판 생성 후 범위 힐
@@ -944,17 +1068,41 @@ void RoomManager::update_skills(Room &room, float dt) {
             continue;
 
 				if (is_same_team(caster, target)) {
-					apply_heal(target, skill.heal);
+					int healed = apply_heal(target, skill.heal);
+
+					// 자기 자신에게 직접 들어간 힐은
+					// 패시브 계산에서 제외
+					if (target.id != caster.id)
+					{
+						total_ally_heal += healed;
+					}
 				}
 				else {
 					apply_damage(target, skill.damage);
 					broadcast_skill_hit(room, caster.id, target.id);
 
-            if (target.hp <= 0) {
-              kill_player(room, target, caster.id);
-            }
-          }
-        }
+					if (target.hp <= 0) {
+						kill_player(room, target, caster.id);
+					}
+				}
+			}
+
+			// 힐러 패시브
+			// 실제 아군 치유량의 40%만큼 자신 회복
+			if (total_ally_heal > 0 &&
+				caster.passive_skill == PassiveType::HEALER_PASSIVE)
+			{
+				int self_heal = static_cast<int>(
+					total_ally_heal * stats.passive.self_heal_rate
+					);
+
+				if (self_heal > 0)
+				{
+					apply_heal(caster, self_heal);
+
+					broadcast_skill(room,caster.id,SkillId::HEALER_PASSIVE);
+				}
+			}
 
 			skill_casted = true;
 			break;
@@ -966,11 +1114,27 @@ void RoomManager::update_skills(Room &room, float dt) {
 			caster.mp -= static_cast<int>(skill.mana_cost);
 			caster.skill_timer = skill.cooldown;
 
-			// 스킬 사용 후 브로드캐스팅
-			SC_Skill packet;
-			packet.caster_id = caster.id;
+      // 스킬 사용 후 브로드캐스팅
+			switch (caster.active_skill) {
+			case SkillType::DEALER_SKILL:
+				broadcast_skill(room, caster.id, SkillId::DEALER_SKILL);
+				break;
 
-			broadcast_room(room.room_id, reinterpret_cast<char*>(&packet), packet.size);
+			case SkillType::ARCHER_SKILL:
+				broadcast_skill(room, caster.id, SkillId::ARCHER_SKILL);
+				break;
+
+			case SkillType::TANKER_SKILL:
+				broadcast_skill(room, caster.id, SkillId::TANKER_SKILL);
+				break;
+
+			case SkillType::HEALER_SKILL:
+				broadcast_skill(room, caster.id, SkillId::HEALER_SKILL);
+				break;
+
+			default:
+				break;
+			}
 		}
 	}
 }
@@ -1027,8 +1191,11 @@ void RoomManager::respawn_player(Room &room, PlayerState &player) {
   player.moving = false;
   player.move_input_timer = 0.0f;
 
-  player.auto_attack = false;
-  player.skill_requested = false;
+	player.auto_attack = false;
+	player.skill_requested = false;
+
+	player.passive_timer = 0.0f;
+	player.passive_cooldown_timer = 0.0f;
 
   set_spawn_position(room, player);
 
@@ -1347,6 +1514,17 @@ void RoomManager::send_ingame_room_info(Room& room,int player_id)
 
 	clients[player_id].do_send(packet.size, reinterpret_cast<char*>(&packet));
 }
+
+void RoomManager::broadcast_skill(Room& room,int caster_id,SkillId skill_id)
+{
+	SC_Skill packet;
+	packet.caster_id = caster_id;
+	packet.skill_id = skill_id;
+
+	broadcast_room(room.room_id, reinterpret_cast<char*>(&packet), packet.size);
+}
+
+
 
 void RoomManager::update_ai(Room& room, float dt) {}
 void RoomManager::check_collisions(Room& room) {}

@@ -61,6 +61,10 @@ struct PlayerState {
 	float attack_timer = 0.0f;       // 기본 공격 쿨타임 진행 상태
 	float skill_timer = 0.0f;        // 스킬 쿨타임 진행 상태
 
+	// 아처 패시브
+	float passive_timer = 0.0f;           // 현재 패시브 버프 남은 시간
+	float passive_cooldown_timer = 0.0f;  // 패시브 재사용 대기시간
+
 	int current_target_id = -1; // 클라 표시용
 	int last_attack_target = -1;     // 마지막으로 공격한 대상
 	float last_damaged_time = 0.0f;  // 마지막으로 피해받은 시간
@@ -227,6 +231,9 @@ private:
 	// 재접속 한 플레이어에게 방정보 보내기
 	void send_ingame_room_info(Room& room, int player_id);
 
+	// 스킬 사용 브로드캐스트
+	void broadcast_skill(Room& room, int caster_id, SkillId skill_id);
+
   std::unordered_map<int, Room> m_rooms;
   std::unordered_map<int, int> m_player_room;
 
@@ -236,8 +243,4 @@ private:
 	std::vector<int> m_match_requests; // 매칭요청대기업
 	std::vector<int> m_leave_requests; // 퇴장 요청 대기업
 };
-
-
-
-
 
