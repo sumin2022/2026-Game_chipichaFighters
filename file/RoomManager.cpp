@@ -639,6 +639,10 @@ void RoomManager::update_attacks(Room& room, float dt)
 			// 0.7 정도면 전방 약 90도 안쪽
 			if (dot < 0.7f) continue;
 
+			// 중간에 벽이 있으면 타겟팅 불가
+			if (!MapCollision::can_see(attacker.x,attacker.y,enemy.x,enemy.y))
+				continue;
+
 			bestDistSq = distSq;
 			target = &enemy;
 		}
@@ -986,6 +990,10 @@ void RoomManager::update_skills(Room& room, float dt)
 				float closestY = caster.y + dirY * forward_dist;
 
 				if (dist_sq(target.x, target.y, closestX, closestY) <= hit_width_sq) {
+
+					if (!MapCollision::ray_cast(caster.x,caster.y,target.x,target.y))
+						continue;
+
 					apply_damage(target, static_cast<int>(current_damage));
 					broadcast_skill_hit(room, caster.id, target.id);
 
@@ -1021,10 +1029,14 @@ void RoomManager::update_skills(Room& room, float dt)
 
 				float d = dist_sq(caster.x, caster.y, enemy.x, enemy.y);
 
-				if (d <= best_dist_sq) {
-					best_dist_sq = d;
-					target = &enemy;
-				}
+				if (d > best_dist_sq)
+					continue;
+
+				if (!MapCollision::can_see(caster.x,caster.y,enemy.x,enemy.y))
+					continue;
+
+				best_dist_sq = d;
+				target = &enemy;
 			}
 
 			if (target != nullptr) {
