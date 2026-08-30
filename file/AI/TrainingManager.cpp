@@ -314,7 +314,7 @@ void TrainingManager::OnGameEnd(
         experience.reward = reward;
 
         // done=true이면 DQN 학습에서 NextState의 Q값을 사용하지 않는다.
-        // 하지만 입력 크기를 맞추기 위해 25개의 0 벡터를 저장한다.
+        // 하지만 입력 크기를 맞추기 위해 33개의 0 벡터를 저장한다.
         experience.nextState = arma::colvec(AIConfig::StateSize, arma::fill::zeros);
 
         // 경기 종료이므로 terminal state

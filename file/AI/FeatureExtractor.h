@@ -2,6 +2,7 @@
 
 #include "../Bot.h"
 #include "RoomObservation.h"
+#include "AIMapCollision.h"
 
 class FeatureExtractor
 {
@@ -10,4 +11,6 @@ public:
         const BotClient& bot,
         const RoomObservation& room
     )const;
+private:
+    AIMapCollision m_mapCollision;
 };

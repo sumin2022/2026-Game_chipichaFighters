@@ -48,6 +48,17 @@ struct RLState
     float itemRelativeY = 0.0f;
     float itemDistance = 0.0f;
     float itemActive = 0.0f;
+
+    // 주변 벽
+    float wallUp = 0.0f;
+    float wallDown = 0.0f;
+    float wallLeft = 0.0f;
+    float wallRight = 0.0f;
+
+    float wallUpLeft = 0.0f;
+    float wallUpRight = 0.0f;
+    float wallDownLeft = 0.0f;
+    float wallDownRight = 0.0f;
 };
 
 // RLState 구조체에 저장된 강화학습 상태값을
@@ -59,7 +70,7 @@ struct RLState
 inline arma::colvec ToArmaVector(
     const RLState& state)
 {
-    // 현재 RLState에서 사용하는 특징값은 총 25개이다.
+    // 현재 RLState에서 사용하는 특징값은 총 33개이다.
     arma::colvec result(AIConfig::StateSize);
 
     // 각 특징값을 순서대로 저장하기 위한 인덱스
@@ -125,5 +136,15 @@ inline arma::colvec ToArmaVector(
     result(i++) = state.itemDistance;
     result(i++) = state.itemActive;
 
+    //벽
+    result(i++) = state.wallUp;
+    result(i++) = state.wallDown;
+    result(i++) = state.wallLeft;
+    result(i++) = state.wallRight;
+
+    result(i++) = state.wallUpLeft;
+    result(i++) = state.wallUpRight;
+    result(i++) = state.wallDownLeft;
+    result(i++) = state.wallDownRight;
     return result;
 }

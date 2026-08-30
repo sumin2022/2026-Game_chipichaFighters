@@ -3,6 +3,7 @@
 #include "Action.h"
 #include <cmath>
 #include <cfloat>
+#include <iostream>
 
 // DQN이나 랜덤 정책이 선택한 행동 번호를 실제 게임 명령으로 변환한다.
 // 이동 방향을 axisX, axisY 값으로 바꾸고,
@@ -79,6 +80,28 @@ void ActionMapper::Execute(BotClient& bot,std::size_t action, Network& network,c
         moveX /= length;
         moveY /= length;
     }
+
+    constexpr float CHECK_DISTANCE = 100.0f;
+
+    const float checkX =
+        bot.x + moveX * CHECK_DISTANCE;
+
+    const float checkY =
+        bot.y + moveY * CHECK_DISTANCE;
+
+    if ((moveX != 0.0f || moveY != 0.0f) && m_mapCollision.IsBlocked(checkX, checkY))
+    {
+        std::cout
+            << "[AI WALL BLOCK]"
+            << " Bot=" << bot.index
+            << " Pos=(" << bot.x << ", " << bot.y << ")"
+            << " Check=(" << checkX << ", " << checkY << ")"
+            << '\n';
+        // 선택한 방향이 벽이면 일단 이동하지 않는다.
+        moveX = 0.0f;
+        moveY = 0.0f;
+    }
+
 
     // 이동 방향을 메인 서버에 전달한다.
     // Stop 행동인 경우에도 (0, 0)을 보내 이동을 중단시킨다.

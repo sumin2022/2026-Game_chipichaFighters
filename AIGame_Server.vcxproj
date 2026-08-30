@@ -22,6 +22,7 @@
     <ClCompile Include="file\AIDatabase.cpp" />
     <ClCompile Include="file\AI\ActionMapper.cpp" />
     <ClCompile Include="file\AI\AI.cpp" />
+    <ClCompile Include="file\AI\AIMapCollision.cpp" />
     <ClCompile Include="file\AI\DQNAgent.cpp" />
     <ClCompile Include="file\AI\FeatureExtractor.cpp" />
     <ClCompile Include="file\AI\RandomPolicy.cpp" />
@@ -42,6 +43,7 @@
     <ClInclude Include="file\AI\ActionMapper.h" />
     <ClInclude Include="file\AI\AI.h" />
     <ClInclude Include="file\AI\AIConfig.h" />
+    <ClInclude Include="file\AI\AIMapCollision.h" />
     <ClInclude Include="file\AI\DQNAgent.h" />
     <ClInclude Include="file\AI\FeatureExtractor.h" />
     <ClInclude Include="file\AI\Normalization.h" />

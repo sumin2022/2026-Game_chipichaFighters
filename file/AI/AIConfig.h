@@ -34,7 +34,7 @@ struct RewardConfig
     // 적에게 가까워지는 행동 유도
     float enemyApproachReward = 0.5f;
     // 중앙 점령지로 가까워지는 행동 유도
-    float captureApproachReward = 0.5f;
+    float captureApproachReward = 2.0f;
 
     float attackHitReward = 1.0f;
     float skillHitReward = 1.5f;
@@ -50,7 +50,7 @@ struct AIConfig
     static constexpr float MatchDuration = 150.0f;
 
     // DQN
-    static constexpr std::size_t StateSize = 25;
+    static constexpr std::size_t StateSize = 33;
     static constexpr std::size_t BatchSize = 64;
 
     static constexpr float Gamma = 0.99f;

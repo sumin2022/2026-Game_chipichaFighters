@@ -305,6 +305,60 @@ RLState FeatureExtractor::Extract(
         1.0f
     );
 
+	// ========================================================
+    // 벽 상태
+    // ========================================================
+    constexpr float CHECK_DISTANCE = 100.0f;
+
+    state.wallUp =
+        m_mapCollision.IsBlocked(
+            self->x,
+            self->y + CHECK_DISTANCE
+        ) ? 1.0f : 0.0f;
+
+    state.wallDown =
+        m_mapCollision.IsBlocked(
+            self->x,
+            self->y - CHECK_DISTANCE
+        ) ? 1.0f : 0.0f;
+
+    state.wallLeft =
+        m_mapCollision.IsBlocked(
+            self->x - CHECK_DISTANCE,
+            self->y
+        ) ? 1.0f : 0.0f;
+
+    state.wallRight =
+        m_mapCollision.IsBlocked(
+            self->x + CHECK_DISTANCE,
+            self->y
+        ) ? 1.0f : 0.0f;
+
+    state.wallUpLeft =
+        m_mapCollision.IsBlocked(
+            self->x - CHECK_DISTANCE,
+            self->y + CHECK_DISTANCE
+        ) ? 1.0f : 0.0f;
+
+    state.wallUpRight =
+        m_mapCollision.IsBlocked(
+            self->x + CHECK_DISTANCE,
+            self->y + CHECK_DISTANCE
+        ) ? 1.0f : 0.0f;
+
+    state.wallDownLeft =
+        m_mapCollision.IsBlocked(
+            self->x - CHECK_DISTANCE,
+            self->y - CHECK_DISTANCE
+        ) ? 1.0f : 0.0f;
+
+    state.wallDownRight =
+        m_mapCollision.IsBlocked(
+            self->x + CHECK_DISTANCE,
+            self->y - CHECK_DISTANCE
+        ) ? 1.0f : 0.0f;
+
+
     // 현재 단계에서는 아이템 상태를 학습에 사용하지 않으므로
     // itemRelativeX, itemRelativeY, itemDistance, itemActive는
     // 초기값 0을 유지한다.

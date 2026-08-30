@@ -84,6 +84,9 @@
     <ClCompile Include="file\DBThread.cpp">
       <Filter>소스 파일\DB</Filter>
     </ClCompile>
+    <ClCompile Include="file\AI\AIMapCollision.cpp">
+      <Filter>소스 파일\AI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="file\Common.h">
@@ -148,6 +151,9 @@
     </ClInclude>
     <ClInclude Include="file\DBThread.h">
       <Filter>소스 파일\DB</Filter>
+    </ClInclude>
+    <ClInclude Include="file\AI\AIMapCollision.h">
+      <Filter>소스 파일\AI</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

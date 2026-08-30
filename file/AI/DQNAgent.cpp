@@ -14,7 +14,7 @@
 
 DQNAgent::DQNAgent()
 {
-    // 입력 State 25개
+    // 입력 State 33개
     // ↓
     // Hidden Layer 128
     // ↓
@@ -102,7 +102,7 @@ void DQNAgent::Train(const std::vector<Experience>& batch)
     const std::size_t batchSize = batch.size();
 
     // 입력:
-    // 25 x BatchSize
+    // 33 x BatchSize
     arma::mat states(AIConfig::StateSize, batchSize);
 
     // 정답 Q값:

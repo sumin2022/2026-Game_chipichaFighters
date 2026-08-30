@@ -66,10 +66,9 @@ float RewardCalculator::Calculate(
     // +점령지 내부 유지 보상
     // ========================================================
 
-    if (std::abs(currentPlayer.x) <= 300.0f &&
-        std::abs(currentPlayer.y) <= 300.0f)
+    if (std::abs(currentPlayer.x) <= 300.0f && std::abs(currentPlayer.y) <= 300.0f)
     {
-        reward += 0.05f;
+        reward += 0.1f;
     }
 
     // ========================================================
@@ -89,6 +88,12 @@ float RewardCalculator::Calculate(
     {
         reward += static_cast<float>(skillHits) * m_config.skillHitReward;
     }
+
+    // ========================================================
+    // +점령지에서 너무 멀리 있는 것에 대한 약한 패널티
+    // ========================================================
+
+    reward -= normalizedCurrentCaptureDistance * 0.01f;
 
     // ========================================================
     // 1. 받은 피해 패널티
