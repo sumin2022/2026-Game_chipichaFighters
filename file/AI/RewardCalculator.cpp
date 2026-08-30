@@ -18,7 +18,9 @@ float RewardCalculator::Calculate(
     const NetPlayerState& currentPlayer,
     const RLState& currentState,
     const RoomObservation& room,
-    TeamType team) const
+    TeamType team,
+    int attackHits,
+    int skillHits) const
 {
     float reward = 0.0f;
 
@@ -68,6 +70,24 @@ float RewardCalculator::Calculate(
         std::abs(currentPlayer.y) <= 300.0f)
     {
         reward += 0.05f;
+    }
+
+    // ========================================================
+    // +공격 적중 보상
+    // ========================================================
+
+    if (attackHits > 0)
+    {
+        reward += static_cast<float>(attackHits) * m_config.attackHitReward;
+    }
+
+    // ========================================================
+    // +스킬 적중 보상
+    // ========================================================
+
+    if (skillHits > 0)
+    {
+        reward += static_cast<float>(skillHits) * m_config.skillHitReward;
     }
 
     // ========================================================

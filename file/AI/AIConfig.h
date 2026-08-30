@@ -35,6 +35,9 @@ struct RewardConfig
     float enemyApproachReward = 0.5f;
     // 중앙 점령지로 가까워지는 행동 유도
     float captureApproachReward = 0.5f;
+
+    float attackHitReward = 1.0f;
+    float skillHitReward = 1.5f;
 };
 
 struct AIConfig
@@ -54,8 +57,8 @@ struct AIConfig
 
     // Epsilon-Greedy
     static constexpr float EpsilonStart = 1.0f;
-    static constexpr float EpsilonMin = 0.05f;
-    static constexpr float EpsilonDecay = 0.995f;
+    static constexpr float EpsilonMin = 0.2f;
+    static constexpr float EpsilonDecay = 0.999f;
 
     // Epsilon은 매 Train마다 낮추면 너무 빨리 감소하므로
     // 일정 학습 횟수마다 감소시킨다.

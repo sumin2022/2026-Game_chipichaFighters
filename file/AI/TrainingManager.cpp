@@ -88,14 +88,33 @@ void TrainingManager::UpdateBot(
 
     if (bot.learning.hasPreviousExperience)
     {
+        // 이번 판단 구간에서 발생한 적중 보상 소비
+        const int attackHits = bot.pendingAttackHits.exchange(0, std::memory_order_relaxed);
+
+        const int skillHits = bot.pendingSkillHits.exchange(0, std::memory_order_relaxed);
+
         const float reward =
             m_rewardCalculator.Calculate(
                 bot.learning,
                 *currentPlayer,
                 currentState,
                 room,
-                bot.team
+                bot.team,
+                attackHits,
+                skillHits
             );
+
+        // 테스트용 로그
+        if (attackHits > 0 || skillHits > 0)
+        {
+            std::cout
+                << "[HIT REWARD]"
+                << " Bot=" << bot.index
+                << " AttackHits=" << attackHits
+                << " SkillHits=" << skillHits
+                << " Reward=" << reward
+                << '\n';
+        }
 
         // 이번 경기 동안 이 봇이 얻은 Reward 누적
         m_botEpisodeRewards[bot.player_id] += reward;
@@ -206,6 +225,14 @@ void TrainingManager::UpdateBot(
             true
         );
 
+    DecodedAction decoded = DecodeAction(action);
+
+    std::cout
+        << "[ACTION] Bot=" << bot.index
+        << " Action=" << action
+        << " Move=" << static_cast<int>(decoded.move)
+        << " Combat=" << static_cast<int>(decoded.combat)
+        << '\n';
 
     // ========================================================
     // 8. 선택한 행동 실행
@@ -394,6 +421,10 @@ void TrainingManager::OnGameEnd(
         << " ReplaySize="
         << m_replayBuffer.Size()
         << "\n";
+
+    bot.pendingAttackHits.store(0, std::memory_order_relaxed);
+
+    bot.pendingSkillHits.store(0, std::memory_order_relaxed);
 
     // 다음 게임에 이전 State/Action이 이어지지 않도록 초기화
     bot.learning = BotLearningContext{};

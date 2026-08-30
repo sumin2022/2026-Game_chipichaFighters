@@ -4,6 +4,7 @@
 #include "../../GameServer/file/protocol.h"
 #include <armadillo>
 #include "AI/RLState.h"
+#include <atomic>
 
 enum class BotState {
     Disconnected,
@@ -33,6 +34,7 @@ struct BotLearningContext
 
     int previousRedScore = 0;
     int previousBlueScore = 0;
+
 };
 
 struct BotCooldownState
@@ -77,5 +79,10 @@ struct BotClient {
     SC_GameResult pendingGameResult{};
     bool hasPendingGameResult = false;
     int pendingGameRoomId = -1;
+
+    // 공격과 스킬이 적중했는지 여부를 판단 후 보상 계산에 사용하기 위해 임시 저장한다.
+    // Network Thread -> AI Thread 전달용
+    std::atomic<int> pendingAttackHits{ 0 };
+    std::atomic<int> pendingSkillHits{ 0 };
 };
 

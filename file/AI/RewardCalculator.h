@@ -26,7 +26,9 @@ public:
         const NetPlayerState& currentPlayer,
         const RLState& currentState,
         const RoomObservation& room,
-        TeamType team
+        TeamType team,
+        int attackHits,
+        int skillHits
     ) const;
 
     // 게임 종료 시 승/패 보상을 계산한다.

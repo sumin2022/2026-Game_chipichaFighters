@@ -437,6 +437,30 @@ void Network::ProcessPacket(BotClient& bot, char* packet, int bytes)
 
         break;
     }
+    case SC_ATTACK:
+    {
+        auto* pkt = reinterpret_cast<SC_Attack*>(packet);
+
+        // 이 봇이 공격자인 경우에만 적중 횟수 증가
+        if (pkt->attacker_id == bot.player_id)
+        {
+            bot.pendingAttackHits.fetch_add(1, std::memory_order_relaxed);
+        }
+
+        break;
+    }
+    case SC_SKILL_HIT:
+    {
+        auto* pkt = reinterpret_cast<SC_SkillHit*>(packet);
+
+        // 이 봇이 스킬 시전자인 경우에만 적중 횟수 증가
+        if (pkt->caster_id == bot.player_id)
+        {
+            bot.pendingSkillHits.fetch_add(1, std::memory_order_relaxed);
+        }
+
+        break;
+    }
     case SC_GAME_RESULT:
     {
         auto* pkt = reinterpret_cast<SC_GameResult*>(packet);

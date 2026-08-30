@@ -1,6 +1,8 @@
 ﻿#include "ActionMapper.h"
 #include "../Network.h"
 #include "Action.h"
+#include <cmath>
+#include <cfloat>
 
 // DQN이나 랜덤 정책이 선택한 행동 번호를 실제 게임 명령으로 변환한다.
 // 이동 방향을 axisX, axisY 값으로 바꾸고,
@@ -82,12 +84,57 @@ void ActionMapper::Execute(BotClient& bot,std::size_t action, Network& network,c
     // Stop 행동인 경우에도 (0, 0)을 보내 이동을 중단시킨다.
     network.SendMove(bot, moveX, moveY);
 
-    // 이동 중이라면 이동 방향과 같은 방향을 바라보게 한다.
-    // 정지 상태에서 (0, 0)을 얼굴 방향으로 보내면
-    // 서버의 기존 방향이 사라질 수 있으므로 전송하지 않는다.
-    if (length > 0.0f)
+    // 가장 가까운 적 방향 바라보기
+    const NetPlayerState* nearestEnemy = nullptr;
+    float nearestDistSq = FLT_MAX;
+
+    for (int i = 0; i < room.playerCount; ++i)
     {
-        network.SendFaceDir(bot, moveX, moveY);
+        const auto& player = room.players[i];
+
+        if (!player.alive)
+            continue;
+
+        if (player.player_id == bot.player_id)
+            continue;
+
+        const TeamType playerTeam =
+            room.FindTeam(player.player_id);
+
+        if (playerTeam == TeamType::TEAM_NONE)
+            continue;
+
+        if (playerTeam == bot.team)
+            continue;
+
+        const float dx = player.x - bot.x;
+        const float dy = player.y - bot.y;
+
+        const float distSq =
+            dx * dx + dy * dy;
+
+        if (distSq < nearestDistSq)
+        {
+            nearestDistSq = distSq;
+            nearestEnemy = &player;
+        }
+    }
+
+    if (nearestEnemy != nullptr)
+    {
+        float dx = nearestEnemy->x - bot.x;
+        float dy = nearestEnemy->y - bot.y;
+
+        const float length =
+            std::sqrt(dx * dx + dy * dy);
+
+        if (length > 0.0001f)
+        {
+            dx /= length;
+            dy /= length;
+
+            network.SendFaceDir(bot, dx, dy);
+        }
     }
 
     // 선택된 전투 행동을 실제 공격 또는 스킬 패킷으로 변환한다.
