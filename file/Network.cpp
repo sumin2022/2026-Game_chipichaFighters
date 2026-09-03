@@ -305,8 +305,15 @@ void Network::ProcessPacket(BotClient& bot, char* packet, int bytes)
     }
     case SC_GAME_START:
     {
+        // BFS 먼저 초기화
+		// 초기 점령지 이동 경로를 사용하도록 설정
+        bot.useInitialPath = true;
+        bot.initialPath.clear();
+        bot.initialPathIndex = 0;
+
         bot.state = BotState::InGame;
         std::cout << "[BOT " << bot.index << "] Game Start / InGame\n";
+
         break;
     }
     case SC_DEATH:
@@ -338,6 +345,11 @@ void Network::ProcessPacket(BotClient& bot, char* packet, int bytes)
             bot.x = pkt->x;
             bot.y = pkt->y;
             bot.hp = pkt->hp;
+
+            // 리스폰 후 다시 중앙까지 BFS
+            bot.useInitialPath = true;
+            bot.initialPath.clear();
+            bot.initialPathIndex = 0;
         }
 
         break;

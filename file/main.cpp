@@ -63,11 +63,27 @@ int main() {
     if (useDatabase == 'y' || useDatabase == 'Y')
     {
         std::string dbServerIp;
+        std::string dbUser;
+        std::string dbPassword;
+        std::string dbName;
 
         std::cout << "DB Server IP: ";
         std::cin >> dbServerIp;
 
-        if (!database.Connect(dbServerIp.c_str()))
+        std::cout << "DB User: ";
+        std::cin >> dbUser;
+
+        std::cout << "DB Password: ";
+        std::cin >> dbPassword;
+
+        std::cout << "DB Name (default: ai_db): ";
+        std::cin >> dbName;
+
+
+        if (!database.Connect(dbServerIp.c_str(),
+            dbUser.c_str(),
+            dbPassword.c_str(),
+            dbName.c_str()))
         {
             std::cout << "DB connection failed\n";
             return 1;
@@ -124,21 +140,21 @@ int main() {
     }
     else
     {
-        modelInfo.modelVersion = 1;
-        modelInfo.modelPath = "models/dqn_model.bin";
-        modelInfo.trainCount = 0;
-        modelInfo.epsilon = AIConfig::EpsilonStart;
+        //modelInfo.modelVersion = 1;
+        //modelInfo.modelPath = "models/dqn_model.bin";
+        //modelInfo.trainCount = 0;
+        //modelInfo.epsilon = AIConfig::EpsilonStart;
 
-        if (!database.InsertModel(modelInfo))
-        {
-            std::cout << "[DB] Initial model insert failed\n";
-            return 1;
-        }
+        //if (!database.InsertModel(modelInfo))
+        //{
+        //    std::cout << "[DB] Initial model insert failed\n";
+        //    return 1;
+        //}
 
-        std::cout
-            << "[DB] New model inserted"
-            << " ID=" << modelInfo.modelId
-            << "\n";
+        //std::cout
+        //    << "[DB] New model inserted"
+        //    << " ID=" << modelInfo.modelId
+        //    << "\n";
     }
 
     AI ai(dbThread.get(), modelInfo);

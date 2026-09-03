@@ -214,6 +214,89 @@ void TrainingManager::UpdateBot(
         return;
     }
 
+    // ================================
+    // 게임 시작 직후 BFS 이동
+    // ================================
+    if (bot.useInitialPath)
+    {
+        // 점령지에 들어왔으면 BFS 종료
+        if (std::abs(bot.x) <= 300.0f &&
+            std::abs(bot.y) <= 300.0f)
+        {
+            bot.useInitialPath = false;
+            bot.initialPath.clear();
+            bot.initialPathIndex = 0;
+
+            std::cout
+                << "[BFS END] Bot="
+                << bot.index
+                << " Capture zone reached\n";
+        }
+        else
+        {
+            // 최초 한 번 경로 생성
+            if (bot.initialPath.empty())
+            {
+                if (m_pathFinder.FindPath(
+                    bot.x,
+                    bot.y,
+                    0.0f,
+                    0.0f,
+                    bot.initialPath))
+                {
+                    bot.initialPathIndex = 0;
+
+                    std::cout
+                        << "[BFS START] Bot="
+                        << bot.index
+                        << " PathSize="
+                        << bot.initialPath.size()
+                        << '\n';
+                }
+                else
+                {
+                    // 경로 생성 실패 시 DQN으로 넘김
+                    bot.useInitialPath = false;
+
+                    std::cout
+                        << "[BFS FAIL] Bot="
+                        << bot.index
+                        << '\n';
+                }
+            }
+
+            if (bot.useInitialPath &&
+                bot.initialPathIndex < bot.initialPath.size())
+            {
+                const AIPathNode& next =
+                    bot.initialPath[bot.initialPathIndex];
+
+                float dirX = next.worldX - bot.x;
+                float dirY = next.worldY - bot.y;
+
+                const float distance =
+                    std::sqrt(
+                        dirX * dirX +
+                        dirY * dirY);
+
+                if (distance < 30.0f)
+                {
+                    ++bot.initialPathIndex;
+                    return;
+                }
+                else
+                {
+                    dirX /= distance;
+                    dirY /= distance;
+
+                    network.SendMove(bot,dirX,dirY);
+                    return;
+                }
+            }
+        }
+    }
+
+
     // ========================================================
     // 7. 다음 행동 선택
     // ========================================================

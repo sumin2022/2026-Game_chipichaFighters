@@ -30,7 +30,12 @@ public:
     AIDatabase();
     ~AIDatabase();
 
-    bool Connect(const char* host);
+    bool Connect(
+        const char* host,
+        const char* user,
+        const char* password,
+        const char* database
+    );
 
     void Disconnect();
 

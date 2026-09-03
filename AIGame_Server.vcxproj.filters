@@ -87,6 +87,9 @@
     <ClCompile Include="file\AI\AIMapCollision.cpp">
       <Filter>소스 파일\AI</Filter>
     </ClCompile>
+    <ClCompile Include="file\AI\AIPathFinder.cpp">
+      <Filter>소스 파일\AI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="file\Common.h">
@@ -153,6 +156,9 @@
       <Filter>소스 파일\DB</Filter>
     </ClInclude>
     <ClInclude Include="file\AI\AIMapCollision.h">
+      <Filter>소스 파일\AI</Filter>
+    </ClInclude>
+    <ClInclude Include="file\AI\AIPathFinder.h">
       <Filter>소스 파일\AI</Filter>
     </ClInclude>
   </ItemGroup>

@@ -16,7 +16,11 @@ AIDatabase::~AIDatabase()
 // MySQL 연결
 // ============================================================
 
-bool AIDatabase::Connect(const char* host)
+bool AIDatabase::Connect(
+    const char* host,
+    const char* user,
+    const char* password,
+    const char* database)
 {
     // 이미 연결되어 있으면 다시 연결하지 않는다.
     if (m_connection != nullptr)
@@ -33,9 +37,9 @@ bool AIDatabase::Connect(const char* host)
     }
 
     // 기존 MySQL 설정에 맞게 수정
-    const char* user = "root";
-    const char* password = "pungbear2018";
-    const char* database = "ai_db";
+    //const char* user = "root";
+    //const char* password = "pungbear2018";
+    //const char* database = "ai_db";
 
     const unsigned int port = 3306;
 

@@ -11,6 +11,7 @@
 #include "ReplayBuffer.h"
 #include "ActionMapper.h"
 #include "DQNAgent.h"
+#include "AIPathFinder.h"
 
 #include <cstddef>
 #include <unordered_map>
@@ -49,6 +50,7 @@ public:
     // 현재 ReplayBuffer에 저장된 Experience 개수를 확인한다.
     std::size_t GetReplayBufferSize() const;
 private:
+    AIPathFinder m_pathFinder;
 
     struct GameRewardStat
     {

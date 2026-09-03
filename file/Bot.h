@@ -5,6 +5,7 @@
 #include <armadillo>
 #include "AI/RLState.h"
 #include <atomic>
+#include "AI/AIPathFinder.h"
 
 enum class BotState {
     Disconnected,
@@ -84,5 +85,11 @@ struct BotClient {
     // Network Thread -> AI Thread 전달용
     std::atomic<int> pendingAttackHits{ 0 };
     std::atomic<int> pendingSkillHits{ 0 };
+
+    // 초기 점령지 이동
+    bool useInitialPath = true;
+
+    std::vector<AIPathNode> initialPath;
+    std::size_t initialPathIndex = 0;
 };
 
