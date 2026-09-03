@@ -54,7 +54,28 @@ bool ServerMain::InitServer(int port) {
 		return false;
 	}
 
-	if (!db.ConnectDB())
+	std::string dbHost;
+	std::string dbUser;
+	std::string dbPassword;
+	std::string dbName;
+
+	std::cout << "DB Server IP: ";
+	std::cin >> dbHost;
+
+	std::cout << "DB User: ";
+	std::cin >> dbUser;
+
+	std::cout << "DB Password: ";
+	std::cin >> dbPassword;
+
+	std::cout << "DB Name: ";
+	std::cin >> dbName;
+
+	if (!db.ConnectDB(
+		dbHost,
+		dbUser,
+		dbPassword,
+		dbName))
 	{
 		std::cout << "DB 연결 실패" << "\n";
 		return false;

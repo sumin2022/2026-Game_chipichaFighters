@@ -11,22 +11,34 @@ DBLogin::~DBLogin() {
     }
 }
 
-bool DBLogin::ConnectDB()
+bool DBLogin::ConnectDB(
+	const std::string& host,
+	const std::string& user,
+	const std::string& password,
+	const std::string& database)
 {
     conn = mysql_init(NULL);
 
+	if (conn == nullptr)
+	{
+		std::cout << "MySQL initialization failed\n";
+		return false;
+	}
+
     if (!mysql_real_connect(
         conn,
-        "127.0.0.1",   // localhost
-        "root",        // user
-		"pungbear2018",    // password
-        "game",        // database name
+		host.c_str(),   // localhost
+		user.c_str(),       // user
+		password.c_str(),    // password
+		database.c_str(),        // database name
         3306,
         NULL,
         0))
     {
         std::cout << "DB connection failed\n";
-        return false;
+		mysql_close(conn);
+		conn = nullptr;
+		return false;
     }
 
     std::cout << "DB connected\n";
