@@ -466,11 +466,10 @@ void TrainingManager::OnGameEnd(
         m_modelInfo.epsilon = m_dqnAgent.GetEpsilon();
 
         // 이번 경기 학습이 전부 끝난 최종 모델을 한 번 저장
-        if (m_dqnAgent.SaveModel(m_modelInfo.modelPath))
+        // DB를 사용하는 학습 모드에서만 모델 및 메타데이터 저장
+        if (m_dbThread != nullptr)
         {
-            // DB를 사용하는 학습 모드에서만 경기당 한번씩
-            // ai_models 메타데이터 갱신
-            if (m_dbThread != nullptr)
+            if (m_dqnAgent.SaveModel(m_modelInfo.modelPath))
             {
                 m_dbThread->PushModelUpdate(m_modelInfo);
             }
