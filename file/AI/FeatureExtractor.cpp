@@ -1,6 +1,7 @@
 ﻿#include "FeatureExtractor.h"
 #include "Normalization.h"
 #include "AIConfig.h"
+#include "TargetSelector.h"
 
 #include <algorithm>
 #include <cmath>
@@ -363,5 +364,33 @@ RLState FeatureExtractor::Extract(
     // itemRelativeX, itemRelativeY, itemDistance, itemActive는
     // 초기값 0을 유지한다.
 
+    state.roomId = room.roomId;
+    state.effectiveRange = EffectiveAttackRange(self->character);
+    const auto slots = EnemySlotIds(room, selfTeam);
+    int previousTargetId = -1;
+    if (bot.learning.hasPreviousExperience && bot.learning.previousState.roomId == room.roomId) {
+        const auto slot = static_cast<std::size_t>(DecodeAction(bot.learning.previousAction).target);
+        previousTargetId = bot.learning.previousState.enemies[slot].playerId;
+    }
+    for (std::size_t slot=0; slot<3; ++slot) {
+        auto& enemy = state.enemies[slot];
+        enemy.playerId = slots[slot];
+        const auto* player = FindObservedPlayer(room, slots[slot]);
+        if (!player) continue;
+        enemy.exists = 1;
+        enemy.alive = player->alive ? 1.0f : 0.0f;
+        enemy.deaths = player->death_count;
+        if (!player->alive) continue;
+        const float dx=player->x-self->x, dy=player->y-self->y;
+        const float distance=std::sqrt(dx*dx+dy*dy);
+        enemy.relativeX = std::clamp(dx/(AIConfig::MapHalfWidth*2), -1.0f, 1.0f);
+        enemy.relativeY = std::clamp(dy/(AIConfig::MapHalfHeight*2), -1.0f, 1.0f);
+        enemy.distance = distance / MAX_MAP_DISTANCE;
+        enemy.hp = static_cast<float>(player->hp) / 1000.0f;
+        enemy.hpRatio = player->max_hp>0 ? std::clamp(static_cast<float>(player->hp)/player->max_hp,0.0f,1.0f) : 0;
+        enemy.inRange = state.effectiveRange>0 && distance<=state.effectiveRange ? 1.0f : 0.0f;
+        enemy.visible = m_mapCollision.HasLineOfSight(self->x,self->y,player->x,player->y) ? 1.0f : 0.0f;
+        state.selectedTarget[slot] = player->player_id == previousTargetId ? 1.0f : 0.0f;
+    }
     return state;
 }

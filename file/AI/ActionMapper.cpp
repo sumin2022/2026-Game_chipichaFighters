@@ -1,6 +1,7 @@
 ﻿#include "ActionMapper.h"
 #include "../Network.h"
 #include "Action.h"
+#include "TargetSelector.h"
 #include <cmath>
 #include <cfloat>
 #include <iostream>
@@ -107,58 +108,21 @@ void ActionMapper::Execute(BotClient& bot,std::size_t action, Network& network,c
     // Stop 행동인 경우에도 (0, 0)을 보내 이동을 중단시킨다.
     network.SendMove(bot, moveX, moveY);
 
-    // 가장 가까운 적 방향 바라보기
-    const NetPlayerState* nearestEnemy = nullptr;
-    float nearestDistSq = FLT_MAX;
+    // 신경망이 선택한 슬롯만 사용합니다. 가까운 적/저체력 적으로 대체하지 않습니다.
+    const auto* self = FindObservedPlayer(room, bot.player_id);
 
-    for (int i = 0; i < room.playerCount; ++i)
-    {
-        const auto& player = room.players[i];
+    if (!self || !self->alive) return;
 
-        if (!player.alive)
-            continue;
+    const auto ids = EnemySlotIds(room, room.FindTeam(bot.player_id));
+    const auto* target = FindObservedPlayer(room, ids[static_cast<std::size_t>(decoded.target)]);
 
-        if (player.player_id == bot.player_id)
-            continue;
+    if (!target || !target->alive ||
+        !m_mapCollision.HasLineOfSight(self->x,self->y,target->x,target->y)) return;
 
-        const TeamType playerTeam =
-            room.FindTeam(player.player_id);
+    const float dx=target->x - self->x, dy=target->y - self->y;
+    const float distance=std::sqrt(dx*dx+dy*dy);
 
-        if (playerTeam == TeamType::TEAM_NONE)
-            continue;
-
-        if (playerTeam == bot.team)
-            continue;
-
-        const float dx = player.x - bot.x;
-        const float dy = player.y - bot.y;
-
-        const float distSq =
-            dx * dx + dy * dy;
-
-        if (distSq < nearestDistSq)
-        {
-            nearestDistSq = distSq;
-            nearestEnemy = &player;
-        }
-    }
-
-    if (nearestEnemy != nullptr)
-    {
-        float dx = nearestEnemy->x - bot.x;
-        float dy = nearestEnemy->y - bot.y;
-
-        const float length =
-            std::sqrt(dx * dx + dy * dy);
-
-        if (length > 0.0001f)
-        {
-            dx /= length;
-            dy /= length;
-
-            network.SendFaceDir(bot, dx, dy);
-        }
-    }
+    if (distance > 0.0001f) network.SendFaceDir(bot, dx/distance, dy/distance);
 
     // 선택된 전투 행동을 실제 공격 또는 스킬 패킷으로 변환한다.
     switch (decoded.combat)

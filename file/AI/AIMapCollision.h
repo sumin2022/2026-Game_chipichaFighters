@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <array>
 
@@ -25,6 +25,8 @@ public:
     AIMapCollision();
 
     bool IsBlocked(float worldX, float worldY) const;
+
+    bool HasLineOfSight(float x0, float y0, float x1, float y1) const;
 
 private:
     CollisionMap CreateCollisionMap();

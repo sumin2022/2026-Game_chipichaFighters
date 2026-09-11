@@ -1,4 +1,4 @@
-#include "AIMapCollision.h"
+ï»¿#include "AIMapCollision.h"
 #include <cmath>
 #include <algorithm>
 
@@ -27,7 +27,7 @@ AIMapCollision::CollisionMap AIMapCollision::CreateCollisionMap()
 {
 	CollisionMap map{};
 
-	// ÀüÃ¼¸¦ ÀÌµ¿ °¡´ÉÀ¸·Î ÃÊ±âÈ­
+	// ì „ì²´ë¥¼ ì´ë™ ê°€ëŠ¥ìœ¼ë¡œ ì´ˆê¸°í™”
 	for (auto& row : map) {
 		row.fill(TileType::WALKABLE);
 	}
@@ -69,7 +69,7 @@ AIMapCollision::CollisionMap AIMapCollision::CreateCollisionMap()
 			}
 		};
 
-	// Áß¾Ó ±¸Á¶¹°
+	// ì¤‘ì•™ êµ¬ì¡°ë¬¼
 	set_blocked_world_rect(360.0f, -800.0f, 60.0f, 400.0f);
 	set_blocked_world_rect(300.0f, -600.0f, 200.0f, 60.0f);
 
@@ -82,7 +82,7 @@ AIMapCollision::CollisionMap AIMapCollision::CreateCollisionMap()
 	set_blocked_world_rect(-360.0f, 800.0f, 60.0f, 400.0f);
 	set_blocked_world_rect(-300.0f, 600.0f, 200.0f, 60.0f);
 
-	// X À½¼ö ÂÊ ¸®½ºÆù ±¸Á¶¹°
+	// X ìŒìˆ˜ ìª½ ë¦¬ìŠ¤í° êµ¬ì¡°ë¬¼
 	set_blocked_world_rect(-900.0f, -450.0f, 60.0f, 500.0f);
 	set_blocked_world_rect(-900.0f, 450.0f, 60.0f, 500.0f);
 	set_blocked_world_rect(-1170.0f, 680.0f, 500.0f, 60.0f);
@@ -90,7 +90,7 @@ AIMapCollision::CollisionMap AIMapCollision::CreateCollisionMap()
 	set_blocked_world_rect(-1450.0f, -450.0f, 60.0f, 500.0f);
 	set_blocked_world_rect(-1170.0f, -680.0f, 500.0f, 60.0f);
 
-	// X ¾ç¼ö ÂÊ ¸®½ºÆù ±¸Á¶¹°
+	// X ì–‘ìˆ˜ ìª½ ë¦¬ìŠ¤í° êµ¬ì¡°ë¬¼
 	set_blocked_world_rect(900.0f, -450.0f, 60.0f, 500.0f);
 	set_blocked_world_rect(900.0f, 450.0f, 60.0f, 500.0f);
 	set_blocked_world_rect(1170.0f, 680.0f, 500.0f, 60.0f);
@@ -99,4 +99,26 @@ AIMapCollision::CollisionMap AIMapCollision::CreateCollisionMap()
 	set_blocked_world_rect(1170.0f, -680.0f, 500.0f, 60.0f);
 
 	return map;
+}
+
+// ì„ ë¶„ê³¼ ì°¨ë‹¨ íƒ€ì¼ì˜ AABB êµì°¨ ê²€ì‚¬. ì½”ë„ˆì— ë‹¿ëŠ” ì„ ë„ ë³´ìˆ˜ì ìœ¼ë¡œ ì°¨ë‹¨í•©ë‹ˆë‹¤.
+bool AIMapCollision::HasLineOfSight(float x0, float y0, float x1, float y1) const
+{
+    if (!std::isfinite(x0) || !std::isfinite(y0) || !std::isfinite(x1) || !std::isfinite(y1)) return false;
+    if (IsBlocked(x0,y0) || IsBlocked(x1,y1)) return false;
+    const float dx=x1-x0, dy=y1-y0;
+    for(int y=0;y<MAP_ROWS;++y) for(int x=0;x<MAP_COLS;++x) {
+        if(m_map[y][x] != TileType::BLOCKED) continue;
+        const float left=TILE_MAP_MIN_X+x*TILE_SIZE, bottom=TILE_MAP_MIN_Y+y*TILE_SIZE;
+        float lo=0, hi=1;
+        auto slab=[&](float start,float delta,float a,float b) {
+            if(std::abs(delta)<1e-8f) return start>=a && start<=b;
+            float t0=(a-start)/delta, t1=(b-start)/delta;
+            if(t0>t1) std::swap(t0,t1);
+            lo=std::max(lo,t0); hi=std::min(hi,t1);
+            return lo<=hi;
+        };
+        if(slab(x0,dx,left,left+TILE_SIZE) && slab(y0,dy,bottom,bottom+TILE_SIZE)) return false;
+    }
+    return true;
 }

@@ -54,6 +54,7 @@
     <ClInclude Include="file\AI\RewardCalculator.h" />
     <ClInclude Include="file\AI\RLState.h" />
     <ClInclude Include="file\AI\RoomObservation.h" />
+    <ClInclude Include="file\AI\TargetSelector.h" />
     <ClInclude Include="file\AI\TrainingManager.h" />
     <ClInclude Include="file\Bot.h" />
     <ClInclude Include="file\BotManager.h" />

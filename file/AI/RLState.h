@@ -5,11 +5,28 @@
 // 점수, 남은 시간, 아이템 정보 등을 정규화된 값으로 저장한다.
 
 #include <cstddef>
+#include <array>
+#include <cassert>
+#include "Action.h"
 #include <armadillo>
 #include "AIConfig.h"
 
+struct EnemyObservation
+{
+    // ID/사망 횟수는 동일 대상 검증용이며 신경망에 숫자로 입력하지 않습니다.
+    int playerId = -1;
+    int deaths = 0;
+    float exists = 0, alive = 0;
+    float relativeX = 0, relativeY = 0, distance = 0;
+    float hp = 0, hpRatio = 0, inRange = 0, visible = 0;
+};
+
 struct RLState
 {
+    int roomId = -1;
+    std::array<EnemyObservation, 3> enemies{};
+    std::array<float, 3> selectedTarget{};
+    float effectiveRange = 0; // world units; negative means unknown
     // 자신
     float hpRatio = 0.0f;
     float normalizedX = 0.0f;
@@ -70,7 +87,7 @@ struct RLState
 inline arma::colvec ToArmaVector(
     const RLState& state)
 {
-    // 현재 RLState에서 사용하는 특징값은 총 33개이다.
+    // 현재 RLState에서 사용하는 특징값은 총 64개이다.
     arma::colvec result(AIConfig::StateSize);
 
     // 각 특징값을 순서대로 저장하기 위한 인덱스
@@ -146,5 +163,37 @@ inline arma::colvec ToArmaVector(
     result(i++) = state.wallUpRight;
     result(i++) = state.wallDownLeft;
     result(i++) = state.wallDownRight;
+    for (const auto& enemy : state.enemies)
+    {
+        result(i++) = enemy.exists;
+        result(i++) = enemy.alive;
+        result(i++) = enemy.relativeX;
+        result(i++) = enemy.relativeY;
+        result(i++) = enemy.distance;
+        result(i++) = enemy.hp;
+        result(i++) = enemy.hpRatio;
+        result(i++) = enemy.inRange;
+        result(i++) = enemy.visible;
+    }
+    for (float selected : state.selectedTarget) result(i++) = selected;
+    result(i++) = state.effectiveRange > 0 ? state.effectiveRange / MAX_MAP_DISTANCE : 0;
+    assert(i == AIConfig::StateSize);
     return result;
+}
+// 마스크는 현재 행동 선택과 다음 상태의 Bellman max 계산에 함께 사용합니다.
+inline bool IsTargetActionValid(const arma::colvec& state, std::size_t action)
+{
+    if (state.n_elem != AIConfig::StateSize || action >= TOTAL_ACTION_COUNT) return false;
+    bool any = false;
+    std::array<bool, 3> valid{};
+    for (std::size_t slot = 0; slot < 3; ++slot)
+    {
+        const auto base = 33 + slot * 9;
+        valid[slot] = state(base) > 0.5 && state(base+1) > 0.5 && state(base+8) > 0.5;
+        any = any || valid[slot];
+    }
+    const auto decoded = DecodeAction(action);
+    if (any) return valid[static_cast<std::size_t>(decoded.target)];
+    // 보이는 적이 없으면 이동만 허용합니다. 슬롯0은 '방향 유지' 기본 처리입니다.
+    return decoded.target == TargetAction::Enemy0 && decoded.combat == CombatAction::None;
 }

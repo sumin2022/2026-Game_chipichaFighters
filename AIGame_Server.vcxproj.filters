@@ -161,5 +161,8 @@
     <ClInclude Include="file\AI\AIPathFinder.h">
       <Filter>소스 파일\AI</Filter>
     </ClInclude>
+    <ClInclude Include="file\AI\TargetSelector.h">
+      <Filter>소스 파일\AI</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

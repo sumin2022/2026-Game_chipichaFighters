@@ -1,4 +1,5 @@
 ﻿#include "TrainingManager.h"
+#include <filesystem>
 
 // 봇별 강화학습 과정을 전체적으로 관리한다.
 //
@@ -20,6 +21,15 @@ TrainingManager::TrainingManager(
     m_rewardCalculator(RewardConfig{}),
     m_replayBuffer(50000)
 {
+    // 기존 27행동 모델 파일은 보존하고 새 입력/행동 모델을 별도 저장합니다.
+    std::filesystem::path modelPath(m_modelInfo.modelPath);
+    const std::string stem = modelPath.stem().string();
+    const std::string suffix = "_target81";
+    if (stem.size() < suffix.size() || stem.substr(stem.size()-suffix.size()) != suffix)
+        m_modelInfo.modelPath = (modelPath.parent_path() / (stem + suffix + modelPath.extension().string())).string();
+    if (AIConfig::DealerAttackRange <= 0 || AIConfig::ArcherAttackRange <= 0 ||
+        AIConfig::TankerAttackRange <= 0 || AIConfig::HealerAttackRange <= 0)
+        std::cout << "[RANGE CONFIG] Set character attack ranges in AIConfig.h; unknown ranges disable approach reward.\n";
     if (m_dqnAgent.LoadModel(m_modelInfo.modelPath))
     {
         std::cout
@@ -86,7 +96,8 @@ void TrainingManager::UpdateBot(
     // 4. 이전 State / Action이 있다면 Reward 계산
     // ========================================================
 
-    if (bot.learning.hasPreviousExperience)
+    const bool hadPreviousExperience = bot.learning.hasPreviousExperience;
+    if (hadPreviousExperience)
     {
         // 이번 판단 구간에서 발생한 적중 보상 소비
         const int attackHits = bot.pendingAttackHits.exchange(0, std::memory_order_relaxed);
@@ -189,6 +200,9 @@ void TrainingManager::UpdateBot(
                 << "\n";
         }
 
+        // 이 전이는 이미 소비했습니다. BFS가 다음 행동을 담당해도 중복 저장하지 않습니다.
+        bot.learning.hasPreviousExperience = false;
+
         // 사망 상태라면 마지막 Experience까지만 저장한다.
         //
         // 죽어있는 동안 새로운 행동을 실행하면 안 되고,
@@ -212,6 +226,12 @@ void TrainingManager::UpdateBot(
     if (!currentPlayer->alive)
     {
         return;
+    }
+
+    if (!hadPreviousExperience) {
+        // DQN 행동 이전(BFS/사망 대기)의 적중 이벤트를 새 행동에 잘못 귀속하지 않습니다.
+        bot.pendingAttackHits.exchange(0, std::memory_order_relaxed);
+        bot.pendingSkillHits.exchange(0, std::memory_order_relaxed);
     }
 
     // ================================
@@ -301,8 +321,7 @@ void TrainingManager::UpdateBot(
     // 7. 다음 행동 선택
     // ========================================================
 
-    // 아직 MLpack DQN 신경망은 연결하지 않았으므로
-    // 현재 DQNAgent는 사실상 RandomPolicy를 사용한다.
+    // 관측 가능한 타겟만 탐험/활용에서 선택합니다.
     const std::size_t action =m_dqnAgent.SelectAction(
             currentState,
             true
@@ -315,6 +334,8 @@ void TrainingManager::UpdateBot(
         << " Action=" << action
         << " Move=" << static_cast<int>(decoded.move)
         << " Combat=" << static_cast<int>(decoded.combat)
+        << " TargetSlot=" << static_cast<int>(decoded.target)
+        << " TargetId=" << currentState.enemies[static_cast<std::size_t>(decoded.target)].playerId
         << '\n';
 
     // ========================================================

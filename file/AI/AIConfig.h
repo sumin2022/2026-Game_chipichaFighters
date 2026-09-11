@@ -49,8 +49,13 @@ struct AIConfig
 
     static constexpr float MatchDuration = 150.0f;
 
+    // 메인 서버 기본공격 사거리(월드 단위)
+    static constexpr float DealerAttackRange = 150.0f;
+    static constexpr float ArcherAttackRange = 600.0f;
+    static constexpr float TankerAttackRange = 150.0f;
+    static constexpr float HealerAttackRange = 625.0f;
     // DQN
-    static constexpr std::size_t StateSize = 33;
+    static constexpr std::size_t StateSize = 64;
     static constexpr std::size_t BatchSize = 64;
 
     static constexpr float Gamma = 0.99f;

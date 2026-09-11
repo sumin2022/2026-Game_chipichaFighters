@@ -5,6 +5,9 @@
 #include <random>
 #include <algorithm>
 #include <iostream>
+#include <limits>
+#include <cstdint>
+#include <stdexcept>
 
 // MLpack을 이용한 DQN 강화학습 모델을 관리한다.
 // 현재 상태에서 행동별 Q값을 계산하고,
@@ -14,13 +17,13 @@
 
 DQNAgent::DQNAgent()
 {
-    // 입력 State 33개
+    // 입력 State 64개
     // ↓
     // Hidden Layer 128
     // ↓
     // Hidden Layer 128
     // ↓
-    // 행동 27개의 Q값 출력
+    // 행동 81개의 Q값 출력
 
    // Online Network
     m_network.Add<mlpack::Linear>(128);
@@ -47,13 +50,40 @@ DQNAgent::DQNAgent()
     );
 }
 
-std::size_t DQNAgent::SelectAction(const RLState& state,bool training)
+namespace {
+std::size_t RandomValidAction(const arma::colvec& input)
 {
-    if (training && RandomFloat() < m_epsilon)
-    {
-        return m_randomPolicy.SelectAction();
+    std::vector<std::size_t> valid;
+    for (std::size_t a=0; a<TOTAL_ACTION_COUNT; ++a)
+		if (IsTargetActionValid(input, a)) valid.push_back(a); // 유효한 행동만 선택
+    if (valid.empty()) throw std::runtime_error("No valid action / state schema mismatch");
+    static thread_local std::mt19937 rng{std::random_device{}()}; //스레드마다 생성한 난수 유지
+    std::uniform_int_distribution<std::size_t> distribution(0,valid.size()-1);
+	return valid[distribution(rng)]; // 랜덤하게 유효한 행동 선택
+}
+std::size_t BestValidAction(const arma::mat& values, const arma::colvec& input) // Q값 중 가장 큰 유효한 행동 선택
+{
+    if (values.n_rows != TOTAL_ACTION_COUNT || values.n_cols != 1)
+        throw std::runtime_error("DQN output must contain 81 Q values");
+    std::size_t best = TOTAL_ACTION_COUNT;
+	double score = -std::numeric_limits<double>::infinity(); // Q값은 음수일 수 있으므로 -무한대로 초기화
+    for(std::size_t a=0; a<TOTAL_ACTION_COUNT; ++a) {
+        if(!IsTargetActionValid(input,a)) continue;
+        if(best == TOTAL_ACTION_COUNT || values(a,0)>score) { best=a; score=values(a,0); }
+		// best : 가장 좋은 행동, score : 가장 좋은 Q값
+		// best == TOTAL_ACTION_COUNT - > 아직 유효한 행동이 없음을 의미
     }
+    if(best == TOTAL_ACTION_COUNT) throw std::runtime_error("No valid action");
+    return best;
+}
+constexpr std::uint32_t MODEL_MAGIC = 0x54473831; // TG81 모델 식별자
+constexpr std::uint32_t MODEL_SCHEMA = 1; // 모델 파일 형식의 버전 번호
+}
 
+std::size_t DQNAgent::SelectAction(const RLState& state, bool training)
+{
+    if (!m_networkReady || (training && RandomFloat() < m_epsilon))
+        return RandomValidAction(ToArmaVector(state));
     return SelectBestAction(state);
 }
 
@@ -76,7 +106,7 @@ std::size_t DQNAgent::SelectBestAction(const RLState& state)
     // 나중에 m_targetNetwork.Predict(...)
     if (!m_networkReady)
     {
-        return m_randomPolicy.SelectAction();
+        return RandomValidAction(ToArmaVector(state));
     }
 
     // RLState를 MLpack 입력 벡터로 변환
@@ -88,10 +118,7 @@ std::size_t DQNAgent::SelectBestAction(const RLState& state)
     // 행동별 Q값을 얻는다.
     m_network.Predict(input, output);
 
-    // 가장 높은 Q값을 가진 Action 선택
-    arma::uword bestAction = output.index_max();
-
-    return static_cast<std::size_t>(bestAction);
+    return BestValidAction(output, input);
 }
 
 void DQNAgent::Train(const std::vector<Experience>& batch)
@@ -99,14 +126,19 @@ void DQNAgent::Train(const std::vector<Experience>& batch)
     if (batch.empty())
         return;
 
+    for (const auto& experience : batch) {
+        if (experience.state.n_elem != AIConfig::StateSize || experience.nextState.n_elem != AIConfig::StateSize ||
+            !IsTargetActionValid(experience.state, experience.action))
+            throw std::runtime_error("Replay state/action schema mismatch");
+    }
     const std::size_t batchSize = batch.size();
 
     // 입력:
-    // 33 x BatchSize
+    // 64 x BatchSize
     arma::mat states(AIConfig::StateSize, batchSize);
 
     // 정답 Q값:
-    // 27 x BatchSize
+    // 81 x BatchSize
     arma::mat targets(
         TOTAL_ACTION_COUNT,
         batchSize,
@@ -161,7 +193,8 @@ void DQNAgent::Train(const std::vector<Experience>& batch)
             // Target Network를 이용한다.
             m_targetNetwork.Predict(experience.nextState, nextQ);
 
-            const float maxNextQ = static_cast<float>(nextQ.max());
+			const auto bestNext = BestValidAction(nextQ, experience.nextState); // 다음 상태에서 선택 가능한 것 중 가장 좋은 행동 선택
+            const float maxNextQ = static_cast<float>(nextQ(bestNext, 0)); //그 해당 행동번호에 해당하는 Q값
 
             targetValue += AIConfig::Gamma * maxNextQ;
         }
@@ -298,6 +331,10 @@ bool DQNAgent::SaveModel(const std::string& filePath)
             return false;
         }
 
+        const std::uint32_t header[] = {MODEL_MAGIC, MODEL_SCHEMA,
+            static_cast<std::uint32_t>(AIConfig::StateSize), static_cast<std::uint32_t>(TOTAL_ACTION_COUNT)};
+        file.write(reinterpret_cast<const char*>(header), sizeof(header));
+
         // 모델 파일에 저장할 정보
         DQNModelData data{};
 
@@ -360,10 +397,23 @@ bool DQNAgent::LoadModel(const std::string& filePath)
 
         DQNModelData data{};
 
+        std::uint32_t header[4]{};
+        file.read(reinterpret_cast<char*>(header), sizeof(header));
+        if (!file || header[0] != MODEL_MAGIC || header[1] != MODEL_SCHEMA ||
+            header[2] != AIConfig::StateSize || header[3] != TOTAL_ACTION_COUNT) {
+            std::cout << "[MODEL LOAD SKIP] Expected target81 schema (64 inputs / 81 actions).\n";
+            return false;
+        }
         // 저장된 모델 데이터 복원
         cereal::BinaryInputArchive archive(file);
 
         archive(data);
+
+        arma::mat validationInput(AIConfig::StateSize, 1, arma::fill::zeros);
+        arma::mat validationOutput;
+        data.network.Predict(validationInput, validationOutput);
+        if (validationOutput.n_rows != TOTAL_ACTION_COUNT || validationOutput.n_cols != 1)
+            throw std::runtime_error("Loaded model output shape mismatch");
 
         // Online Network 복원
         m_network = std::move(data.network);
