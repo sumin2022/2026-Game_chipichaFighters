@@ -21,15 +21,20 @@ TrainingManager::TrainingManager(
     m_rewardCalculator(RewardConfig{}),
     m_replayBuffer(50000)
 {
-    // 기존 27행동 모델 파일은 보존하고 새 입력/행동 모델을 별도 저장합니다.
+    // 기존 27행동 모델 파일은 보존하고 새 입력/행동 모델을 별도 저장한다.
     std::filesystem::path modelPath(m_modelInfo.modelPath);
+
     const std::string stem = modelPath.stem().string();
     const std::string suffix = "_target81";
+
     if (stem.size() < suffix.size() || stem.substr(stem.size()-suffix.size()) != suffix)
         m_modelInfo.modelPath = (modelPath.parent_path() / (stem + suffix + modelPath.extension().string())).string();
+
     if (AIConfig::DealerAttackRange <= 0 || AIConfig::ArcherAttackRange <= 0 ||
         AIConfig::TankerAttackRange <= 0 || AIConfig::HealerAttackRange <= 0)
+
         std::cout << "[RANGE CONFIG] Set character attack ranges in AIConfig.h; unknown ranges disable approach reward.\n";
+
     if (m_dqnAgent.LoadModel(m_modelInfo.modelPath))
     {
         std::cout
@@ -200,7 +205,7 @@ void TrainingManager::UpdateBot(
                 << "\n";
         }
 
-        // 이 전이는 이미 소비했습니다. BFS가 다음 행동을 담당해도 중복 저장하지 않습니다.
+        // 이 전이는 이미 소비했다. BFS가 다음 행동을 담당해도 중복 저장하지 않는다.
         bot.learning.hasPreviousExperience = false;
 
         // 사망 상태라면 마지막 Experience까지만 저장한다.
@@ -229,7 +234,7 @@ void TrainingManager::UpdateBot(
     }
 
     if (!hadPreviousExperience) {
-        // DQN 행동 이전(BFS/사망 대기)의 적중 이벤트를 새 행동에 잘못 귀속하지 않습니다.
+        // DQN 행동 이전(BFS/사망 대기)의 적중 이벤트를 새 행동에 잘못 귀속하지 않는다.
         bot.pendingAttackHits.exchange(0, std::memory_order_relaxed);
         bot.pendingSkillHits.exchange(0, std::memory_order_relaxed);
     }
@@ -321,7 +326,7 @@ void TrainingManager::UpdateBot(
     // 7. 다음 행동 선택
     // ========================================================
 
-    // 관측 가능한 타겟만 탐험/활용에서 선택합니다.
+    // 관측 가능한 타겟만 탐험/활용에서 선택한다.
     const std::size_t action =m_dqnAgent.SelectAction(
             currentState,
             true

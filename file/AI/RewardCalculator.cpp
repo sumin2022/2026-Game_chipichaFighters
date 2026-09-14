@@ -33,9 +33,11 @@ float RewardCalculator::Calculate(
     const auto slot = static_cast<std::size_t>(DecodeAction(previous.previousAction).target);
     const auto& oldEnemy = oldState.enemies[slot];
     const EnemyObservation* newEnemy = nullptr;
+
     for (const auto& enemy : currentState.enemies)
         if (oldEnemy.playerId >= 0 && enemy.playerId == oldEnemy.playerId) newEnemy = &enemy;
-    // 같은 방/대상/생명 주기에만 비교합니다. 타겟 변경 자체로는 보상을 얻지 않습니다.
+
+    // 같은 방/대상/생명 주기에만 비교한다. 타겟 변경 자체로는 보상을 얻지 않는다.
     if (oldState.roomId == currentState.roomId && oldState.alive > 0.5f && currentPlayer.alive &&
         previous.previousDeaths == currentPlayer.death_count &&
         oldState.effectiveRange > 0 && oldState.effectiveRange == currentState.effectiveRange &&

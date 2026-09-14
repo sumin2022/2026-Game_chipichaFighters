@@ -13,7 +13,7 @@
 
 struct EnemyObservation
 {
-    // ID/사망 횟수는 동일 대상 검증용이며 신경망에 숫자로 입력하지 않습니다.
+    // ID/사망 횟수는 동일 대상 검증용이며 신경망에 숫자로 입력하지 않는다.
     int playerId = -1;
     int deaths = 0;
     float exists = 0, alive = 0;
@@ -163,6 +163,7 @@ inline arma::colvec ToArmaVector(
     result(i++) = state.wallUpRight;
     result(i++) = state.wallDownLeft;
     result(i++) = state.wallDownRight;
+
     for (const auto& enemy : state.enemies)
     {
         result(i++) = enemy.exists;
@@ -175,25 +176,31 @@ inline arma::colvec ToArmaVector(
         result(i++) = enemy.inRange;
         result(i++) = enemy.visible;
     }
+
     for (float selected : state.selectedTarget) result(i++) = selected;
     result(i++) = state.effectiveRange > 0 ? state.effectiveRange / MAX_MAP_DISTANCE : 0;
     assert(i == AIConfig::StateSize);
     return result;
 }
-// 마스크는 현재 행동 선택과 다음 상태의 Bellman max 계산에 함께 사용합니다.
+// 마스크는 현재 행동 선택과 다음 상태의 Bellman max 계산에 함께 사용한다.
 inline bool IsTargetActionValid(const arma::colvec& state, std::size_t action)
 {
     if (state.n_elem != AIConfig::StateSize || action >= TOTAL_ACTION_COUNT) return false;
+
     bool any = false;
     std::array<bool, 3> valid{};
+
     for (std::size_t slot = 0; slot < 3; ++slot)
     {
-        const auto base = 33 + slot * 9;
+		const auto base = 33 + slot * 9; // 적 관찰 정보 시작 인덱스
+		// 적이 존재하고 살아있으며, 시야에 보여야 공격 가능하다. (visible=1)
         valid[slot] = state(base) > 0.5 && state(base+1) > 0.5 && state(base+8) > 0.5;
         any = any || valid[slot];
     }
+
     const auto decoded = DecodeAction(action);
     if (any) return valid[static_cast<std::size_t>(decoded.target)];
-    // 보이는 적이 없으면 이동만 허용합니다. 슬롯0은 '방향 유지' 기본 처리입니다.
+
+    // 보이는 적이 없으면 이동만 허용한다. 슬롯0은 '방향 유지' 기본 처리한다.
     return decoded.target == TargetAction::Enemy0 && decoded.combat == CombatAction::None;
 }

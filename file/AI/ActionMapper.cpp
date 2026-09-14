@@ -108,7 +108,7 @@ void ActionMapper::Execute(BotClient& bot,std::size_t action, Network& network,c
     // Stop 행동인 경우에도 (0, 0)을 보내 이동을 중단시킨다.
     network.SendMove(bot, moveX, moveY);
 
-    // 신경망이 선택한 슬롯만 사용합니다. 가까운 적/저체력 적으로 대체하지 않습니다.
+    // 신경망이 선택한 슬롯만 사용한다. 가까운 적/저체력 적으로 대체하지 않는다.
     const auto* self = FindObservedPlayer(room, bot.player_id);
 
     if (!self || !self->alive) return;

@@ -150,8 +150,7 @@ RLState FeatureExtractor::Extract(
 
         // 실제 거리 비교에는 sqrt가 필요 없으므로
         // 제곱 거리를 이용하여 가장 가까운 플레이어를 찾는다.
-        const float distanceSquared =
-            dx * dx + dy * dy;
+        const float distanceSquared = dx * dx + dy * dy;
 
         if (playerTeam != selfTeam)
         {
@@ -366,23 +365,33 @@ RLState FeatureExtractor::Extract(
 
     state.roomId = room.roomId;
     state.effectiveRange = EffectiveAttackRange(self->character);
+
     const auto slots = EnemySlotIds(room, selfTeam);
+
     int previousTargetId = -1;
+
     if (bot.learning.hasPreviousExperience && bot.learning.previousState.roomId == room.roomId) {
         const auto slot = static_cast<std::size_t>(DecodeAction(bot.learning.previousAction).target);
         previousTargetId = bot.learning.previousState.enemies[slot].playerId;
     }
+
     for (std::size_t slot=0; slot<3; ++slot) {
         auto& enemy = state.enemies[slot];
         enemy.playerId = slots[slot];
+
         const auto* player = FindObservedPlayer(room, slots[slot]);
+
         if (!player) continue;
+
         enemy.exists = 1;
         enemy.alive = player->alive ? 1.0f : 0.0f;
         enemy.deaths = player->death_count;
+
         if (!player->alive) continue;
+
         const float dx=player->x-self->x, dy=player->y-self->y;
         const float distance=std::sqrt(dx*dx+dy*dy);
+
         enemy.relativeX = std::clamp(dx/(AIConfig::MapHalfWidth*2), -1.0f, 1.0f);
         enemy.relativeY = std::clamp(dy/(AIConfig::MapHalfHeight*2), -1.0f, 1.0f);
         enemy.distance = distance / MAX_MAP_DISTANCE;
@@ -392,5 +401,6 @@ RLState FeatureExtractor::Extract(
         enemy.visible = m_mapCollision.HasLineOfSight(self->x,self->y,player->x,player->y) ? 1.0f : 0.0f;
         state.selectedTarget[slot] = player->player_id == previousTargetId ? 1.0f : 0.0f;
     }
+
     return state;
 }

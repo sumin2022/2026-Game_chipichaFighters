@@ -56,26 +56,34 @@ std::size_t RandomValidAction(const arma::colvec& input)
     std::vector<std::size_t> valid;
     for (std::size_t a=0; a<TOTAL_ACTION_COUNT; ++a)
 		if (IsTargetActionValid(input, a)) valid.push_back(a); // 유효한 행동만 선택
+
     if (valid.empty()) throw std::runtime_error("No valid action / state schema mismatch");
+
     static thread_local std::mt19937 rng{std::random_device{}()}; //스레드마다 생성한 난수 유지
     std::uniform_int_distribution<std::size_t> distribution(0,valid.size()-1);
+
 	return valid[distribution(rng)]; // 랜덤하게 유효한 행동 선택
 }
 std::size_t BestValidAction(const arma::mat& values, const arma::colvec& input) // Q값 중 가장 큰 유효한 행동 선택
 {
     if (values.n_rows != TOTAL_ACTION_COUNT || values.n_cols != 1)
         throw std::runtime_error("DQN output must contain 81 Q values");
+
     std::size_t best = TOTAL_ACTION_COUNT;
 	double score = -std::numeric_limits<double>::infinity(); // Q값은 음수일 수 있으므로 -무한대로 초기화
+
     for(std::size_t a=0; a<TOTAL_ACTION_COUNT; ++a) {
         if(!IsTargetActionValid(input,a)) continue;
         if(best == TOTAL_ACTION_COUNT || values(a,0)>score) { best=a; score=values(a,0); }
 		// best : 가장 좋은 행동, score : 가장 좋은 Q값
 		// best == TOTAL_ACTION_COUNT - > 아직 유효한 행동이 없음을 의미
     }
+
     if(best == TOTAL_ACTION_COUNT) throw std::runtime_error("No valid action");
+
     return best;
 }
+
 constexpr std::uint32_t MODEL_MAGIC = 0x54473831; // TG81 모델 식별자
 constexpr std::uint32_t MODEL_SCHEMA = 1; // 모델 파일 형식의 버전 번호
 }
