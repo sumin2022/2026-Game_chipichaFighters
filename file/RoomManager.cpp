@@ -4,9 +4,8 @@
 #include <algorithm>
 #include <cmath>
 
-constexpr float ITEM_POS_X[2] = { 100.0f, 300.0f };
-constexpr float ITEM_POS_Y[2] = { 200.0f, 200.0f };
-
+constexpr float ITEM_POS_X[2] = { -50.0f, -50.0f };
+constexpr float ITEM_POS_Y[2] = { -753.0f, 753.0f };
 void RoomManager::broadcast_room(int room_id, char* packet, int size, int exclude_player_id)
 {
 	auto room_it = m_rooms.find(room_id);
