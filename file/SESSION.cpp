@@ -259,6 +259,16 @@ void SESSION::process_packet(unsigned char* p, DBLogin& db)
 		//	<< aimX << ", " << aimY << "\n";
 		break;
 	}
+	case CS_SELECT_TARGET:
+	{
+		if (!m_in_game) return;
+
+		CS_SelectTarget* packet = reinterpret_cast<CS_SelectTarget*>(p);
+		std::cout << "[TARGET REQUEST] player=" << m_id
+			<< " target=" << packet->target_id << "\n";
+		RoomManager::Instance().select_target(m_id, packet->target_id);
+		break;
+	}
 	case CS_SKILL:
 	{
 		if (!m_in_game) return;

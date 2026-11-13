@@ -164,6 +164,7 @@ void RoomManager::process_pending_requests()
 					clients[pid].send_remove_player(player_id);
 				}
 			}
+			clear_locked_targets_for(room, player_id, "despawn");
 			room.remove_player(player_id);
 			m_player_room.erase(player_id);
 
@@ -430,6 +431,43 @@ bool RoomManager::is_same_team(const PlayerState& a,
 	return a.team == b.team;
 }
 
+bool RoomManager::is_target_valid(const PlayerState& attacker, const PlayerState& target) const
+{
+	if (!attacker.alive || !target.alive || is_same_team(attacker, target)) return false;
+	float dx = target.x - attacker.x;
+	float dy = target.y - attacker.y;
+	return dx * dx + dy * dy <= attacker.attack_range * attacker.attack_range;
+}
+
+bool RoomManager::is_attackable_target(const PlayerState& attacker, const PlayerState& target) const
+{
+	if (!is_target_valid(attacker, target)) return false;
+	float dx = target.x - attacker.x;
+	float dy = target.y - attacker.y;
+	float len = sqrtf(dx * dx + dy * dy);
+	if (len <= 0.0f) return false;
+	float dot = (dx / len) * attacker.faceX + (dy / len) * attacker.faceY;
+	return dot >= 0.7f && MapCollision::can_see(attacker.x, attacker.y, target.x, target.y);
+}
+
+void RoomManager::clear_locked_target(PlayerState& player, const char* reason)
+{
+	if (!player.target_locked) return;
+	std::cout << "[TARGET RELEASE] player=" << player.id
+		<< " target=" << player.current_target_id << " reason=" << reason << "\n";
+	player.target_locked = false;
+	player.current_target_id = -1;
+}
+
+void RoomManager::clear_locked_targets_for(Room& room, int target_id, const char* reason)
+{
+	for (int i = 0; i < room.player_count; ++i) {
+		PlayerState& player = room.states[i];
+		if (player.target_locked && player.current_target_id == target_id)
+			clear_locked_target(player, reason);
+	}
+}
+
 void RoomManager::select_character(int player_id, CharacterType character)
 {
 	if (character < CharacterType::CHAR_DEALER || character > CharacterType::CHAR_HEALER) return;
@@ -598,19 +636,32 @@ void RoomManager::update_attacks(Room& room, float dt)
 		attacker.passive_cooldown_timer = (std::max)(0.0f, attacker.passive_cooldown_timer - dt);
 
 		if (!attacker.alive) {
+			clear_locked_target(attacker, "owner_dead");
 			attacker.current_target_id = -1;
 			continue;
 		}
 
+		PlayerState* target = nullptr;
+		if (attacker.target_locked) {
+			target = find_player_state(room, attacker.current_target_id);
+			if (target == nullptr) {
+				clear_locked_target(attacker, "despawn");
+			}
+			else if (!is_target_valid(attacker, *target)) {
+				clear_locked_target(attacker, target->alive ? "out_of_range" : "dead");
+				target = nullptr;
+			}
+		}
+
 		if (!attacker.auto_attack) {
-			attacker.current_target_id = -1;
+			if (!attacker.target_locked) attacker.current_target_id = -1;
 			continue;
 		}
 
 		attacker.attack_timer = (std::max)(0.0f, attacker.attack_timer - dt);
 
-		PlayerState* target = nullptr;
-		float bestDistSq = attacker.attack_range * attacker.attack_range;
+		if (!attacker.target_locked) {
+			float bestDistSq = attacker.attack_range * attacker.attack_range;
 
 		for (int j = 0; j < room.player_count; ++j) {
 			if (i == j) continue;
@@ -646,10 +697,12 @@ void RoomManager::update_attacks(Room& room, float dt)
 			target = &enemy;
 		}
 
-		attacker.current_target_id = target ? target->id : -1;
+			attacker.current_target_id = target ? target->id : -1;
+		}
 
 		if (target == nullptr) continue;
 		if (attacker.attack_timer > 0.0f) continue;
+		if (!is_attackable_target(attacker, *target)) continue;
 
 		attacker.last_attack_target = target->id;
 
@@ -777,6 +830,29 @@ void RoomManager::request_attack(int player_id)
 	if (state == nullptr) return;
 
 	state->auto_attack = true;
+}
+
+void RoomManager::select_target(int player_id, int target_id)
+{
+	auto room_id_it = m_player_room.find(player_id);
+	if (room_id_it == m_player_room.end()) return;
+
+	auto room_it = m_rooms.find(room_id_it->second);
+	if (room_it == m_rooms.end() || !room_it->second.active) return;
+
+	Room& room = room_it->second;
+	PlayerState* attacker = find_player_state(room, player_id);
+	PlayerState* target = find_player_state(room, target_id);
+	if (attacker == nullptr || target == nullptr || !is_target_valid(*attacker, *target)) {
+		std::cout << "[TARGET REJECT] player=" << player_id
+			<< " target=" << target_id << "\n";
+		return;
+	}
+
+	attacker->current_target_id = target->id;
+	attacker->target_locked = true;
+	std::cout << "[TARGET APPROVE] player=" << player_id
+		<< " target=" << target_id << "\n";
 }
 
 void RoomManager::set_move_input(int player_id, float axisX, float axisY)
@@ -1170,6 +1246,8 @@ void RoomManager::kill_player(Room& room, PlayerState& target, int killer_id)
 	target.skill_requested = false;
 	target.respawn_timer = 5.0f; // 임시 리스폰 시간
 	target.death_count++;
+	clear_locked_target(target, "owner_dead");
+	clear_locked_targets_for(room, target.id, "dead");
 
 	PlayerState* killer = find_player_state(room, killer_id);
 	if (killer != nullptr && killer->id != target.id) {

@@ -49,6 +49,7 @@ struct PlayerState {
 
 	bool auto_attack = false;
 	bool skill_requested = false;
+	bool target_locked = false;
 
 	CharacterType character = CharacterType::CHAR_NONE;
 	AttackType attack_type = AttackType::NONE;
@@ -187,6 +188,7 @@ public:
 
 	void set_move_input(int player_id, float axisX, float axisY);
 	void request_attack(int player_id);
+	void select_target(int player_id, int target_id);
 	void request_skill(int player_id);
 
 	void set_face_dir(int player_id, float faceX, float faceY);
@@ -215,6 +217,10 @@ private:
 	void broadcast_item_state(Room& room, int item_id, bool active);
 
 	bool is_same_team(const PlayerState& a, const PlayerState& b) const;
+	bool is_target_valid(const PlayerState& attacker, const PlayerState& target) const;
+	bool is_attackable_target(const PlayerState& attacker, const PlayerState& target) const;
+	void clear_locked_target(PlayerState& player, const char* reason);
+	void clear_locked_targets_for(Room& room, int target_id, const char* reason);
 	void enter_lobby(int room_id);
 	void assign_teams(Room& room);
 	PlayerState* find_player_state(Room& room, int player_id);

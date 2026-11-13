@@ -44,6 +44,7 @@ enum struct PACKET_TYPE : std::uint8_t {
 	CS_FACE_DIR,
 	CS_ATTACK,
 	CS_SKILL,
+	CS_SELECT_TARGET,
 	SC_ADD_PLAYER,
 	SC_REMOVE_PLAYER,
 	SC_MOVE_PLAYER,
@@ -198,6 +199,12 @@ struct CS_Skill : TZPacket<PACKET_TYPE::CS_SKILL, CS_Skill> {
 };
 
 // battle - 게임 중 플레이어 추가 알림 (재접속용)
+struct CS_SelectTarget : TZPacket<PACKET_TYPE::CS_SELECT_TARGET, CS_SelectTarget> {
+	int target_id{};
+};
+
+static_assert(sizeof(CS_SelectTarget) == sizeof(std::uint16_t) + sizeof(PACKET_TYPE) + sizeof(int));
+
 struct SC_AddPlayer : TZPacket<PACKET_TYPE::SC_ADD_PLAYER, SC_AddPlayer> {
 	int playerId{};
 	char username[MAX_NAME_LEN]{};
@@ -333,6 +340,7 @@ inline PACKET_STAGE GetPacketStage(PACKET_TYPE type)
     case CS_FACE_DIR:
     case CS_ATTACK:
     case CS_SKILL:
+	case CS_SELECT_TARGET:
     case SC_ADD_PLAYER:
     case SC_REMOVE_PLAYER:
     case SC_MOVE_PLAYER:
