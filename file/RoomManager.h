@@ -217,7 +217,10 @@ private:
 	void broadcast_item_state(Room& room, int item_id, bool active);
 
 	bool is_same_team(const PlayerState& a, const PlayerState& b) const;
+	float get_target_selection_range(const PlayerState& attacker) const;
+	float get_target_retention_range(const PlayerState& attacker) const;
 	bool is_target_valid(const PlayerState& attacker, const PlayerState& target) const;
+	bool is_locked_target_valid(const PlayerState& attacker, const PlayerState& target) const;
 	bool is_attackable_target(const PlayerState& attacker, const PlayerState& target) const;
 	void clear_locked_target(PlayerState& player, const char* reason);
 	void clear_locked_targets_for(Room& room, int target_id, const char* reason);

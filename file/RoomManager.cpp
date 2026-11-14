@@ -431,21 +431,48 @@ bool RoomManager::is_same_team(const PlayerState& a,
 	return a.team == b.team;
 }
 
+float RoomManager::get_target_selection_range(const PlayerState& attacker) const
+{
+	switch (attacker.character) {
+	case CharacterType::CHAR_DEALER: return 300.0f;
+	case CharacterType::CHAR_ARCHER: return 850.0f;
+	case CharacterType::CHAR_TANKER: return 300.0f;
+	case CharacterType::CHAR_HEALER: return 650.0f;
+	default: return attacker.attack_range;
+	}
+}
+
+float RoomManager::get_target_retention_range(const PlayerState& attacker) const
+{
+	return get_target_selection_range(attacker) + 50.0f;
+}
+
 bool RoomManager::is_target_valid(const PlayerState& attacker, const PlayerState& target) const
 {
 	if (!attacker.alive || !target.alive || is_same_team(attacker, target)) return false;
 	float dx = target.x - attacker.x;
 	float dy = target.y - attacker.y;
-	return dx * dx + dy * dy <= attacker.attack_range * attacker.attack_range;
+	float range = get_target_selection_range(attacker);
+	return dx * dx + dy * dy <= range * range;
+}
+
+bool RoomManager::is_locked_target_valid(const PlayerState& attacker, const PlayerState& target) const
+{
+	if (!attacker.alive || !target.alive || is_same_team(attacker, target)) return false;
+	float dx = target.x - attacker.x;
+	float dy = target.y - attacker.y;
+	float range = get_target_retention_range(attacker);
+	return dx * dx + dy * dy <= range * range;
 }
 
 bool RoomManager::is_attackable_target(const PlayerState& attacker, const PlayerState& target) const
 {
-	if (!is_target_valid(attacker, target)) return false;
+	if (!attacker.alive || !target.alive || is_same_team(attacker, target)) return false;
 	float dx = target.x - attacker.x;
 	float dy = target.y - attacker.y;
 	float len = sqrtf(dx * dx + dy * dy);
 	if (len <= 0.0f) return false;
+	if (len > attacker.attack_range) return false;
 	float dot = (dx / len) * attacker.faceX + (dy / len) * attacker.faceY;
 	return dot >= 0.7f && MapCollision::can_see(attacker.x, attacker.y, target.x, target.y);
 }
@@ -647,7 +674,7 @@ void RoomManager::update_attacks(Room& room, float dt)
 			if (target == nullptr) {
 				clear_locked_target(attacker, "despawn");
 			}
-			else if (!is_target_valid(attacker, *target)) {
+			else if (!is_locked_target_valid(attacker, *target)) {
 				clear_locked_target(attacker, target->alive ? "out_of_range" : "dead");
 				target = nullptr;
 			}
@@ -862,7 +889,7 @@ void RoomManager::select_target(int player_id, int target_id)
 	}
 
 	PlayerState* target = find_player_state(room, target_id);
-	const float allowed_range = attacker->attack_range;
+	const float allowed_range = get_target_selection_range(*attacker);
 	float distance = -1.0f;
 	if (target != nullptr) {
 		float dx = target->x - attacker->x;
