@@ -204,6 +204,7 @@ struct CS_SelectTarget : TZPacket<PACKET_TYPE::CS_SELECT_TARGET, CS_SelectTarget
 };
 
 static_assert(sizeof(CS_SelectTarget) == sizeof(std::uint16_t) + sizeof(PACKET_TYPE) + sizeof(int));
+static_assert(static_cast<std::uint8_t>(PACKET_TYPE::CS_SELECT_TARGET) == 16);
 
 struct SC_AddPlayer : TZPacket<PACKET_TYPE::SC_ADD_PLAYER, SC_AddPlayer> {
 	int playerId{};

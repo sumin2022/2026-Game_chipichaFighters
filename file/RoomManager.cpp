@@ -835,24 +835,79 @@ void RoomManager::request_attack(int player_id)
 void RoomManager::select_target(int player_id, int target_id)
 {
 	auto room_id_it = m_player_room.find(player_id);
-	if (room_id_it == m_player_room.end()) return;
+	if (room_id_it == m_player_room.end()) {
+		std::cout << "[TARGET REJECT] requester=" << player_id
+			<< " target=" << target_id << " reason=no_room\n";
+		return;
+	}
 
 	auto room_it = m_rooms.find(room_id_it->second);
-	if (room_it == m_rooms.end() || !room_it->second.active) return;
+	if (room_it == m_rooms.end() || !room_it->second.active) {
+		std::cout << "[TARGET REJECT] requester=" << player_id
+			<< " target=" << target_id << " reason=room_not_active\n";
+		return;
+	}
 
 	Room& room = room_it->second;
 	PlayerState* attacker = find_player_state(room, player_id);
+	if (attacker == nullptr) {
+		std::cout << "[TARGET REJECT] requester=" << player_id
+			<< " target=" << target_id << " reason=requester_not_found\n";
+		return;
+	}
+
+	if (target_id < 0) {
+		clear_locked_target(*attacker, "client_clear");
+		return;
+	}
+
 	PlayerState* target = find_player_state(room, target_id);
-	if (attacker == nullptr || target == nullptr || !is_target_valid(*attacker, *target)) {
-		std::cout << "[TARGET REJECT] player=" << player_id
-			<< " target=" << target_id << "\n";
+	const float allowed_range = attacker->attack_range;
+	float distance = -1.0f;
+	if (target != nullptr) {
+		float dx = target->x - attacker->x;
+		float dy = target->y - attacker->y;
+		distance = sqrtf(dx * dx + dy * dy);
+	}
+
+	if (target == nullptr) {
+		std::cout << "[TARGET REJECT] requester=" << player_id
+			<< " target=" << target_id << " reason=target_not_found"
+			<< " distance=" << distance << " range=" << allowed_range << "\n";
+		return;
+	}
+	if (!attacker->alive) {
+		std::cout << "[TARGET REJECT] requester=" << player_id
+			<< " target=" << target_id << " reason=requester_dead"
+			<< " distance=" << distance << " range=" << allowed_range << "\n";
+		return;
+	}
+	if (!target->alive) {
+		std::cout << "[TARGET REJECT] requester=" << player_id
+			<< " target=" << target_id << " reason=target_dead"
+			<< " distance=" << distance << " range=" << allowed_range << "\n";
+		return;
+	}
+	if (is_same_team(*attacker, *target)) {
+		std::cout << "[TARGET REJECT] requester=" << player_id
+			<< " target=" << target_id << " reason=same_team"
+			<< " distance=" << distance << " range=" << allowed_range << "\n";
+		return;
+	}
+	if (distance > allowed_range) {
+		std::cout << "[TARGET REJECT] requester=" << player_id
+			<< " target=" << target_id << " reason=out_of_range"
+			<< " distance=" << distance << " range=" << allowed_range << "\n";
 		return;
 	}
 
 	attacker->current_target_id = target->id;
 	attacker->target_locked = true;
-	std::cout << "[TARGET APPROVE] player=" << player_id
-		<< " target=" << target_id << "\n";
+	std::cout << "[TARGET APPROVE] requester=" << player_id
+		<< " target=" << target_id
+		<< " distance=" << distance << " range=" << allowed_range << "\n";
+	std::cout << "[TARGET RETAIN] requester=" << player_id
+		<< " target=" << target_id << " reason=AliveEnemyInRange\n";
 }
 
 void RoomManager::set_move_input(int player_id, float axisX, float axisY)
@@ -1356,6 +1411,10 @@ void RoomManager::send_room_snapshot(Room& room)
 		packet.players[i].faceX = p.faceX;
 		packet.players[i].faceY = p.faceY;
 		packet.players[i].current_target_id = p.current_target_id;
+		if (p.target_locked) {
+			std::cout << "[TARGET SNAPSHOT] requester=" << p.id
+				<< " current_target_id=" << p.current_target_id << "\n";
+		}
 		packet.players[i].hp = p.hp;
 		packet.players[i].max_hp = p.max_hp;
 		packet.players[i].alive = p.alive;
