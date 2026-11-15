@@ -14,16 +14,30 @@
 // 4. 우리 팀 점수 증가
 // 5. 상대 팀 점수 증가
 
-float RewardCalculator::Calculate(
+RewardCalculator::Result RewardCalculator::Calculate(
     const BotLearningContext& previous,
     const NetPlayerState& currentPlayer,
     const RLState& currentState,
     const RoomObservation& room,
     TeamType team,
+    CharacterType character,
     int attackHits,
     int skillHits) const
 {
-    float reward = 0.0f;
+    Result result{};
+    float& reward = result.total;
+
+    const CharacterCombatRewardConfig* characterConfig = nullptr;
+    const bool melee = character == CharacterType::CHAR_DEALER ||
+                       character == CharacterType::CHAR_TANKER;
+    switch (character)
+    {
+    case CharacterType::CHAR_DEALER: characterConfig = &m_config.dealer; break;
+    case CharacterType::CHAR_TANKER: characterConfig = &m_config.tanker; break;
+    case CharacterType::CHAR_ARCHER: characterConfig = &m_config.archer; break;
+    case CharacterType::CHAR_HEALER: characterConfig = &m_config.healer; break;
+    default: break;
+    }
 
     // ========================================================
     // +적 접근 보상
@@ -45,9 +59,44 @@ float RewardCalculator::Calculate(
         newEnemy->exists > 0.5f && newEnemy->alive > 0.5f && newEnemy->visible > 0.5f &&
         oldEnemy.deaths == newEnemy->deaths)
     {
-        const float previousOutsideRange = std::max(0.0f, oldEnemy.distance * MAX_MAP_DISTANCE - oldState.effectiveRange);
-        const float currentOutsideRange = std::max(0.0f, newEnemy->distance * MAX_MAP_DISTANCE - oldState.effectiveRange);
-        reward += (previousOutsideRange - currentOutsideRange) / MAX_MAP_DISTANCE * m_config.enemyApproachReward;
+        const float range = oldState.effectiveRange;
+        const float previousDistance = oldEnemy.distance * MAX_MAP_DISTANCE;
+        const float currentDistance = newEnemy->distance * MAX_MAP_DISTANCE;
+        const float previousOutsideRange = std::max(0.0f, previousDistance - range);
+        const float currentOutsideRange = std::max(0.0f, currentDistance - range);
+
+        if (characterConfig != nullptr)
+        {
+            float distanceReward = 0.0f;
+            if (melee)
+            {
+                // 사거리 밖에서는 적극적으로 접근하되, 진입 뒤 밀착을 보상하지 않는다.
+                distanceReward += (previousOutsideRange - currentOutsideRange) / MAX_MAP_DISTANCE
+                    * characterConfig->meleeApproachReward;
+                if (previousOutsideRange > 0.0f && currentOutsideRange <= 0.0f)
+                    distanceReward += characterConfig->meleeEnterRangeReward;
+                if (previousOutsideRange <= 0.0f && currentOutsideRange > 0.0f)
+                    distanceReward += characterConfig->meleeRetreatPenalty
+                        * std::min(1.0f, currentOutsideRange / range);
+            }
+            else
+            {
+                const float safeDistance = range * characterConfig->safeDistanceRatio;
+                const float preferredDistance = range * characterConfig->preferredDistanceRatio;
+                const float tolerance = range * characterConfig->preferredDistanceToleranceRatio;
+                if (previousOutsideRange > 0.0f)
+                    distanceReward += (previousOutsideRange - currentOutsideRange) / MAX_MAP_DISTANCE
+                        * characterConfig->rangedApproachReward;
+                if (previousDistance < safeDistance && currentDistance > previousDistance)
+                    distanceReward += (currentDistance - previousDistance) / range
+                        * characterConfig->rangedRetreatReward;
+                if (currentDistance >= safeDistance && currentDistance <= range &&
+                    std::abs(currentDistance - preferredDistance) <= tolerance)
+                    distanceReward += characterConfig->rangedMaintainReward;
+            }
+            reward += distanceReward;
+            result.characterDistance += distanceReward;
+        }
     }
 
     // ========================================================
@@ -76,15 +125,22 @@ float RewardCalculator::Calculate(
 
     const float captureDistanceChange = normalizedPreviousCaptureDistance - normalizedCurrentCaptureDistance;
 
-    reward += captureDistanceChange * m_config.captureApproachReward;
+    const float captureApproach = captureDistanceChange * m_config.common.captureApproachReward;
+    reward += captureApproach;
+    result.capture += captureApproach;
 
     // ========================================================
     // +점령지 내부 유지 보상
     // ========================================================
 
-    if (std::abs(currentPlayer.x) <= 300.0f && std::abs(currentPlayer.y) <= 300.0f)
+    const bool wasInCapture = std::abs(previousX) <= 300.0f && std::abs(previousY) <= 300.0f;
+    const bool isInCapture = std::abs(currentPlayer.x) <= 300.0f && std::abs(currentPlayer.y) <= 300.0f;
+    if (isInCapture)
     {
-        reward += 0.1f;
+        const float captureReward = m_config.common.captureInsideReward +
+            (!wasInCapture ? m_config.common.captureEntryReward : 0.0f);
+        reward += captureReward;
+        result.capture += captureReward;
     }
 
     // ========================================================
@@ -93,7 +149,7 @@ float RewardCalculator::Calculate(
 
     if (attackHits > 0)
     {
-        reward += static_cast<float>(attackHits) * m_config.attackHitReward;
+        reward += static_cast<float>(attackHits) * m_config.common.attackHitReward;
     }
 
     // ========================================================
@@ -102,14 +158,14 @@ float RewardCalculator::Calculate(
 
     if (skillHits > 0)
     {
-        reward += static_cast<float>(skillHits) * m_config.skillHitReward;
+        reward += static_cast<float>(skillHits) * m_config.common.skillHitReward;
     }
 
     // ========================================================
     // +점령지에서 너무 멀리 있는 것에 대한 약한 패널티
     // ========================================================
 
-    reward -= normalizedCurrentCaptureDistance * 0.01f;
+    reward -= normalizedCurrentCaptureDistance * m_config.common.captureDistancePenalty;
 
     // ========================================================
     // 1. 받은 피해 패널티
@@ -123,7 +179,7 @@ float RewardCalculator::Calculate(
     {
         reward +=
             static_cast<float>(damageTaken)
-            * m_config.damageTakenPenalty;
+            * m_config.common.damageTakenPenalty;
     }
 
     // ========================================================
@@ -140,7 +196,7 @@ float RewardCalculator::Calculate(
     {
         reward +=
             static_cast<float>(killDiff)
-            * m_config.killReward;
+            * m_config.common.killReward;
     }
 
     // ========================================================
@@ -157,7 +213,7 @@ float RewardCalculator::Calculate(
     {
         reward +=
             static_cast<float>(deathDiff)
-            * m_config.deathPenalty;
+            * m_config.common.deathPenalty;
     }
 
     // ========================================================
@@ -210,7 +266,7 @@ float RewardCalculator::Calculate(
     {
         reward +=
             static_cast<float>(teamScoreDiff)
-            * m_config.teamScoreReward;
+            * m_config.common.teamScoreReward;
     }
 
     // ========================================================
@@ -224,10 +280,11 @@ float RewardCalculator::Calculate(
     {
         reward +=
             static_cast<float>(enemyScoreDiff)
-            * m_config.enemyScorePenalty;
+            * m_config.common.enemyScorePenalty;
     }
 
-    return reward;
+    result.common = result.total - result.characterDistance - result.capture;
+    return result;
 }
 
 float RewardCalculator::CalculateGameResult(
@@ -245,9 +302,9 @@ float RewardCalculator::CalculateGameResult(
     // 자신의 팀이 승리
     if (team == winnerTeam)
     {
-        return m_config.winReward;
+        return m_config.common.winReward;
     }
 
     // 패배
-    return m_config.losePenalty;
+    return m_config.common.losePenalty;
 }

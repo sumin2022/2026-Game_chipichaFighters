@@ -310,6 +310,11 @@ void Network::ProcessPacket(BotClient& bot, char* packet, int bytes)
         bot.useInitialPath = true;
         bot.initialPath.clear();
         bot.initialPathIndex = 0;
+        bot.useReturnPath = false;
+        bot.returnPath.clear();
+        bot.returnPathIndex = 0;
+        bot.returnStallDecisions = 0;
+        bot.returnPathRetryCooldown = 0.0f;
 
         bot.state = BotState::InGame;
         std::cout << "[BOT " << bot.index << "] Game Start / InGame\n";
@@ -326,6 +331,10 @@ void Network::ProcessPacket(BotClient& bot, char* packet, int bytes)
         if (bot.player_id == pkt->dead_id) {
             bot.state = BotState::Dead;
             bot.alive = false;
+            bot.useReturnPath = false;
+            bot.returnPath.clear();
+            bot.returnPathIndex = 0;
+            bot.returnStallDecisions = 0;
         }
 
         break;
@@ -350,6 +359,11 @@ void Network::ProcessPacket(BotClient& bot, char* packet, int bytes)
             bot.useInitialPath = true;
             bot.initialPath.clear();
             bot.initialPathIndex = 0;
+            bot.useReturnPath = false;
+            bot.returnPath.clear();
+            bot.returnPathIndex = 0;
+            bot.returnStallDecisions = 0;
+            bot.returnPathRetryCooldown = 0.0f;
         }
 
         break;

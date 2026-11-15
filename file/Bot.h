@@ -91,5 +91,14 @@ struct BotClient {
 
     std::vector<AIPathNode> initialPath;
     std::size_t initialPathIndex = 0;
+
+    // 경기 중 점령지 복귀 BFS. 초기 이동 상태와 의도적으로 분리한다.
+    bool useReturnPath = false;
+    std::vector<AIPathNode> returnPath;
+    std::size_t returnPathIndex = 0;
+    float returnLastX = 0.0f;
+    float returnLastY = 0.0f;
+    int returnStallDecisions = 0;
+    float returnPathRetryCooldown = 0.0f;
 };
 

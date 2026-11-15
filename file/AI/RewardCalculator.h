@@ -12,21 +12,28 @@
 class RewardCalculator
 {
 public:
-    explicit RewardCalculator(
-        const RewardConfig& config
-    )
+    struct Result
+    {
+        float total = 0.0f;
+        float common = 0.0f;
+        float characterDistance = 0.0f;
+        float capture = 0.0f;
+    };
+
+    explicit RewardCalculator(const CharacterRewardConfig& config)
         : m_config(config)
     {
     }
 
     // 이전 학습 상태와 현재 방 상태를 비교하여
     // 현재 행동에 대한 보상값을 계산한다.
-    float Calculate(
+    Result Calculate(
         const BotLearningContext& previous,
         const NetPlayerState& currentPlayer,
         const RLState& currentState,
         const RoomObservation& room,
         TeamType team,
+        CharacterType character,
         int attackHits,
         int skillHits
     ) const;
@@ -38,5 +45,5 @@ public:
     ) const;
 
 private:
-    RewardConfig m_config;
+    CharacterRewardConfig m_config;
 };

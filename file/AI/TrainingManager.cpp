@@ -1,5 +1,7 @@
 ﻿#include "TrainingManager.h"
 #include <filesystem>
+#include <algorithm>
+#include <cmath>
 
 // 봇별 강화학습 과정을 전체적으로 관리한다.
 //
@@ -18,7 +20,7 @@ TrainingManager::TrainingManager(
     const AIModelInfo& modelInfo)
     : m_dbThread(dbThread),
     m_modelInfo(modelInfo),
-    m_rewardCalculator(RewardConfig{}),
+    m_rewardCalculator(AIConfig{}.rewards),
     m_replayBuffer(50000)
 {
     // 기존 27행동 모델 파일은 보존하고 새 입력/행동 모델을 별도 저장한다.
@@ -63,6 +65,7 @@ void TrainingManager::UpdateBot(
     // ========================================================
 
     bot.decisionTimer -= dt;
+    bot.returnPathRetryCooldown = std::max(0.0f, bot.returnPathRetryCooldown - dt);
 
     if (bot.decisionTimer > 0.0f)
         return;
@@ -109,16 +112,18 @@ void TrainingManager::UpdateBot(
 
         const int skillHits = bot.pendingSkillHits.exchange(0, std::memory_order_relaxed);
 
-        const float reward =
+        const RewardCalculator::Result rewardResult =
             m_rewardCalculator.Calculate(
                 bot.learning,
                 *currentPlayer,
                 currentState,
                 room,
                 bot.team,
+                bot.character,
                 attackHits,
                 skillHits
             );
+        const float reward = rewardResult.total;
 
         // 테스트용 로그
         if (attackHits > 0 || skillHits > 0)
@@ -129,6 +134,9 @@ void TrainingManager::UpdateBot(
                 << " AttackHits=" << attackHits
                 << " SkillHits=" << skillHits
                 << " Reward=" << reward
+                << " Common=" << rewardResult.common
+                << " CharacterDistance=" << rewardResult.characterDistance
+                << " Capture=" << rewardResult.capture
                 << '\n';
         }
 
@@ -200,6 +208,9 @@ void TrainingManager::UpdateBot(
                 << " Size=" << bufferSize
                 << " Bot=" << bot.index
                 << " Reward=" << reward
+                << " Common=" << rewardResult.common
+                << " CharacterDistance=" << rewardResult.characterDistance
+                << " Capture=" << rewardResult.capture
                 << " Action="
                 << experience.action
                 << "\n";
@@ -317,6 +328,100 @@ void TrainingManager::UpdateBot(
                     network.SendMove(bot,dirX,dirY);
                     return;
                 }
+            }
+        }
+    }
+
+    // ========================================================
+    // 경기 중 점령지 복귀 BFS
+    // 초기 경로와 분리된 상태를 사용하며, 이 블록에서는 DQN 행동을 선택하지 않는다.
+    // ========================================================
+    const float captureDistance = std::sqrt(
+        currentPlayer->x * currentPlayer->x + currentPlayer->y * currentPlayer->y);
+    const bool inCaptureZone =
+        std::abs(currentPlayer->x) <= AIConfig::CaptureReturnEndDistance &&
+        std::abs(currentPlayer->y) <= AIConfig::CaptureReturnEndDistance;
+
+    if (!bot.useReturnPath && !inCaptureZone &&
+        captureDistance >= AIConfig::CaptureReturnStartDistance &&
+        bot.returnPathRetryCooldown <= 0.0f)
+    {
+        bot.useReturnPath = true;
+        bot.returnPath.clear();
+        bot.returnPathIndex = 0;
+        bot.returnLastX = currentPlayer->x;
+        bot.returnLastY = currentPlayer->y;
+        bot.returnStallDecisions = 0;
+        std::cout << "[RETURN BFS START] Bot=" << bot.index
+            << " Distance=" << captureDistance << '\n';
+    }
+
+    if (bot.useReturnPath)
+    {
+        if (inCaptureZone)
+        {
+            bot.useReturnPath = false;
+            bot.returnPath.clear();
+            bot.returnPathIndex = 0;
+            bot.returnStallDecisions = 0;
+            std::cout << "[RETURN BFS END] Bot=" << bot.index
+                << " Capture zone reached\n";
+        }
+        else
+        {
+            if (bot.returnPath.empty() || bot.returnPathIndex >= bot.returnPath.size())
+            {
+                bot.returnPath.clear();
+                bot.returnPathIndex = 0;
+                if (!m_pathFinder.FindPath(currentPlayer->x, currentPlayer->y, 0.0f, 0.0f, bot.returnPath))
+                {
+                    bot.useReturnPath = false;
+                    bot.returnPathRetryCooldown = AIConfig::ReturnPathRetryCooldown;
+                    std::cout << "[RETURN BFS FAIL] Bot=" << bot.index << '\n';
+                }
+                else
+                {
+                    bot.returnLastX = currentPlayer->x;
+                    bot.returnLastY = currentPlayer->y;
+                    bot.returnStallDecisions = 0;
+                    std::cout << "[RETURN BFS PATH] Bot=" << bot.index
+                        << " PathSize=" << bot.returnPath.size() << '\n';
+                }
+            }
+
+            if (bot.useReturnPath && bot.returnPathIndex < bot.returnPath.size())
+            {
+                const float movedX = currentPlayer->x - bot.returnLastX;
+                const float movedY = currentPlayer->y - bot.returnLastY;
+                if (movedX * movedX + movedY * movedY < 25.0f)
+                    ++bot.returnStallDecisions;
+                else
+                    bot.returnStallDecisions = 0;
+                bot.returnLastX = currentPlayer->x;
+                bot.returnLastY = currentPlayer->y;
+
+                if (bot.returnStallDecisions >= AIConfig::ReturnPathStallDecisionLimit)
+                {
+                    bot.returnPath.clear();
+                    bot.returnPathIndex = 0;
+                    bot.returnStallDecisions = 0;
+                    std::cout << "[RETURN BFS REPATH] Bot=" << bot.index << " Reason=stalled\n";
+                    return;
+                }
+
+                const AIPathNode& next = bot.returnPath[bot.returnPathIndex];
+                float dirX = next.worldX - currentPlayer->x;
+                float dirY = next.worldY - currentPlayer->y;
+                const float distance = std::sqrt(dirX * dirX + dirY * dirY);
+                if (distance < AIConfig::ReturnPathNodeReachDistance)
+                {
+                    ++bot.returnPathIndex;
+                    return;
+                }
+                dirX /= distance;
+                dirY /= distance;
+                network.SendMove(bot, dirX, dirY);
+                return;
             }
         }
     }
