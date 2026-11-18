@@ -6,13 +6,14 @@
 
 constexpr float ITEM_POS_X[2] = { -50.0f, -50.0f };
 constexpr float ITEM_POS_Y[2] = { -753.0f, 753.0f };
+constexpr float MP_REGEN_PER_SECOND = 5.0f;
 void RoomManager::broadcast_room(int room_id, char* packet, int size, int exclude_player_id)
 {
 	auto room_it = m_rooms.find(room_id);
 	if (room_it == m_rooms.end()) return;
 
 	Room& room = room_it->second;
-	//auto* header = reinterpret_cast<TZPacketHeader*>(packet); //출력용
+	auto* header = reinterpret_cast<TZPacketHeader*>(packet);
 
 	for (int i = 0; i < room.player_count; ++i) {
 		int player_id = room.players[i];
@@ -22,6 +23,14 @@ void RoomManager::broadcast_room(int room_id, char* packet, int size, int exclud
 
 		if (session.m_is_connected) {
 			session.do_send(size, packet);
+			if (header->type == PACKET_TYPE::SC_ROOM_ENTER ||
+				header->type == PACKET_TYPE::SC_CHARACTER_SELECTED ||
+				header->type == PACKET_TYPE::SC_LOBBY_READY_STATE) {
+				std::cout << "[ROOM PACKET SEND] room=" << room_id
+					<< " recipient=" << player_id
+					<< " type=" << static_cast<int>(header->type)
+					<< " size=" << size << '\n';
+			}
 		}
 	}
 }
@@ -61,6 +70,7 @@ void RoomManager::update_room(Room& room, float dt)
 	update_ai(room, dt);
 	update_respawns(room, dt);
 	update_movement(room, dt);
+	update_mp_regen(room, dt);
 	update_skills(room, dt);
 	update_attacks(room, dt);
 	update_items(room, dt);
@@ -356,6 +366,11 @@ void RoomManager::start_room(int room_id)
 		clients[player_id].m_room_id = room_id;
 
 		clients[player_id].send_game_start();
+		std::cout << "[GAME START SEND] room=" << room_id
+			<< " recipient=" << player_id
+			<< " type=" << static_cast<int>(PACKET_TYPE::SC_GAME_START)
+			<< " size=" << sizeof(SC_GameStart)
+			<< " player_count=" << room.player_count << '\n';
 	}
 	std::cout << "Room " << room_id << " started\n";
 }
@@ -407,7 +422,12 @@ void RoomManager::enter_lobby(int room_id)
 		<< "[ROOM ENTER SEND] room=" << room_id
 		<< " size=" << packet.size
 		<< " type=" << static_cast<int>(packet.type)
-		<< '\n';
+		<< " player_count=" << packet.player_count
+		<< " player_ids=";
+	for (int i = 0; i < packet.player_count; ++i) {
+		std::cout << (i == 0 ? "" : ",") << packet.player_ids[i];
+	}
+	std::cout << '\n';
 
 
 	broadcast_room(room_id, reinterpret_cast<char*>(&packet), packet.size);
@@ -521,6 +541,11 @@ void RoomManager::select_character(int player_id, CharacterType character)
 	packet.type = PACKET_TYPE::SC_CHARACTER_SELECTED;
 	packet.player_id = player_id;
 	packet.character = character;
+	std::cout << "[CHARACTER SELECTED SEND] room=" << room_id
+		<< " player=" << player_id
+		<< " type=" << static_cast<int>(packet.type)
+		<< " size=" << packet.size
+		<< " player_count=" << room.player_count << '\n';
 
 	broadcast_room(room_id, reinterpret_cast<char*>(&packet), packet.size);
 }
@@ -551,6 +576,12 @@ void RoomManager::set_lobby_ready(int player_id, bool ready)
 	packet.type = PACKET_TYPE::SC_LOBBY_READY_STATE;
 	packet.player_id = player_id;
 	packet.ready = ready;
+	std::cout << "[LOBBY READY SEND] room=" << room_id
+		<< " player=" << player_id
+		<< " ready=" << ready
+		<< " type=" << static_cast<int>(packet.type)
+		<< " size=" << packet.size
+		<< " player_count=" << room.player_count << '\n';
 
 	broadcast_room(room_id, reinterpret_cast<char*>(&packet), packet.size);
 
@@ -581,6 +612,7 @@ void RoomManager::apply_character_to_player(PlayerState& state, CharacterType ch
 
 	state.max_mp = stats.max_mp;
 	state.mp = stats.max_mp;
+	state.mp_regen_remainder = 0.0f;
 
 	state.attack_damage = stats.attack_damage;
 	state.attack_cooldown = stats.attack_cooldown;
@@ -648,6 +680,25 @@ void RoomManager::update_movement(Room& room, float dt)
 
 		clients[p.id].m_x = static_cast<short>(p.x);
 		clients[p.id].m_y = static_cast<short>(p.y);
+	}
+}
+
+void RoomManager::update_mp_regen(Room& room, float dt)
+{
+	for (int i = 0; i < room.player_count; ++i) {
+		PlayerState& player = room.states[i];
+		if (!player.alive || player.max_mp <= 0 || player.mp >= player.max_mp) {
+			if (player.mp >= player.max_mp) player.mp_regen_remainder = 0.0f;
+			continue;
+		}
+
+		player.mp_regen_remainder += MP_REGEN_PER_SECOND * dt;
+		int recovered_mp = static_cast<int>(player.mp_regen_remainder);
+		if (recovered_mp <= 0) continue;
+
+		player.mp = (std::min)(player.max_mp, player.mp + recovered_mp);
+		player.mp_regen_remainder -= recovered_mp;
+		if (player.mp >= player.max_mp) player.mp_regen_remainder = 0.0f;
 	}
 }
 
@@ -1364,6 +1415,8 @@ void RoomManager::respawn_player(Room& room, PlayerState& player)
 {
 	player.alive = true;
 	player.hp = player.max_hp;
+	player.mp = player.max_mp;
+	player.mp_regen_remainder = 0.0f;
 
 	player.respawn_timer = 0.0f;
 

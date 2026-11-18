@@ -30,6 +30,7 @@ struct PlayerState {
 
 	int mp = 0;
 	int max_mp = 0;
+	float mp_regen_remainder = 0.0f;
 
 	int attack_damage = 10;
 	float attack_cooldown = 1.0f;
@@ -205,6 +206,7 @@ private:
 
 	void update_ai(Room& room, float dt);
 	void update_movement(Room& room, float dt);
+	void update_mp_regen(Room& room, float dt);
 	void update_skills(Room& room, float dt);
 	void update_attacks(Room& room, float dt);
 	void update_items(Room& room, float dt);

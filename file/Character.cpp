@@ -7,7 +7,7 @@ const CharacterStats& CharacterManager::GetStats(CharacterType type)
 	static CharacterStats tanker{
 		CharacterType::CHAR_TANKER,                 // type
 		610,                         // max_hp
-		0,                           // max_mp
+		250,                         // max_mp
 		80,                          // attack_damage
 		1.8f,                        // attack_cooldown
 		150.0f,                      // attack_range
